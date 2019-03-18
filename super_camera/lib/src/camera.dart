@@ -12,3 +12,13 @@ class Camera {
     throw UnimplementedError();
   }
 }
+
+class CameraException implements Exception {
+  const CameraException({this.code, this.description});
+
+  final String code;
+  final String description;
+
+  @override
+  String toString() => '$runtimeType($code, $description)';
+}
