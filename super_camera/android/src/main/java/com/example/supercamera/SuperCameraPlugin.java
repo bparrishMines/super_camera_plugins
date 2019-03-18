@@ -1,5 +1,7 @@
 package com.example.supercamera;
 
+import com.example.supercamera.camera1.CameraController;
+
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -20,7 +22,7 @@ public class SuperCameraPlugin implements MethodCallHandler {
   @Override
   public void onMethodCall(MethodCall call, Result result) {
     if (call.method.equals("Camera#availableCameras")) {
-      result.success(new ArrayList<Map<String, Object>>());
+      result.success(CameraController.availableCameras());
     } else {
       result.notImplemented();
     }
