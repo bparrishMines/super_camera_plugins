@@ -13,11 +13,8 @@ class Camera {
       'Camera#availableCameras',
     );
 
-    return result.map<CameraDevice>((dynamic camera) {
-      return CameraDevice._(
-        cameraId: camera['cameraId'],
-        lensDirection: camera['lensDirection'],
-      );
+    return result.map<CameraDevice>((dynamic data) {
+      return CameraDevice._fromMap(data);
     }).toList();
   }
 }
