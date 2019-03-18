@@ -17,6 +17,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> testCameraPlugin() async {
     final List<CameraDevice> cameras = await Camera.availableCameras();
+    print(cameras);
   }
 
   @override

@@ -8,8 +8,17 @@ class Camera {
     'bmparr2450.plugins/super_camera',
   );
 
-  static Future<List<CameraDevice>> availableCameras() {
-    throw UnimplementedError();
+  static Future<List<CameraDevice>> availableCameras() async {
+    final List<dynamic> result = await channel.invokeMethod(
+      'Camera#availableCameras',
+    );
+
+    return result.map<CameraDevice>((dynamic camera) {
+      return CameraDevice._(
+        cameraId: camera['cameraId'],
+        lensDirection: camera['lensDirection'],
+      );
+    }).toList();
   }
 }
 

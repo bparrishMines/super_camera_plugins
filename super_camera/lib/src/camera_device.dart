@@ -10,4 +10,7 @@ class CameraDevice {
 
   final String _cameraId;
   final LensDirection lensDirection;
+
+  @override
+  String toString() => '$runtimeType($lensDirection)';
 }
