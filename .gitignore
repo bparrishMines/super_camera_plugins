@@ -33,4 +33,4 @@ GeneratedPluginRegistrant.java
 build/
 .flutter-plugins
 
-example/ios/Runner.xcworkspace/xcshareddata/
+xcshareddata/
