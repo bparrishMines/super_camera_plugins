@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:super_camera/super_camera.dart';
 
 void main() => runApp(MyApp());
 
@@ -11,6 +12,11 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    testCameraPlugin();
+  }
+
+  Future<void> testCameraPlugin() async {
+    final List<CameraDevice> cameras = await Camera.availableCameras();
   }
 
   @override
