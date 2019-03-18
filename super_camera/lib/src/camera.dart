@@ -5,7 +5,7 @@ class Camera {
 
   @visibleForTesting
   static const MethodChannel channel = MethodChannel(
-    'bmparr.plugins/super_camera',
+    'bmparr2450.plugins/super_camera',
   );
 
   static Future<List<CameraDevice>> availableCameras() {
