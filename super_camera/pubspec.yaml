@@ -1,0 +1,18 @@
+name: super_camera
+description: A Flutter plugin used as a base plugin for accessing a device camera. The main goal of
+  this plugin is to handle abstracting differences between cameras on different platforms and
+  creates an easy way to create more complex camera plugins.
+version: 0.0.1
+author: - Maurice <bmparr2450@gmail.com>
+
+environment:
+  sdk: ">=2.1.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    androidPackage: com.example.supercamera
+    pluginClass: SuperCameraPlugin
