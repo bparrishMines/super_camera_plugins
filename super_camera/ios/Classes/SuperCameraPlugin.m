@@ -11,7 +11,7 @@
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
   if ([@"Camera#availableCameras" isEqualToString:call.method]) {
-    result(@[]);
+    result([CameraController availableCameras]);
   } else {
     result(FlutterMethodNotImplemented);
   }

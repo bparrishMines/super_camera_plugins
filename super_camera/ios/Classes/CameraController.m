@@ -1,4 +1,4 @@
-#import <Foundation/Foundation.h>
+#import <AVFoundation/AVFoundation.h>
 #import "SuperCameraPlugin.h"
 
 @implementation CameraController
@@ -13,7 +13,41 @@
 }
 
 + (NSArray<NSDictionary *> *)availableCameras {
-  return nil;
+  NSArray<AVCaptureDevice *> *devices;
+
+  if (@available(iOS 10.0, *)) {
+    AVCaptureDeviceDiscoverySession *discoverySession = [AVCaptureDeviceDiscoverySession
+          discoverySessionWithDeviceTypes:@[ AVCaptureDeviceTypeBuiltInWideAngleCamera ]
+                                mediaType:AVMediaTypeVideo
+                                 position:AVCaptureDevicePositionUnspecified];
+    devices = discoverySession.devices;
+  } else {
+    devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+  }
+
+  NSMutableArray<NSDictionary<NSString *, NSObject *> *> *allCameraData = [[NSMutableArray alloc] initWithCapacity:devices.count];
+
+  for (AVCaptureDevice *device in devices) {
+    NSString *lensFacing;
+    switch ([device position]) {
+      case AVCaptureDevicePositionBack:
+        lensFacing = @"back";
+        break;
+      case AVCaptureDevicePositionFront:
+        lensFacing = @"front";
+        break;
+      case AVCaptureDevicePositionUnspecified:
+        lensFacing = @"external";
+        break;
+    }
+
+    [allCameraData addObject:@{
+      @"cameraId" : [device uniqueID],
+      @"lensDirection" : lensFacing,
+    }];
+  }
+
+  return allCameraData;
 }
 
 - (void) putSingleCaptureRequest:(NSDictionary *)settings result:(FlutterResult)result {
