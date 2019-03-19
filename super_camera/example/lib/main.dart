@@ -19,7 +19,29 @@ class _MyAppState extends State<MyApp> {
   Future<void> testCameraPlugin() async {
     final bool hasCameraAccess = await getCameraPermission();
     final List<CameraDevice> cameras = await Camera.availableCameras();
-    print(cameras);
+
+    final CameraDevice device = cameras[0];
+    print(device);
+
+    final CameraController controller = CameraController(device);
+
+    controller.open(
+      onSuccess: () {
+        print('Camera Opened!');
+      },
+      onFailure: (CameraException exception) {
+        print(exception);
+      },
+    );
+
+    controller.open(
+      onSuccess: () {
+        print('Camera Opened!');
+      },
+      onFailure: (CameraException exception) {
+        print(exception);
+      },
+    );
   }
 
   Future<bool> getCameraPermission() async {
