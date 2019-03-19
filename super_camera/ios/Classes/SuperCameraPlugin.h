@@ -9,7 +9,7 @@
 
 + (NSArray<NSDictionary *> *_Nonnull)availableCameras;
 
-- (instancetype _Nonnull )initWithCameraId:(NSString *_Nonnull)cameraId;
+- (instancetype _Nonnull)initWithCameraId:(NSString *_Nonnull)cameraId;
 
 - (void) putSingleCaptureRequest:(NSDictionary *_Nonnull)settings result:(FlutterResult _Nonnull)result;
 - (void) putRepeatingCaptureRequest:(NSDictionary *_Nonnull)settings result:(FlutterResult _Nonnull)result;

@@ -2,7 +2,6 @@
 #import "SuperCameraPlugin.h"
 
 @implementation CameraController
-
 - (instancetype)initWithCameraId:(NSString *)cameraId {
   self = [super init];
   if (self) {
