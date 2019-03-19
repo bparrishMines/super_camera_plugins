@@ -16,7 +16,7 @@ abstract class RepeatingCaptureSettings {
 
 typedef TextureReadyCallback = Function(Texture texture);
 
-class TextureCaptureSettings extends SingleCaptureSettings {
+class TextureCaptureSettings extends RepeatingCaptureSettings {
   TextureCaptureSettings(
     TextureReadyCallback onTextureReady,
     Function() onFailure,

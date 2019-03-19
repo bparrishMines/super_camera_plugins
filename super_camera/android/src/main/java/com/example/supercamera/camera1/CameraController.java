@@ -58,6 +58,6 @@ public class CameraController extends BaseCameraController {
 
   @Override
   public void close() {
-    throw new UnsupportedOperationException();
+
   }
 }

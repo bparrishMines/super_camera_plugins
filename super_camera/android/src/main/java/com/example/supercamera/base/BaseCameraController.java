@@ -17,5 +17,6 @@ public abstract class BaseCameraController {
   public abstract void putRepeatingCaptureRequest(Map<String, Object> settings, MethodChannel.Result result);
 
   public abstract void stopRepeatingCaptureRequest(MethodChannel.Result result);
+
   public abstract void close();
 }

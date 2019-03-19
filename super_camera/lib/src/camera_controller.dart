@@ -8,8 +8,23 @@ class CameraController {
   void open({
     Function() onSuccess,
     Function(CameraException exception) onFailure,
-  }) async {}
-  Future<void> close() async {}
+  }) async {
+    return Camera.channel.invokeMethod(
+      'CameraController#open',
+      <String, dynamic>{
+        'cameraId': device.cameraId,
+      },
+    );
+  }
+
+  Future<void> close() async {
+    return Camera.channel.invokeMethod(
+      'CameraController#close',
+      <String, dynamic>{
+        'cameraId': device.cameraId,
+      },
+    );
+  }
 
   void putSingleCaptureRequest(SingleCaptureSettings settings) async {}
   void putRepeatingCaptureRequest(RepeatingCaptureSettings settings) async {}
