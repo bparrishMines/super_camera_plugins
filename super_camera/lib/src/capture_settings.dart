@@ -17,10 +17,10 @@ abstract class RepeatingCaptureSettings {
 typedef TextureReadyCallback = Function(Texture texture);
 
 class TextureCaptureSettings extends RepeatingCaptureSettings {
-  TextureCaptureSettings(
-    TextureReadyCallback onTextureReady,
-    Function() onFailure,
-  ) : super(
+  TextureCaptureSettings({
+    @required TextureReadyCallback onTextureReady,
+    Function(CameraException exception) onFailure,
+  }) : super(
           onSuccess: (dynamic id) => onTextureReady(Texture(textureId: id)),
           onFailure: onFailure,
         );

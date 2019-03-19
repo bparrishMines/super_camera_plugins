@@ -39,6 +39,9 @@ public class SuperCameraPlugin implements MethodCallHandler {
       case "CameraController#close":
         closeController(call, result);
         break;
+      case "CameraController#putRepeatingCaptureRequest":
+        putRepeatingCaptureRequest(call, result);
+        break;
       default:
         result.notImplemented();
     }
@@ -74,5 +77,17 @@ public class SuperCameraPlugin implements MethodCallHandler {
     controllers.remove(cameraId);
 
     result.success(null);
+  }
+
+  private void putRepeatingCaptureRequest(MethodCall call, Result result) {
+    final String cameraId = call.argument("cameraId");
+
+    if (!controllers.containsKey(cameraId)) {
+      result.error("No CameraController for this camera", null, null);
+      return;
+    }
+
+    final BaseCameraController controller = controllers.get(cameraId);
+    controller.putRepeatingCaptureRequest((Map<String, Object>) call.arguments, result);
   }
 }

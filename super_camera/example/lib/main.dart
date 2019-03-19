@@ -12,6 +12,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   CameraController _controller;
   LensDirection _lensDirection = LensDirection.front;
+  Texture _texture;
 
   @override
   void initState() {
@@ -37,7 +38,17 @@ class _MyAppState extends State<MyApp> {
 
     _controller.open(
       onSuccess: () {
-        print('Camera Opened!');
+        print("Camera Opened!");
+        _controller.putRepeatingCaptureRequest(TextureCaptureSettings(
+          onTextureReady: (Texture texture) {
+            setState(() {
+              _texture = texture;
+            });
+          },
+          onFailure: (CameraException exception) {
+            print(exception);
+          },
+        ));
       },
       onFailure: (CameraException exception) {
         print(exception);
@@ -81,7 +92,7 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Text('Running Super Camera'),
+          child: _texture == null ? Text('Running Super Camera') : _texture,
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
