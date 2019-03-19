@@ -52,7 +52,7 @@ public class SuperCameraPlugin implements MethodCallHandler {
       return;
     }
 
-    final BaseCameraController controller = new CameraController(cameraId);
+    final BaseCameraController controller = new CameraController(cameraId, registrar.textures());
     controller.open();
 
     controllers.put(cameraId, controller);

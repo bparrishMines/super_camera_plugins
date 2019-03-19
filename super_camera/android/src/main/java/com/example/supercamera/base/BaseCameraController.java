@@ -3,14 +3,15 @@ package com.example.supercamera.base;
 import java.util.Map;
 
 import io.flutter.plugin.common.MethodChannel;
+import io.flutter.view.TextureRegistry;
 
 public abstract class BaseCameraController {
   public final String cameraId;
+  public final TextureRegistry textureRegistry;
 
-  public boolean hasRepeatingCaptureRequest = false;
-
-  public BaseCameraController(final String cameraId) {
+  public BaseCameraController(final String cameraId, final TextureRegistry textureRegistry) {
     this.cameraId = cameraId;
+    this.textureRegistry = textureRegistry;
   }
 
   public abstract void putSingleCaptureRequest(Map<String, Object> settings, MethodChannel.Result result);
