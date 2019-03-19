@@ -9,12 +9,25 @@ class CameraController {
     Function() onSuccess,
     Function(CameraException exception) onFailure,
   }) async {
-    return Camera.channel.invokeMethod(
-      'CameraController#open',
-      <String, dynamic>{
-        'cameraId': device.cameraId,
-      },
-    );
+    try {
+      await Camera.channel.invokeMethod(
+        'CameraController#open',
+        <String, dynamic>{
+          'cameraId': device.cameraId,
+        },
+      );
+
+      if (onSuccess != null) {
+        onSuccess();
+      }
+    } on PlatformException catch (exception) {
+      if (onFailure != null) {
+        onFailure(CameraException(
+          code: exception.code,
+          description: exception.message,
+        ));
+      }
+    }
   }
 
   Future<void> close() async {
