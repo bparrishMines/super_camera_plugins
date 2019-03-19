@@ -13,3 +13,15 @@ abstract class RepeatingCaptureSettings {
   final Function onSuccess;
   final Function onFailure;
 }
+
+typedef TextureReadyCallback = Function(Texture texture);
+
+class TextureCaptureSettings extends SingleCaptureSettings {
+  TextureCaptureSettings(
+    TextureReadyCallback onTextureReady,
+    Function() onFailure,
+  ) : super(
+          onSuccess: (dynamic id) => onTextureReady(Texture(textureId: id)),
+          onFailure: onFailure,
+        );
+}

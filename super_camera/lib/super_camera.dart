@@ -1,6 +1,7 @@
 library super_camera;
 
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart';
 
 part 'src/camera.dart';
