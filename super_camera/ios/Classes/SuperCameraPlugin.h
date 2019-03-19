@@ -16,5 +16,6 @@
 
 - (void) stopRepeatingCaptureRequest:(FlutterResult _Nullable)result;
 
+- (void) open;
 - (void) close;
 @end

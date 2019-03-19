@@ -1,6 +1,12 @@
 #import <AVFoundation/AVFoundation.h>
 #import "SuperCameraPlugin.h"
 
+@interface CameraController ()
+@property(nonatomic, retain) AVCaptureSession *captureSession;
+@property(readonly, nonatomic) AVCaptureDevice *captureDevice;
+@property(readonly, nonatomic) AVCaptureInput *captureVideoInput;
+@end
+
 @implementation CameraController
 - (instancetype)initWithCameraId:(NSString *)cameraId {
   self = [super init];
@@ -49,6 +55,14 @@
   return allCameraData;
 }
 
+- (void) open {
+  _captureSession = [[AVCaptureSession alloc] init];
+  _captureDevice = [AVCaptureDevice deviceWithUniqueID:_cameraId];
+
+  _captureVideoInput = [AVCaptureDeviceInput deviceInputWithDevice:_captureDevice
+                                                             error:nil];
+}
+
 - (void) putSingleCaptureRequest:(NSDictionary *)settings result:(FlutterResult)result {
     
 }
@@ -62,6 +76,8 @@
 }
 
 - (void) close {
-    
+  if ([_captureSession isRunning]) {
+    return [_captureSession stopRunning];
+  }
 }
 @end
