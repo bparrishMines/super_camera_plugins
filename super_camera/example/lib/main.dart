@@ -18,6 +18,12 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> testCameraPlugin() async {
     final bool hasCameraAccess = await getCameraPermission();
+
+    if (!hasCameraAccess) {
+      print('No camera access!');
+      return;
+    }
+
     final List<CameraDevice> cameras = await Camera.availableCameras();
 
     final CameraDevice device = cameras[0];
