@@ -32,7 +32,8 @@ NSMutableDictionary *controllers;
 }
 
 - (void)openController:(FlutterMethodCall*)call result:(FlutterResult)result {
-  NSString *cameraId = [call valueForKey:@"cameraId"];
+  NSDictionary *arguments = call.arguments;
+  NSString *cameraId = arguments[@"cameraId"];
 
   if (controllers[cameraId]) {
     result([FlutterError errorWithCode:@"Already opened CameraController for this camera."
@@ -48,7 +49,8 @@ NSMutableDictionary *controllers;
 }
 
 - (void)closeController:(FlutterMethodCall*)call result:(FlutterResult)result {
-  NSString *cameraId = [call valueForKey:@"cameraId"];
+  NSDictionary *arguments = call.arguments;
+  NSString *cameraId = arguments[@"cameraId"];
 
   if (!controllers[cameraId]) {
     result([FlutterError errorWithCode:@"No CameraController for this camera"
