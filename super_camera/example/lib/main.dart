@@ -10,14 +10,17 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  CameraController _controller;
+  LensDirection _lensDirection = LensDirection.front;
+
   @override
   void initState() {
     super.initState();
-    testCameraPlugin();
+    _openCamera();
   }
 
-  Future<void> testCameraPlugin() async {
-    final bool hasCameraAccess = await getCameraPermission();
+  void _openCamera() async {
+    final bool hasCameraAccess = await _getCameraPermission();
 
     if (!hasCameraAccess) {
       print('No camera access!');
@@ -26,21 +29,13 @@ class _MyAppState extends State<MyApp> {
 
     final List<CameraDevice> cameras = await Camera.availableCameras();
 
-    final CameraDevice device = cameras[0];
-    print(device);
-
-    final CameraController controller = CameraController(device);
-
-    controller.open(
-      onSuccess: () {
-        print('Camera Opened!');
-      },
-      onFailure: (CameraException exception) {
-        print(exception);
-      },
+    final CameraDevice device = cameras.firstWhere(
+      (CameraDevice device) => device.lensDirection == _lensDirection,
     );
 
-    controller.open(
+    _controller = CameraController(device);
+
+    _controller.open(
       onSuccess: () {
         print('Camera Opened!');
       },
@@ -50,7 +45,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Future<bool> getCameraPermission() async {
+  Future<bool> _getCameraPermission() async {
     final PermissionStatus permission =
         await PermissionHandler().checkPermissionStatus(
       PermissionGroup.camera,
@@ -66,6 +61,18 @@ class _MyAppState extends State<MyApp> {
     return permissions[PermissionGroup.camera] == PermissionStatus.granted;
   }
 
+  // Switches camera if another exists.
+  void _toggleCamera() async {
+    setState(() {
+      _lensDirection = _lensDirection == LensDirection.back
+          ? LensDirection.front
+          : LensDirection.back;
+    });
+
+    await _controller.close();
+    _openCamera();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -75,6 +82,14 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Center(
           child: Text('Running Super Camera'),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            _toggleCamera();
+          },
+          child: _lensDirection == LensDirection.back
+              ? const Icon(Icons.camera_front)
+              : const Icon(Icons.camera_rear),
         ),
       ),
     );

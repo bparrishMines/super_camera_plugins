@@ -12,6 +12,8 @@ import java.util.Map;
 import io.flutter.plugin.common.MethodChannel;
 
 public class CameraController extends BaseCameraController {
+  private Camera camera;
+
   public CameraController(final String cameraId) {
     super(cameraId);
   }
@@ -42,6 +44,11 @@ public class CameraController extends BaseCameraController {
   }
 
   @Override
+  public void open() {
+    camera = Camera.open(Integer.parseInt(cameraId));
+  }
+
+  @Override
   public void putSingleCaptureRequest(Map<String, Object> settings, MethodChannel.Result result) {
     throw new UnsupportedOperationException();
   }
@@ -58,6 +65,8 @@ public class CameraController extends BaseCameraController {
 
   @Override
   public void close() {
-
+    camera.stopPreview();
+    camera.release();
+    camera = null;
   }
 }
