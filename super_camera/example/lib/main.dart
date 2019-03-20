@@ -42,19 +42,18 @@ class _MyAppState extends State<MyApp> {
 
         _controller.putRepeatingCaptureRequest(
           RepeatingCaptureSettings(
-            onSuccess: (dynamic result) {
-              print("Got texture!");
+            delegateSettings: TextureSettings(
+              onTextureReady: (Texture texture) {
+                print("Got texture!");
 
-              setState(() {
-                _texture = Texture(textureId: result);
-              });
-            },
-            onFailure: (CameraException exception) {
-              print(exception);
-            },
-            androidDelegateName:
-                'com.example.supercamera.camera1.TextureDelegate',
-            iOSDelegateName: 'TextureDelegate',
+                setState(() {
+                  _texture = texture;
+                });
+              },
+              onFailure: (CameraException exception) {
+                print(exception);
+              },
+            ),
           ),
         );
       },

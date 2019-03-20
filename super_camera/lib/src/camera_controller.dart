@@ -47,12 +47,12 @@ class CameraController {
         },
       );
 
-      if (settings.onSuccess != null) {
-        settings.onSuccess(result);
+      if (settings.delegateSettings.onSuccess != null) {
+        settings.delegateSettings.onSuccess(result);
       }
     } on PlatformException catch (exception) {
-      if (settings.onFailure != null) {
-        settings.onFailure(CameraException(
+      if (settings.delegateSettings.onFailure != null) {
+        settings.delegateSettings.onFailure(CameraException(
           code: exception.code,
           description: exception.message,
         ));
