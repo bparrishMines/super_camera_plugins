@@ -88,6 +88,7 @@ public class CameraController extends BaseCameraController {
         camera.setPreviewTexture(surfaceTexture);
       } catch (IOException exception) {
         result.error(exception.getClass().getSimpleName(), exception.getMessage(), null);
+        return;
       }
     }
 
@@ -108,7 +109,7 @@ public class CameraController extends BaseCameraController {
     if (repeatingCaptureDelegate != null) {
       repeatingCaptureDelegate.close(result);
       repeatingCaptureDelegate = null;
-    } {
+    } else {
       result.success(null);
     }
   }
@@ -122,7 +123,7 @@ public class CameraController extends BaseCameraController {
     if (repeatingCaptureDelegate != null) {
       repeatingCaptureDelegate.close(result);
       repeatingCaptureDelegate = null;
-    } {
+    } else {
       result.success(null);
     }
   }

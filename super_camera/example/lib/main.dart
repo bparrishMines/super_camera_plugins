@@ -43,6 +43,8 @@ class _MyAppState extends State<MyApp> {
         _controller.putRepeatingCaptureRequest(
           RepeatingCaptureSettings(
             onSuccess: (dynamic result) {
+              print("Got texture!");
+
               setState(() {
                 _texture = Texture(textureId: result);
               });
