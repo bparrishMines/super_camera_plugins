@@ -55,29 +55,34 @@
   return allCameraData;
 }
 
-- (void) open {
+- (void) open:(FlutterResult _Nonnull)result {
   _captureSession = [[AVCaptureSession alloc] init];
   _captureDevice = [AVCaptureDevice deviceWithUniqueID:_cameraId];
 
   _captureVideoInput = [AVCaptureDeviceInput deviceInputWithDevice:_captureDevice
                                                              error:nil];
+
+  result(nil);
 }
 
-- (void) putSingleCaptureRequest:(NSDictionary *)settings result:(FlutterResult)result {
-    
+- (void) putSingleCaptureRequest:(NSDictionary *)settings result:(FlutterResult _Nonnull)result {
+
 }
 
-- (void) putRepeatingCaptureRequest:(NSDictionary *)settings result:(FlutterResult)result {
-    
+- (void) putRepeatingCaptureRequest:(NSDictionary *)settings result:(FlutterResult _Nonnull)result {
+
 }
 
-- (void) stopRepeatingCaptureRequest:(FlutterResult _Nullable)result {
-    
+- (void) stopRepeatingCaptureRequest:(FlutterResult _Nonnull)result {
+
 }
 
-- (void) close {
+- (void) close:(FlutterResult _Nonnull)result {
   if ([_captureSession isRunning]) {
     return [_captureSession stopRunning];
   }
+
+  _captureSession = nil;
+  result(nil);
 }
 @end

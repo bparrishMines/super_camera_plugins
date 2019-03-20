@@ -26,6 +26,10 @@ NSMutableDictionary *controllers;
     [self openController:call result:result];
   } else if ([@"CameraController#close" isEqualToString:call.method]) {
     [self closeController:call result:result];
+  } else if ([@"CameraController#putRepeatingCaptureRequest" isEqualToString:call.method]) {
+    [self putRepeatingCaptureRequest:call result:result];
+  } else if ([@"CameraController#stopRepeatingCaptureRequest" isEqualToString:call.method]) {
+    [self stopRepeatingCaptureRequest:call result:result];
   } else {
     result(FlutterMethodNotImplemented);
   }
@@ -36,34 +40,37 @@ NSMutableDictionary *controllers;
   NSString *cameraId = arguments[@"cameraId"];
 
   if (controllers[cameraId]) {
-    result([FlutterError errorWithCode:@"Already opened CameraController for this camera."
-                               message:nil
+    result([FlutterError errorWithCode:@"CameraAlreadyOpenException"
+                               message:@"CameraController has already been opened."
                                details:nil]);
     return;
   }
 
   CameraController *controller = [[CameraController alloc] initWithCameraId:cameraId];
   controllers[cameraId] = controller;
-
-  result(nil);
+  [controller open:result];
 }
 
 - (void)closeController:(FlutterMethodCall*)call result:(FlutterResult)result {
   NSDictionary *arguments = call.arguments;
   NSString *cameraId = arguments[@"cameraId"];
 
-  if (!controllers[cameraId]) {
-    result([FlutterError errorWithCode:@"No CameraController for this camera"
-                               message:nil
-                               details:nil]);
+  CameraController *controller = controllers[cameraId];
+
+  if (!controller) {
+    result(nil);
     return;
   }
 
-  CameraController *controller = controllers[cameraId];
-  [controller close];
-
   [controllers removeObjectForKey:cameraId];
+  [controller close:result];
+}
 
+- (void)putRepeatingCaptureRequest:(FlutterMethodCall*)call result:(FlutterResult)result {
+  result(@1);
+}
+
+- (void)stopRepeatingCaptureRequest:(FlutterMethodCall*)call result:(FlutterResult)result {
   result(nil);
 }
 @end

@@ -14,8 +14,8 @@
 - (void) putSingleCaptureRequest:(NSDictionary *_Nonnull)settings result:(FlutterResult _Nonnull)result;
 - (void) putRepeatingCaptureRequest:(NSDictionary *_Nonnull)settings result:(FlutterResult _Nonnull)result;
 
-- (void) stopRepeatingCaptureRequest:(FlutterResult _Nullable)result;
+- (void) stopRepeatingCaptureRequest:(FlutterResult _Nonnull)result;
 
-- (void) open;
-- (void) close;
+- (void) open:(FlutterResult _Nonnull)result;
+- (void) close:(FlutterResult _Nonnull)result;
 @end
