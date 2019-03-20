@@ -67,10 +67,32 @@ NSMutableDictionary *controllers;
 }
 
 - (void)putRepeatingCaptureRequest:(FlutterMethodCall*)call result:(FlutterResult)result {
-  result(@1);
+  NSDictionary *arguments = call.arguments;
+  NSString *cameraId = arguments[@"cameraId"];
+
+  CameraController *controller = controllers[cameraId];
+
+  if (!controller) {
+    result([FlutterError errorWithCode:@"CameraNotOpenException"
+                               message:@"Camera is not open."
+                               details:nil]);
+    return;
+  }
+
+  [controller putRepeatingCaptureRequest:arguments[@"settings"] result:result];
 }
 
 - (void)stopRepeatingCaptureRequest:(FlutterMethodCall*)call result:(FlutterResult)result {
-  result(nil);
+  NSDictionary *arguments = call.arguments;
+  NSString *cameraId = arguments[@"cameraId"];
+
+  CameraController *controller = controllers[cameraId];
+
+  if (!controller) {
+    result(nil);
+    return;
+  }
+
+  [controller stopRepeatingCaptureRequest:result];
 }
 @end

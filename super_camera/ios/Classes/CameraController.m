@@ -1,10 +1,10 @@
-#import <AVFoundation/AVFoundation.h>
 #import "SuperCameraPlugin.h"
 
 @interface CameraController ()
 @property(nonatomic, retain) AVCaptureSession *captureSession;
-@property(readonly, nonatomic) AVCaptureDevice *captureDevice;
-@property(readonly, nonatomic) AVCaptureInput *captureVideoInput;
+@property(nonatomic) AVCaptureDevice *captureDevice;
+@property(nonatomic) AVCaptureInput *captureVideoInput;
+@property(nonatomic) AVCaptureVideoDataOutput *captureVideoOutput;
 @end
 
 @implementation CameraController
@@ -56,11 +56,12 @@
 }
 
 - (void) open:(FlutterResult _Nonnull)result {
-  _captureSession = [[AVCaptureSession alloc] init];
+  _captureSession = [AVCaptureSession new];
   _captureDevice = [AVCaptureDevice deviceWithUniqueID:_cameraId];
 
   _captureVideoInput = [AVCaptureDeviceInput deviceInputWithDevice:_captureDevice
                                                              error:nil];
+  _captureVideoOutput = [AVCaptureVideoDataOutput new];
 
   result(nil);
 }
@@ -70,16 +71,34 @@
 }
 
 - (void) putRepeatingCaptureRequest:(NSDictionary *)settings result:(FlutterResult _Nonnull)result {
+  if (!_captureSession) {
+    result([FlutterError errorWithCode:@"CameraNotOpenException"
+                               message:@"Camera is not open."
+                               details:nil]);
+    return;
+  }
 
+  _captureVideoOutput.videoSettings =
+      @{(NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA)};
+
+  [_captureVideoOutput setAlwaysDiscardsLateVideoFrames:YES];
+
+  [_captureSession addInput:_captureVideoInput];
+  [_captureSession addOutput:_captureVideoOutput];
+
+  [_captureSession startRunning];
+
+  result(@1);
 }
 
 - (void) stopRepeatingCaptureRequest:(FlutterResult _Nonnull)result {
-
+  [_captureSession stopRunning];
+  result(nil);
 }
 
 - (void) close:(FlutterResult _Nonnull)result {
   if ([_captureSession isRunning]) {
-    return [_captureSession stopRunning];
+    [_captureSession stopRunning];
   }
 
   _captureSession = nil;

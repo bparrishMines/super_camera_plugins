@@ -1,3 +1,4 @@
+#import <AVFoundation/AVFoundation.h>
 #import <Flutter/Flutter.h>
 
 @interface SuperCameraPlugin : NSObject<FlutterPlugin>
@@ -18,4 +19,7 @@
 
 - (void) open:(FlutterResult _Nonnull)result;
 - (void) close:(FlutterResult _Nonnull)result;
+@end
+
+@interface RepeatingCaptureDelegate : NSObject<AVCaptureVideoDataOutputSampleBufferDelegate>
 @end
