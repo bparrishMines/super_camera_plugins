@@ -10,23 +10,24 @@ public class TextureDelegate implements RepeatingCaptureDelegate {
   private TextureRegistry.SurfaceTextureEntry entry;
 
   @Override
-  public SurfaceTexture getSurfaceTexture(TextureRegistry.SurfaceTextureEntry entry) {
+  public SurfaceTexture createSurfaceTexture(TextureRegistry.SurfaceTextureEntry entry) {
     this.entry = entry;
     return entry.surfaceTexture();
   }
 
   @Override
-  public Camera.PreviewCallback getPreviewCallback() {
+  public Camera.PreviewCallback createPreviewCallback() {
     return null;
   }
 
   @Override
-  public void finishSetup(MethodChannel.Result result) {
+  public void finishWithResult(MethodChannel.Result result) {
     result.success(entry.id());
   }
 
   @Override
-  public void close() {
+  public void close(MethodChannel.Result result) {
     entry.release();
+    result.success(null);
   }
 }

@@ -49,8 +49,9 @@ public class CameraController extends BaseCameraController {
   }
 
   @Override
-  public void open() {
+  public void open(MethodChannel.Result result) {
     camera = Camera.open(Integer.parseInt(cameraId));
+    result.success(null);
   }
 
   @Override
@@ -68,7 +69,7 @@ public class CameraController extends BaseCameraController {
     repeatingCaptureDelegate = new TextureDelegate();
 
     final SurfaceTexture surfaceTexture =
-        repeatingCaptureDelegate.getSurfaceTexture(textureRegistry.createSurfaceTexture());
+        repeatingCaptureDelegate.createSurfaceTexture(textureRegistry.createSurfaceTexture());
     if (surfaceTexture != null) {
       try {
         camera.setPreviewTexture(surfaceTexture);
@@ -77,30 +78,39 @@ public class CameraController extends BaseCameraController {
       }
     }
 
-    final Camera.PreviewCallback callback = repeatingCaptureDelegate.getPreviewCallback();
+    final Camera.PreviewCallback callback = repeatingCaptureDelegate.createPreviewCallback();
     if (callback != null) {
       camera.setPreviewCallback(callback);
     }
 
     camera.startPreview();
 
-    repeatingCaptureDelegate.finishSetup(result);
+    repeatingCaptureDelegate.finishWithResult(result);
   }
 
   @Override
   public void stopRepeatingCaptureRequest(MethodChannel.Result result) {
-    throw new UnsupportedOperationException();
+    camera.stopPreview();
+
+    if (repeatingCaptureDelegate != null) {
+      repeatingCaptureDelegate.close(result);
+      repeatingCaptureDelegate = null;
+    } {
+      result.success(null);
+    }
   }
 
   @Override
-  public void close() {
+  public void close(MethodChannel.Result result) {
     camera.stopPreview();
     camera.release();
     camera = null;
 
     if (repeatingCaptureDelegate != null) {
-      repeatingCaptureDelegate.close();
+      repeatingCaptureDelegate.close(result);
       repeatingCaptureDelegate = null;
+    } {
+      result.success(null);
     }
   }
 }

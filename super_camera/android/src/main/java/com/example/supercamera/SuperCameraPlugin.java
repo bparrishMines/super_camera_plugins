@@ -60,11 +60,9 @@ public class SuperCameraPlugin implements MethodCallHandler {
     }
 
     final BaseCameraController controller = new CameraController(cameraId, registrar.textures());
-    controller.open();
-
     controllers.put(cameraId, controller);
 
-    result.success(null);
+    controller.open(result);
   }
 
   private void closeController(MethodCall call, Result result) {
@@ -77,10 +75,8 @@ public class SuperCameraPlugin implements MethodCallHandler {
       return;
     }
 
-    controller.close();
     controllers.remove(cameraId);
-
-    result.success(null);
+    controller.close(result);
   }
 
   private void putRepeatingCaptureRequest(MethodCall call, Result result) {
