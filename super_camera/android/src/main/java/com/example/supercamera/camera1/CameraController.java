@@ -61,12 +61,17 @@ public class CameraController extends BaseCameraController {
   @Override
   public void putRepeatingCaptureRequest(Map<String, Object> settings, MethodChannel.Result result) {
     if (camera == null) {
-      result.error("CameraException", "Camera is not opened.", null);
+      result.error("CameraNotOpenException", "Camera is not open.", null);
+      return;
+    }
+
+    final String androidDelegateName = (String) settings.get("androidDelegateName");
+    if (androidDelegateName == null) {
+      result.error("CameraDelegateNameIsNull", "Camera delegate name is null.", null);
       return;
     }
 
     try {
-      final String androidDelegateName = (String) settings.get("androidDelegateName");
       repeatingCaptureDelegate =
           (RepeatingCaptureDelegate) Class.forName(androidDelegateName).newInstance();
     } catch (Exception exception) {
