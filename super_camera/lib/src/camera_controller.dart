@@ -12,9 +12,7 @@ class CameraController {
     try {
       await Camera.channel.invokeMethod(
         'CameraController#open',
-        <String, dynamic>{
-          'cameraId': device.cameraId,
-        },
+        <String, dynamic>{'cameraId': device.cameraId},
       );
 
       if (onSuccess != null) {
@@ -33,15 +31,11 @@ class CameraController {
   Future<void> close() async {
     return Camera.channel.invokeMethod(
       'CameraController#close',
-      <String, dynamic>{
-        'cameraId': device.cameraId,
-      },
+      <String, dynamic>{'cameraId': device.cameraId},
     );
   }
 
-  void putSingleCaptureRequest(SingleCaptureSettings settings) async {
-
-  }
+  void putSingleCaptureRequest(SingleCaptureSettings settings) async {}
 
   void putRepeatingCaptureRequest(RepeatingCaptureSettings settings) async {
     try {
@@ -49,6 +43,7 @@ class CameraController {
         'CameraController#putRepeatingCaptureRequest',
         <String, dynamic>{
           'cameraId': device.cameraId,
+          'settings': settings.serialize(),
         },
       );
 
@@ -65,5 +60,10 @@ class CameraController {
     }
   }
 
-  Future<void> stopRepeatingCaptureRequests() async {}
+  Future<void> stopRepeatingCaptureRequests() async {
+    return await Camera.channel.invokeMethod(
+      'CameraController#stopRepeatingCaptureRequest',
+      <String, dynamic>{'cameraId': device.cameraId},
+    );
+  }
 }

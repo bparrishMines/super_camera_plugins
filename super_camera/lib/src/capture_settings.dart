@@ -3,25 +3,38 @@ part of super_camera;
 abstract class SingleCaptureSettings {
   const SingleCaptureSettings({this.onSuccess, this.onFailure});
 
-  final Function onSuccess;
-  final Function onFailure;
+  final Function(dynamic result) onSuccess;
+  final Function(CameraException exception) onFailure;
+
+  Map<String, dynamic> serialize();
 }
 
 abstract class RepeatingCaptureSettings {
   const RepeatingCaptureSettings({this.onSuccess, this.onFailure});
 
-  final Function onSuccess;
-  final Function onFailure;
+  final Function(dynamic result) onSuccess;
+  final Function(CameraException exception) onFailure;
+
+  Map<String, dynamic> serialize();
 }
 
 typedef TextureReadyCallback = Function(Texture texture);
 
 class TextureCaptureSettings extends RepeatingCaptureSettings {
-  TextureCaptureSettings({
-    @required TextureReadyCallback onTextureReady,
+  TextureCaptureSettings._({Function onSuccess, Function onFailure})
+      : super(onSuccess: onSuccess, onFailure: onFailure);
+
+  factory TextureCaptureSettings({
+    TextureReadyCallback onTextureReady,
     Function(CameraException exception) onFailure,
-  }) : super(
-          onSuccess: (dynamic id) => onTextureReady(Texture(textureId: id)),
-          onFailure: onFailure,
-        );
+  }) {
+    final Function(dynamic result) onSuccess = (dynamic textureId) {
+      onTextureReady(Texture(textureId: textureId));
+    };
+
+    return TextureCaptureSettings._(onSuccess: onSuccess, onFailure: onFailure);
+  }
+
+  @override
+  Map<String, int> serialize() => null;
 }
