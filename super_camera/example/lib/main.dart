@@ -43,7 +43,9 @@ class _MyAppState extends State<MyApp> {
         _controller.putRepeatingCaptureRequest(
           RepeatingCaptureSettings(
             onSuccess: (dynamic result) {
-              _texture = Texture(textureId: result);
+              setState(() {
+                _texture = Texture(textureId: result);
+              });
             },
             onFailure: (CameraException exception) {
               print(exception);
