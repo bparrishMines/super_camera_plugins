@@ -1,40 +1,49 @@
 part of super_camera;
 
-abstract class SingleCaptureSettings {
-  const SingleCaptureSettings({this.onSuccess, this.onFailure});
+class SingleCaptureSettings {
+  const SingleCaptureSettings({
+    @required this.onSuccess,
+    this.onFailure,
+    this.androidDelegateName,
+    this.iOSDelegateName,
+    this.additionalSettings,
+  });
 
   final Function(dynamic result) onSuccess;
   final Function(CameraException exception) onFailure;
+  final String androidDelegateName;
+  final String iOSDelegateName;
+  final Map<String, dynamic> additionalSettings;
 
-  Map<String, dynamic> serialize();
-}
-
-abstract class RepeatingCaptureSettings {
-  const RepeatingCaptureSettings({this.onSuccess, this.onFailure});
-
-  final Function(dynamic result) onSuccess;
-  final Function(CameraException exception) onFailure;
-
-  Map<String, dynamic> serialize();
-}
-
-typedef TextureReadyCallback = Function(Texture texture);
-
-class TextureCaptureSettings extends RepeatingCaptureSettings {
-  TextureCaptureSettings._({Function onSuccess, Function onFailure})
-      : super(onSuccess: onSuccess, onFailure: onFailure);
-
-  factory TextureCaptureSettings({
-    TextureReadyCallback onTextureReady,
-    Function(CameraException exception) onFailure,
-  }) {
-    final Function(dynamic result) onSuccess = (dynamic textureId) {
-      onTextureReady(Texture(textureId: textureId));
+  Map<String, dynamic> _serialize() {
+    return <String, dynamic>{
+      'androidDelegateName': androidDelegateName,
+      'iOSDelegateName': androidDelegateName,
+      'additionalSettings': additionalSettings,
     };
-
-    return TextureCaptureSettings._(onSuccess: onSuccess, onFailure: onFailure);
   }
+}
 
-  @override
-  Map<String, int> serialize() => null;
+class RepeatingCaptureSettings {
+  const RepeatingCaptureSettings({
+    @required this.onSuccess,
+    this.onFailure,
+    this.androidDelegateName,
+    this.iOSDelegateName,
+    this.additionalSettings,
+  });
+
+  final Function(dynamic result) onSuccess;
+  final Function(CameraException exception) onFailure;
+  final String androidDelegateName;
+  final String iOSDelegateName;
+  final Map<String, dynamic> additionalSettings;
+
+  Map<String, dynamic> _serialize() {
+    return <String, dynamic>{
+      'androidDelegateName': androidDelegateName,
+      'iOSDelegateName': androidDelegateName,
+      'additionalSettings': additionalSettings,
+    };
+  }
 }

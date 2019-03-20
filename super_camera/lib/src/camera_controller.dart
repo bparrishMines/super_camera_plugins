@@ -43,7 +43,7 @@ class CameraController {
         'CameraController#putRepeatingCaptureRequest',
         <String, dynamic>{
           'cameraId': device.cameraId,
-          'settings': settings.serialize(),
+          'settings': settings._serialize(),
         },
       );
 

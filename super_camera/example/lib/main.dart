@@ -39,16 +39,18 @@ class _MyAppState extends State<MyApp> {
     _controller.open(
       onSuccess: () {
         print("Camera Opened!");
-        _controller.putRepeatingCaptureRequest(TextureCaptureSettings(
-          onTextureReady: (Texture texture) {
-            setState(() {
-              _texture = texture;
-            });
-          },
-          onFailure: (CameraException exception) {
-            print(exception);
-          },
-        ));
+
+        _controller.putRepeatingCaptureRequest(
+          RepeatingCaptureSettings(
+            onSuccess: (dynamic result) {
+              _texture = Texture(textureId: result);
+            },
+            onFailure: (CameraException exception) {
+              print(exception);
+            },
+            androidDelegateName: 'TextureDelegate',
+          ),
+        );
       },
       onFailure: (CameraException exception) {
         print(exception);
