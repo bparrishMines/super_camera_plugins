@@ -1,7 +1,7 @@
 part of super_camera;
 
 class CameraController {
-  CameraController(this.device);
+  CameraController(this.device) : assert(device != null);
 
   final CameraDevice device;
 
