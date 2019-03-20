@@ -2,7 +2,6 @@ package com.example.supercamera.camera1;
 
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-import android.view.SurfaceHolder;
 
 import com.example.supercamera.base.BaseCameraController;
 
@@ -63,6 +62,15 @@ public class CameraController extends BaseCameraController {
   public void putRepeatingCaptureRequest(Map<String, Object> settings, MethodChannel.Result result) {
     if (camera == null) {
       result.error("CameraException", "Camera is not opened.", null);
+      return;
+    }
+
+    try {
+      final String androidDelegateName = (String) settings.get("androidDelegateName");
+      repeatingCaptureDelegate =
+          (RepeatingCaptureDelegate) Class.forName(androidDelegateName).newInstance();
+    } catch (Exception exception) {
+      result.error(exception.getClass().getSimpleName(), exception.getMessage(), null);
       return;
     }
 

@@ -50,7 +50,9 @@ class _MyAppState extends State<MyApp> {
             onFailure: (CameraException exception) {
               print(exception);
             },
-            androidDelegateName: 'TextureDelegate',
+            androidDelegateName:
+                'com.example.supercamera.camera1.TextureDelegate',
+            iOSDelegateName: 'TextureDelegate',
           ),
         );
       },
