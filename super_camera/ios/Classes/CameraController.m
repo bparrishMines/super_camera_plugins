@@ -97,12 +97,11 @@
       @{(NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA)};
   [_captureVideoOutput setAlwaysDiscardsLateVideoFrames:YES];
   [_captureSession addOutputWithNoConnections:_captureVideoOutput];
+  [_captureVideoOutput setSampleBufferDelegate:_repeatingCaptureDelegate queue:dispatch_get_main_queue()];
 
   _captureVideoConnection = [AVCaptureConnection connectionWithInputPorts:_captureVideoInput.ports
                                                                    output:_captureVideoOutput];
   [_captureSession addConnection:_captureVideoConnection];
-
-  [_captureVideoOutput setSampleBufferDelegate:_repeatingCaptureDelegate queue:dispatch_get_main_queue()];
 
   [_repeatingCaptureDelegate initialize:_textureRegistry result:result];
 
@@ -149,5 +148,8 @@
 
   [_captureSession removeOutput:_captureVideoOutput];
   _captureVideoOutput = nil;
+
+  [_captureSession removeConnection:_captureVideoConnection];
+  _captureVideoConnection = nil;
 }
 @end
