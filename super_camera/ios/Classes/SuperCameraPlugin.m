@@ -1,12 +1,16 @@
 #import "SuperCameraPlugin.h"
 
-@implementation SuperCameraPlugin
-NSMutableDictionary *controllers;
+@interface SuperCameraPlugin ()
+@property NSMutableDictionary *controllers;
+@property id<FlutterTextureRegistry> textureRegistry;
+@end
 
-- (instancetype)init {
+@implementation SuperCameraPlugin
+- (instancetype)initWithTextureRegistry:(NSObject<FlutterTextureRegistry> *)textureRegistry {
   self = [super init];
   if (self) {
-    controllers = [NSMutableDictionary new];
+    _controllers = [NSMutableDictionary new];
+    _textureRegistry = textureRegistry;
   }
   return self;
 }
@@ -15,7 +19,8 @@ NSMutableDictionary *controllers;
   FlutterMethodChannel* channel = [FlutterMethodChannel
       methodChannelWithName:@"bmparr2450.plugins/super_camera"
             binaryMessenger:[registrar messenger]];
-  SuperCameraPlugin* instance = [[SuperCameraPlugin alloc] init];
+  
+  SuperCameraPlugin* instance = [[SuperCameraPlugin alloc] initWithTextureRegistry:[registrar textures]];
   [registrar addMethodCallDelegate:instance channel:channel];
 }
 
@@ -39,15 +44,16 @@ NSMutableDictionary *controllers;
   NSDictionary *arguments = call.arguments;
   NSString *cameraId = arguments[@"cameraId"];
 
-  if (controllers[cameraId]) {
+  if (_controllers[cameraId]) {
     result([FlutterError errorWithCode:@"CameraAlreadyOpenException"
                                message:@"CameraController has already been opened."
                                details:nil]);
     return;
   }
 
-  CameraController *controller = [[CameraController alloc] initWithCameraId:cameraId];
-  controllers[cameraId] = controller;
+  CameraController *controller = [[CameraController alloc] initWithCameraId:cameraId
+                                                            textureRegistry:_textureRegistry];
+  _controllers[cameraId] = controller;
   [controller open:result];
 }
 
@@ -55,14 +61,14 @@ NSMutableDictionary *controllers;
   NSDictionary *arguments = call.arguments;
   NSString *cameraId = arguments[@"cameraId"];
 
-  CameraController *controller = controllers[cameraId];
+  CameraController *controller = _controllers[cameraId];
 
   if (!controller) {
     result(nil);
     return;
   }
 
-  [controllers removeObjectForKey:cameraId];
+  [_controllers removeObjectForKey:cameraId];
   [controller close:result];
 }
 
@@ -70,7 +76,7 @@ NSMutableDictionary *controllers;
   NSDictionary *arguments = call.arguments;
   NSString *cameraId = arguments[@"cameraId"];
 
-  CameraController *controller = controllers[cameraId];
+  CameraController *controller = _controllers[cameraId];
 
   if (!controller) {
     result([FlutterError errorWithCode:@"CameraNotOpenException"
@@ -86,7 +92,7 @@ NSMutableDictionary *controllers;
   NSDictionary *arguments = call.arguments;
   NSString *cameraId = arguments[@"cameraId"];
 
-  CameraController *controller = controllers[cameraId];
+  CameraController *controller = _controllers[cameraId];
 
   if (!controller) {
     result(nil);
