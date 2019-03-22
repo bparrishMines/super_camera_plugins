@@ -60,7 +60,7 @@ class CameraController {
     }
   }
 
-  Future<void> stopRepeatingCaptureRequests() async {
+  Future<void> stopRepeatingCaptureRequest() async {
     return await Camera.channel.invokeMethod(
       'CameraController#stopRepeatingCaptureRequest',
       <String, dynamic>{'cameraId': device.cameraId},

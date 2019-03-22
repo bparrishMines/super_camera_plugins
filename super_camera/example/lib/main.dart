@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:super_camera/super_camera.dart';
@@ -13,6 +15,7 @@ class _MyAppState extends State<MyApp> {
   CameraController _controller;
   LensDirection _lensDirection = LensDirection.front;
   Texture _texture;
+  bool _isToggling = false;
 
   @override
   void initState() {
@@ -20,12 +23,15 @@ class _MyAppState extends State<MyApp> {
     _openCamera();
   }
 
-  void _openCamera() async {
+  Future<void> _openCamera() async {
+    Completer<void> completer = Completer<void>();
+
     final bool hasCameraAccess = await _getCameraPermission();
 
     if (!hasCameraAccess) {
       print('No camera access!');
-      return;
+      completer.isCompleted;
+      return completer.future;
     }
 
     final List<CameraDevice> cameras = await Camera.availableCameras();
@@ -49,9 +55,11 @@ class _MyAppState extends State<MyApp> {
                 setState(() {
                   _texture = texture;
                 });
+                completer.complete();
               },
               onFailure: (CameraException exception) {
                 print(exception);
+                completer.complete();
               },
             ),
           ),
@@ -59,8 +67,11 @@ class _MyAppState extends State<MyApp> {
       },
       onFailure: (CameraException exception) {
         print(exception);
+        completer.complete();
       },
     );
+
+    return completer.future;
   }
 
   Future<bool> _getCameraPermission() async {
@@ -80,15 +91,17 @@ class _MyAppState extends State<MyApp> {
   }
 
   // Switches camera if another exists.
-  void _toggleCamera() async {
+  Future<void> _toggleCamera() async {
     setState(() {
       _lensDirection = _lensDirection == LensDirection.back
           ? LensDirection.front
           : LensDirection.back;
     });
 
+    await _controller.stopRepeatingCaptureRequest();
     await _controller.close();
-    _openCamera();
+    await _openCamera();
+    _isToggling = false;
   }
 
   @override
@@ -103,6 +116,8 @@ class _MyAppState extends State<MyApp> {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
+            if (_isToggling) return;
+            _isToggling = true;
             _toggleCamera();
           },
           child: _lensDirection == LensDirection.back
