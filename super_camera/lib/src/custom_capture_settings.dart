@@ -7,7 +7,7 @@ class TextureSettings extends CaptureDelegateSettings {
   }) : super(
           androidDelegateName:
               'com.example.supercamera.camera1.TextureDelegate',
-          iOSDelegateName: '',
+          iOSDelegateName: 'TextureDelegate',
           onSuccess: (dynamic result) {
             onTextureReady(Texture(textureId: result));
           },

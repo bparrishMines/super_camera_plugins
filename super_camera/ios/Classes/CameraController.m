@@ -77,11 +77,21 @@
                                details:nil]);
     return;
   }
-  
+
+  NSString *iOSDelegateName = settings[@"iOSDelegateName"];
+  if (iOSDelegateName == [NSNull null]) {
+    result([FlutterError errorWithCode:@"CameraDelegateNameIsNull"
+                               message:@"Camera delegate name is null."
+                               details:nil]);
+    return;
+  }
+
+  _repeatingCaptureDelegate = [NSClassFromString(iOSDelegateName) new];
+
   _captureVideoInput = [AVCaptureDeviceInput deviceInputWithDevice:_captureDevice
                                                              error:nil];
   [_captureSession addInputWithNoConnections:_captureVideoInput];
-  
+
   _captureVideoOutput = [AVCaptureVideoDataOutput new];
   _captureVideoOutput.videoSettings =
       @{(NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA)};
@@ -92,10 +102,9 @@
                                                                    output:_captureVideoOutput];
   [_captureSession addConnection:_captureVideoConnection];
 
-  _repeatingCaptureDelegate = [TextureDelegate new];
-  [_repeatingCaptureDelegate initialize:_textureRegistry result:result];
-
   [_captureVideoOutput setSampleBufferDelegate:_repeatingCaptureDelegate queue:dispatch_get_main_queue()];
+
+  [_repeatingCaptureDelegate initialize:_textureRegistry result:result];
 
   [_captureSession startRunning];
 }
@@ -105,9 +114,9 @@
     result(nil);
     return;
   }
-  
+
   [_captureSession stopRunning];
-  
+
   [self removeCaptureVideoInputsAndOutputs];
   [self closeRepeatingCaptureDelegate:result];
 }
@@ -129,7 +138,7 @@
     result(nil);
     return;
   }
-  
+
   [_repeatingCaptureDelegate close:result];
   _repeatingCaptureDelegate = nil;
 }
@@ -137,7 +146,7 @@
 - (void)removeCaptureVideoInputsAndOutputs {
   [_captureSession removeInput:_captureVideoInput];
   _captureVideoInput = nil;
-  
+
   [_captureSession removeOutput:_captureVideoOutput];
   _captureVideoOutput = nil;
 }
