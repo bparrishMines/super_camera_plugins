@@ -4,6 +4,7 @@ import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 
 import com.example.supercamera.base.BaseCameraController;
+import com.example.supercamera.camera1.repeating_capture_delegates.RepeatingCaptureDelegate;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -78,8 +79,6 @@ public class CameraController extends BaseCameraController {
       result.error(exception.getClass().getSimpleName(), exception.getMessage(), null);
       return;
     }
-
-    repeatingCaptureDelegate = new TextureDelegate();
 
     final SurfaceTexture surfaceTexture =
         repeatingCaptureDelegate.createSurfaceTexture(textureRegistry.createSurfaceTexture());

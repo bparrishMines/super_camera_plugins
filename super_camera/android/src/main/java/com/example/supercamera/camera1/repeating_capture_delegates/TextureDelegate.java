@@ -1,4 +1,4 @@
-package com.example.supercamera.camera1;
+package com.example.supercamera.camera1.repeating_capture_delegates;
 
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
