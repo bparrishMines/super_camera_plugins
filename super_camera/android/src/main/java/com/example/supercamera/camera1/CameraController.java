@@ -27,10 +27,10 @@ public class CameraController extends BaseCameraController {
     List<Map<String, Object>> allCameraData = new ArrayList<>();
 
     for (int i = 0, count = Camera.getNumberOfCameras(); i < count; i++) {
-      Camera.CameraInfo info = new Camera.CameraInfo();
+      final Camera.CameraInfo info = new Camera.CameraInfo();
       Camera.getCameraInfo(i, info);
 
-      Map<String, Object> cameraData = new HashMap<>();
+      final Map<String, Object> cameraData = new HashMap<>();
       cameraData.put("cameraId", String.valueOf(i));
 
       switch(info.facing) {
@@ -47,6 +47,20 @@ public class CameraController extends BaseCameraController {
           cameraData.put("orientation", info.orientation);
           break;
       }
+
+      final Camera camera = Camera.open(i);
+      final Camera.Parameters parameters = camera.getParameters();
+
+      final List<Camera.Size> repeatingCaptureSizes = parameters.getSupportedPreviewSizes();
+
+      final List<int[]> allRepeatingCaptureSizeData = new ArrayList<>();
+      for (Camera.Size size : repeatingCaptureSizes) {
+        allRepeatingCaptureSizeData.add(new int[]{size.width, size.height});
+      }
+
+      cameraData.put("repeatingCaptureSizes", allRepeatingCaptureSizeData);
+
+      camera.release();
 
       allCameraData.add(cameraData);
     }
