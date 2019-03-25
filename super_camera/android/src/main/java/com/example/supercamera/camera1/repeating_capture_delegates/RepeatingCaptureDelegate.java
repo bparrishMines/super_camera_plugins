@@ -7,8 +7,11 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.view.TextureRegistry;
 
 public interface RepeatingCaptureDelegate {
-  SurfaceTexture createSurfaceTexture(TextureRegistry.SurfaceTextureEntry entry);
-  Camera.PreviewCallback createPreviewCallback();
-  void finishWithResult(MethodChannel.Result result);
+  void initialize(TextureRegistry textureRegistry);
+  void onStart(MethodChannel.Result result);
+
+  SurfaceTexture getSurfaceTexture();
+  Camera.PreviewCallback getPreviewCallback();
+
   void close(MethodChannel.Result result);
 }

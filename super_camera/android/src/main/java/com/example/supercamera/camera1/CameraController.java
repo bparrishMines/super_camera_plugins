@@ -80,37 +80,32 @@ public class CameraController extends BaseCameraController {
       return;
     }
 
-    final SurfaceTexture surfaceTexture =
-        repeatingCaptureDelegate.createSurfaceTexture(textureRegistry.createSurfaceTexture());
+    repeatingCaptureDelegate.initialize(textureRegistry);
+
+    final SurfaceTexture surfaceTexture = repeatingCaptureDelegate.getSurfaceTexture();
     if (surfaceTexture != null) {
       try {
         camera.setPreviewTexture(surfaceTexture);
       } catch (IOException exception) {
+        repeatingCaptureDelegate = null;
         result.error(exception.getClass().getSimpleName(), exception.getMessage(), null);
         return;
       }
     }
 
-    final Camera.PreviewCallback callback = repeatingCaptureDelegate.createPreviewCallback();
+    final Camera.PreviewCallback callback = repeatingCaptureDelegate.getPreviewCallback();
     if (callback != null) {
       camera.setPreviewCallback(callback);
     }
 
     camera.startPreview();
-
-    repeatingCaptureDelegate.finishWithResult(result);
+    repeatingCaptureDelegate.onStart(result);
   }
 
   @Override
   public void stopRepeatingCaptureRequest(MethodChannel.Result result) {
     camera.stopPreview();
-
-    if (repeatingCaptureDelegate != null) {
-      repeatingCaptureDelegate.close(result);
-      repeatingCaptureDelegate = null;
-    } else {
-      result.success(null);
-    }
+    closeRepeatingCaptureDelegate(result);
   }
 
   @Override
@@ -119,6 +114,11 @@ public class CameraController extends BaseCameraController {
     camera.release();
     camera = null;
 
+    closeRepeatingCaptureDelegate(result);
+  }
+
+  // Helper Methods
+  private void closeRepeatingCaptureDelegate(MethodChannel.Result result) {
     if (repeatingCaptureDelegate != null) {
       repeatingCaptureDelegate.close(result);
       repeatingCaptureDelegate = null;
