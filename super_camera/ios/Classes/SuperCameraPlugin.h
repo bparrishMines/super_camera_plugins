@@ -22,8 +22,8 @@
 
 @protocol RepeatingCaptureDelegate <AVCaptureVideoDataOutputSampleBufferDelegate>
 @required
-- (void)initialize:(NSObject<FlutterTextureRegistry> *_Nonnull)textureRegistry
-            result:(FlutterResult _Nonnull)result;
+- (void)initialize:(NSObject<FlutterTextureRegistry> *_Nonnull)textureRegistry;
+- (void)onStart:(FlutterResult _Nonnull)result;
 - (void)close:(FlutterResult _Nonnull)result;
 @end
 

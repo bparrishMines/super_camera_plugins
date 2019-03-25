@@ -79,7 +79,7 @@
   }
 
   NSString *iOSDelegateName = settings[@"iOSDelegateName"];
-  if (iOSDelegateName == [NSNull null]) {
+  if ([iOSDelegateName isEqual:[NSNull null]]) {
     result([FlutterError errorWithCode:@"CameraDelegateNameIsNull"
                                message:@"Camera delegate name is null."
                                details:nil]);
@@ -87,6 +87,8 @@
   }
 
   _repeatingCaptureDelegate = [NSClassFromString(iOSDelegateName) new];
+
+  [_repeatingCaptureDelegate initialize:_textureRegistry];
 
   _captureVideoInput = [AVCaptureDeviceInput deviceInputWithDevice:_captureDevice
                                                              error:nil];
@@ -99,13 +101,14 @@
   [_captureSession addOutputWithNoConnections:_captureVideoOutput];
   [_captureVideoOutput setSampleBufferDelegate:_repeatingCaptureDelegate queue:dispatch_get_main_queue()];
 
-  _captureVideoConnection = [AVCaptureConnection connectionWithInputPorts:_captureVideoInput.ports
-                                                                   output:_captureVideoOutput];
+  _captureVideoConnection = [AVCaptureConnection
+                             connectionWithInputPorts:_captureVideoInput.ports
+                                               output:_captureVideoOutput];
   [_captureSession addConnection:_captureVideoConnection];
 
-  [_repeatingCaptureDelegate initialize:_textureRegistry result:result];
-
   [_captureSession startRunning];
+
+  [_repeatingCaptureDelegate onStart:result];
 }
 
 - (void)stopRepeatingCaptureRequest:(FlutterResult)result {

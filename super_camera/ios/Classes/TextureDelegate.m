@@ -8,10 +8,12 @@
 @end
 
 @implementation TextureDelegate
-- (void)initialize:(NSObject<FlutterTextureRegistry> *)textureRegistry
-            result:(FlutterResult)result {
+- (void)initialize:(NSObject<FlutterTextureRegistry> * _Nonnull) textureRegistry {
   _textureRegistry = textureRegistry;
   _textureId = [_textureRegistry registerTexture:self];
+}
+
+- (void)onStart:(FlutterResult _Nonnull)result {
   result(@(_textureId));
 }
 
