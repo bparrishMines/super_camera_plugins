@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:super_camera/super_camera.dart';
@@ -43,19 +44,27 @@ class _MyAppState extends State<MyApp> {
 
     _controller = CameraController(device);
 
+    final bool shouldMirror = device.lensDirection == LensDirection.front;
+
     _controller.open(
       onSuccess: () {
         print("Camera Opened!");
 
         _controller.putRepeatingCaptureRequest(
           RepeatingCaptureSettings(
+            shouldMirror: shouldMirror,
             delegateSettings: TextureSettings(
               onTextureReady: (Texture texture) {
                 print("Got texture!");
 
+                int orientation = device.orientation;
+                if (defaultTargetPlatform == TargetPlatform.iOS && shouldMirror) {
+                  orientation = orientation + 180 % 360;
+                }
+
                 setState(() {
                   _cameraWidget = _buildCameraWidget(
-                    device.orientation,
+                    orientation,
                     texture,
                   );
                 });
@@ -108,8 +117,8 @@ class _MyAppState extends State<MyApp> {
     _isToggling = false;
   }
 
-  Widget _buildCameraWidget(int orientation, Texture texture) {
-    return Transform.rotate(angle: orientation * pi / 180, child: texture);
+  Widget _buildCameraWidget(int degrees, Texture texture) {
+    return Transform.rotate(angle: degrees * pi / 180, child: texture);
   }
 
   @override

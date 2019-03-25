@@ -19,7 +19,8 @@ class RepeatingCaptureSettings {
   const RepeatingCaptureSettings({
     @required this.delegateSettings,
     this.shouldMirror = false,
-  }) : assert(delegateSettings != null);
+  })  : assert(delegateSettings != null),
+        assert(shouldMirror != null);
 
   final CaptureDelegateSettings delegateSettings;
 
