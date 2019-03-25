@@ -16,16 +16,31 @@ class SingleCaptureSettings {
 }
 
 class RepeatingCaptureSettings {
-  const RepeatingCaptureSettings({@required this.delegateSettings})
-      : assert(delegateSettings != null);
+  const RepeatingCaptureSettings({
+    @required this.delegateSettings,
+    this.shouldMirror = false,
+  }) : assert(delegateSettings != null);
 
   final CaptureDelegateSettings delegateSettings;
+
+  /// Indicates whether the video should be mirrored about its vertical axis for iOS.
+  ///
+  /// Defaults to false.
+  ///
+  /// iOS: Sets
+  /// https://developer.apple.com/documentation/avfoundation/avcaptureconnection/1389172-videomirrored?language=objc
+  ///
+  /// Android: Does nothing. Front facing camera is automatically mirrored by
+  /// the system. See
+  /// https://developer.android.com/reference/android/hardware/Camera.html#setDisplayOrientation(int)
+  final bool shouldMirror;
 
   Map<String, dynamic> _serialize() {
     return <String, dynamic>{
       'androidDelegateName': delegateSettings.androidDelegateName,
       'iOSDelegateName': delegateSettings.iOSDelegateName,
       'additionalSettings': delegateSettings.additionalSettings,
+      'shouldMirror': shouldMirror,
     };
   }
 }

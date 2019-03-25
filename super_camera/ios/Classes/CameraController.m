@@ -107,6 +107,8 @@
                                                output:_captureVideoOutput];
   [_captureSession addConnection:_captureVideoConnection];
 
+  [self setShouldMirror:settings[@"shouldMirror"]];
+
   [_captureSession startRunning];
 
   [_repeatingCaptureDelegate onStart:result];
@@ -155,5 +157,9 @@
 
   [_captureSession removeOutput:_captureVideoOutput];
   _captureVideoOutput = nil;
+}
+
+- (void)setShouldMirror:(NSNumber *)shouldMirror {
+  _captureVideoConnection.videoMirrored = shouldMirror.boolValue;
 }
 @end
