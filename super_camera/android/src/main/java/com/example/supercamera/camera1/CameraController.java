@@ -42,6 +42,8 @@ public class CameraController extends BaseCameraController {
           break;
       }
 
+      cameraData.put("orientation", info.orientation);
+
       allCameraData.add(cameraData);
     }
 

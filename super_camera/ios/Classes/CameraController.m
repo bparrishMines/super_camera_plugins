@@ -52,8 +52,9 @@
     }
 
     [allCameraData addObject:@{
-      @"cameraId" : [device uniqueID],
-      @"lensDirection" : lensFacing,
+      @"cameraId": [device uniqueID],
+      @"lensDirection": lensFacing,
+      @"orientation": @(90),
     }];
   }
 
