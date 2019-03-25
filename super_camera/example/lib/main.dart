@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -14,7 +15,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   CameraController _controller;
   LensDirection _lensDirection = LensDirection.front;
-  Texture _texture;
+  Widget _cameraWidget;
   bool _isToggling = false;
 
   @override
@@ -53,7 +54,10 @@ class _MyAppState extends State<MyApp> {
                 print("Got texture!");
 
                 setState(() {
-                  _texture = texture;
+                  _cameraWidget = _buildCameraWidget(
+                    device.orientation,
+                    texture,
+                  );
                 });
                 completer.complete();
               },
@@ -104,6 +108,10 @@ class _MyAppState extends State<MyApp> {
     _isToggling = false;
   }
 
+  Widget _buildCameraWidget(int orientation, Texture texture) {
+    return Transform.rotate(angle: orientation * pi / 180, child: texture);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -112,7 +120,7 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: _texture == null ? Text('Running Super Camera') : _texture,
+          child: _cameraWidget ?? Text('Running Super Camera'),
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
