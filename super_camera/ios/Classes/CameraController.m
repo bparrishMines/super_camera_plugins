@@ -147,13 +147,13 @@
 }
 
 - (void)removeCaptureVideoInputsAndOutputs {
+  [_captureSession removeConnection:_captureVideoConnection];
+  _captureVideoConnection = nil;
+
   [_captureSession removeInput:_captureVideoInput];
   _captureVideoInput = nil;
 
   [_captureSession removeOutput:_captureVideoOutput];
   _captureVideoOutput = nil;
-
-  [_captureSession removeConnection:_captureVideoConnection];
-  _captureVideoConnection = nil;
 }
 @end
