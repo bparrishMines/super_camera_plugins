@@ -5,12 +5,15 @@ class TextureSettings extends CaptureDelegateSettings {
     @required Function(Texture texture) onTextureReady,
     Function(CameraException exception) onFailure,
   }) : super(
-          androidDelegateName:
-              'com.example.supercamera.camera1.repeating_capture_delegates.TextureDelegate',
-          iOSDelegateName: 'TextureDelegate',
+          androidDelegateName: _androidName,
+          iOSDelegateName: _iOSName,
           onSuccess: (dynamic result) {
             onTextureReady(Texture(textureId: result));
           },
           onFailure: onFailure,
         );
+
+  static const String _androidName =
+      'com.example.supercamera.camera1.repeating_capture_delegates.TextureDelegate';
+  static const String _iOSName = 'TextureDelegate';
 }
