@@ -36,13 +36,17 @@ public class CameraController extends BaseCameraController {
       switch(info.facing) {
         case Camera.CameraInfo.CAMERA_FACING_FRONT:
           cameraData.put("lensDirection", "front");
+
+          // We subtract orientation from 180 to compensate for the automatic mirroring of the front
+          // camera. See
+          // https://developer.android.com/reference/android/hardware/Camera.html#setDisplayOrientation(int)
+          cameraData.put("orientation", 360 - info.orientation % 360);
           break;
         case Camera.CameraInfo.CAMERA_FACING_BACK:
           cameraData.put("lensDirection", "back");
+          cameraData.put("orientation", info.orientation);
           break;
       }
-
-      cameraData.put("orientation", info.orientation);
 
       allCameraData.add(cameraData);
     }
@@ -94,6 +98,11 @@ public class CameraController extends BaseCameraController {
         return;
       }
     }
+
+    // Before API level 24, the default value for orientation is 0. However, the default could be
+    // different for 24+. See
+    // https://developer.android.com/reference/android/hardware/Camera.html#setDisplayOrientation(int)
+    camera.setDisplayOrientation(0);
 
     final Camera.PreviewCallback callback = repeatingCaptureDelegate.getPreviewCallback();
     if (callback != null) {
