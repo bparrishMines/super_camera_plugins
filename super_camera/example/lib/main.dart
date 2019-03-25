@@ -58,7 +58,8 @@ class _MyAppState extends State<MyApp> {
                 print("Got texture!");
 
                 int orientation = device.orientation;
-                if (defaultTargetPlatform == TargetPlatform.iOS && shouldMirror) {
+                if (defaultTargetPlatform == TargetPlatform.iOS &&
+                    shouldMirror) {
                   orientation = orientation + 180 % 360;
                 }
 
@@ -118,7 +119,18 @@ class _MyAppState extends State<MyApp> {
   }
 
   Widget _buildCameraWidget(int degrees, Texture texture) {
-    return Transform.rotate(angle: degrees * pi / 180, child: texture);
+    return Container(
+      constraints: BoxConstraints.expand(),
+      alignment: Alignment.center,
+      child: AspectRatio(
+        aspectRatio: 1920.0 / 1080.0,
+        child: Transform.rotate(
+          angle: degrees * pi / 180,
+          child: texture,
+        ),
+      ),
+      decoration: BoxDecoration(color: Colors.black),
+    );
   }
 
   @override
@@ -128,9 +140,7 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Center(
-          child: _cameraWidget ?? Text('Running Super Camera'),
-        ),
+        body: _cameraWidget ?? Text('Running Super Camera'),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
             if (_isToggling) return;

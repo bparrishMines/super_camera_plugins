@@ -7,6 +7,7 @@ class CameraDevice {
     @required this.cameraId,
     @required this.lensDirection,
     @required this.orientation,
+    @required this.repeatingCaptureSizes,
   });
 
   factory CameraDevice._fromMap(Map<dynamic, dynamic> data) {
@@ -20,11 +21,15 @@ class CameraDevice {
       cameraId: data['cameraId'],
       lensDirection: lensDirection,
       orientation: data['orientation'],
+      repeatingCaptureSizes: List.unmodifiable(data['repeatingCaptureSizes']
+          .map<Size>(
+              (dynamic size) => Size(size[0].toDouble(), size[1].toDouble()))),
     );
   }
 
   final String cameraId;
   final LensDirection lensDirection;
+  final List<Size> repeatingCaptureSizes;
 
   /// Clockwise angle through which the output image needs to be rotated to be upright on the device screen in its native orientation.
   ///
@@ -33,13 +38,10 @@ class CameraDevice {
   final int orientation;
 
   @override
-  int get hashCode =>
-      cameraId.hashCode ^ lensDirection.hashCode ^ orientation.hashCode;
+  int get hashCode => cameraId.hashCode;
 
   @override
-  bool operator ==(other) {
-    return this.hashCode == other.hashCode;
-  }
+  bool operator ==(other) => this.hashCode == other.hashCode;
 
   @override
   String toString() => '$runtimeType($cameraId, $lensDirection, $orientation)';
