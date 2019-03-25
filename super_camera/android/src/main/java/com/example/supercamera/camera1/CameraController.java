@@ -37,7 +37,7 @@ public class CameraController extends BaseCameraController {
         case Camera.CameraInfo.CAMERA_FACING_FRONT:
           cameraData.put("lensDirection", "front");
 
-          // We subtract orientation from 180 to compensate for the automatic mirroring of the front
+          // We subtract orientation from 360 to compensate for the automatic mirroring of the front
           // camera. See
           // https://developer.android.com/reference/android/hardware/Camera.html#setDisplayOrientation(int)
           cameraData.put("orientation", 360 - info.orientation % 360);
@@ -118,6 +118,9 @@ public class CameraController extends BaseCameraController {
     // https://developer.android.com/reference/android/hardware/Camera.html#setDisplayOrientation(int)
     camera.setDisplayOrientation(0);
 
+    final Camera.Parameters parameters = camera.getParameters();
+    setPreviewSize(parameters, (Double) settings.get("width"), (Double) settings.get("height"));
+
     final Camera.PreviewCallback callback = repeatingCaptureDelegate.getPreviewCallback();
     if (callback != null) {
       camera.setPreviewCallback(callback);
@@ -149,6 +152,12 @@ public class CameraController extends BaseCameraController {
       repeatingCaptureDelegate = null;
     } else {
       result.success(null);
+    }
+  }
+
+  private void setPreviewSize(final Camera.Parameters parameters, Double width, Double height) {
+    if (width != null && height != null) {
+      parameters.setPreviewSize(width.intValue(), height.intValue());
     }
   }
 }

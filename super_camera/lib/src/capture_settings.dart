@@ -19,10 +19,12 @@ class RepeatingCaptureSettings {
   const RepeatingCaptureSettings({
     @required this.delegateSettings,
     this.shouldMirror = false,
+    this.resolution,
   })  : assert(delegateSettings != null),
         assert(shouldMirror != null);
 
   final CaptureDelegateSettings delegateSettings;
+  final Size resolution;
 
   /// Indicates whether the video should be mirrored about its vertical axis for iOS.
   ///
@@ -42,6 +44,8 @@ class RepeatingCaptureSettings {
       'iOSDelegateName': delegateSettings.iOSDelegateName,
       'additionalSettings': delegateSettings.additionalSettings,
       'shouldMirror': shouldMirror,
+      'width': resolution?.width,
+      'height': resolution?.height,
     };
   }
 }

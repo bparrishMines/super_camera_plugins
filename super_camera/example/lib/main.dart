@@ -42,6 +42,21 @@ class _MyAppState extends State<MyApp> {
       (CameraDevice device) => device.lensDirection == _lensDirection,
     );
 
+    final List<Size> sortedSize = List.from(device.repeatingCaptureSizes);
+    sortedSize.sort((Size one, Size two) {
+      final double areaOne = one.width * one.height;
+      final double areaTwo = two.width * two.height;
+
+      if (areaOne == areaTwo) {
+        return 0;
+      }
+
+      return areaOne > areaTwo ? 1 : -1;
+    });
+
+    final int middleIndex = (sortedSize.length / 2).truncate();
+    final Size resolution = sortedSize[middleIndex];
+
     _controller = CameraController(device);
 
     final bool shouldMirror = device.lensDirection == LensDirection.front;
@@ -53,6 +68,7 @@ class _MyAppState extends State<MyApp> {
         _controller.putRepeatingCaptureRequest(
           RepeatingCaptureSettings(
             shouldMirror: shouldMirror,
+            resolution: resolution,
             delegateSettings: TextureSettings(
               onTextureReady: (Texture texture) {
                 print("Got texture!");
@@ -67,6 +83,7 @@ class _MyAppState extends State<MyApp> {
                   _cameraWidget = _buildCameraWidget(
                     orientation,
                     texture,
+                    resolution.width / resolution.height,
                   );
                 });
                 completer.complete();
@@ -118,12 +135,12 @@ class _MyAppState extends State<MyApp> {
     _isToggling = false;
   }
 
-  Widget _buildCameraWidget(int degrees, Texture texture) {
+  Widget _buildCameraWidget(int degrees, Texture texture, double aspectRatio) {
     return Container(
       constraints: BoxConstraints.expand(),
       alignment: Alignment.center,
       child: AspectRatio(
-        aspectRatio: 1920.0 / 1080.0,
+        aspectRatio: aspectRatio,
         child: Transform.rotate(
           angle: degrees * pi / 180,
           child: texture,
