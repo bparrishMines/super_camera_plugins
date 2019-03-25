@@ -6,7 +6,7 @@ class CameraDevice {
   const CameraDevice._({
     @required this.cameraId,
     @required this.lensDirection,
-    this.orientation,
+    @required this.orientation,
   });
 
   factory CameraDevice._fromMap(Map<dynamic, dynamic> data) {
@@ -19,7 +19,7 @@ class CameraDevice {
     return CameraDevice._(
       cameraId: data['cameraId'],
       lensDirection: lensDirection,
-      orientation: data['orientation']
+      orientation: data['orientation'],
     );
   }
 
@@ -36,13 +36,14 @@ class CameraDevice {
   final int orientation;
 
   @override
-  int get hashCode => cameraId.hashCode ^ lensDirection.hashCode;
+  int get hashCode =>
+      cameraId.hashCode ^ lensDirection.hashCode ^ orientation.hashCode;
 
   @override
   bool operator ==(other) {
-    return cameraId == other.cameraId && lensDirection == other.lensDirection;
+    return this.hashCode == other.hashCode;
   }
 
   @override
-  String toString() => '$runtimeType($cameraId, $lensDirection)';
+  String toString() => '$runtimeType($cameraId, $lensDirection, $orientation)';
 }
