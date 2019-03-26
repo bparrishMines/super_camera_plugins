@@ -10,7 +10,7 @@ class SingleCaptureSettings {
     return <String, dynamic>{
       'androidDelegateName': delegateSettings.androidDelegateName,
       'iOSDelegateName': delegateSettings.iOSDelegateName,
-      'additionalSettings': delegateSettings.additionalSettings,
+      'delegateSettings': delegateSettings.settings,
     };
   }
 }
@@ -42,7 +42,7 @@ class RepeatingCaptureSettings {
     return <String, dynamic>{
       'androidDelegateName': delegateSettings.androidDelegateName,
       'iOSDelegateName': delegateSettings.iOSDelegateName,
-      'additionalSettings': delegateSettings.additionalSettings,
+      'delegateSettings': delegateSettings.settings,
       'shouldMirror': shouldMirror,
       'width': resolution?.width,
       'height': resolution?.height,
@@ -56,12 +56,12 @@ abstract class CaptureDelegateSettings {
     @required this.iOSDelegateName,
     @required this.onSuccess,
     this.onFailure,
-    this.additionalSettings,
+    this.settings,
   }) : assert(androidDelegateName != null || iOSDelegateName != null);
 
   final Function(dynamic result) onSuccess;
   final Function(CameraException exception) onFailure;
   final String androidDelegateName;
   final String iOSDelegateName;
-  final Map<String, dynamic> additionalSettings;
+  final Map<String, dynamic> settings;
 }

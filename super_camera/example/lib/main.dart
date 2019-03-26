@@ -15,14 +15,14 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   CameraController _controller;
-  LensDirection _lensDirection = LensDirection.front;
+  LensDirection _lensDirection = LensDirection.back;
   Widget _cameraWidget;
   bool _isToggling = false;
 
   @override
   void initState() {
     super.initState();
-    _openCamera();
+    _toggleCamera();
   }
 
   Future<void> _openCamera() async {
@@ -129,8 +129,7 @@ class _MyAppState extends State<MyApp> {
           : LensDirection.back;
     });
 
-    await _controller.stopRepeatingCaptureRequest();
-    await _controller.close();
+    await Camera.releaseAllResources();
     await _openCamera();
     _isToggling = false;
   }

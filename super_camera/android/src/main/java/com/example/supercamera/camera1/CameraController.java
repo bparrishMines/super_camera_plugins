@@ -2,28 +2,23 @@ package com.example.supercamera.camera1;
 
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-
 import com.example.supercamera.base.BaseCameraController;
 import com.example.supercamera.camera1.repeating_capture_delegates.RepeatingCaptureDelegate;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.view.TextureRegistry;
 
 public class CameraController extends BaseCameraController {
-  private Camera camera;
-  private RepeatingCaptureDelegate repeatingCaptureDelegate;
-
-  public CameraController(final String cameraId, final TextureRegistry textureRegistry) {
-    super(cameraId, textureRegistry);
-  }
+  private static List<Map<String, Object>> availableCameraData;
 
   public static List<Map<String, Object>> availableCameras() {
+    if (availableCameraData != null) return availableCameraData;
+
     List<Map<String, Object>> allCameraData = new ArrayList<>();
 
     for (int i = 0, count = Camera.getNumberOfCameras(); i < count; i++) {
@@ -65,7 +60,38 @@ public class CameraController extends BaseCameraController {
       allCameraData.add(cameraData);
     }
 
+    availableCameraData = allCameraData;
     return allCameraData;
+  }
+
+  private Camera camera;
+  private RepeatingCaptureDelegate repeatingCaptureDelegate;
+
+  public CameraController(final String cameraId, final TextureRegistry textureRegistry) {
+    super(cameraId, textureRegistry);
+  }
+
+  @Override
+  public void onMethodCall(MethodCall call, MethodChannel.Result result) {
+    switch(call.method) {
+      case "CameraController#open":
+        open(result);
+        break;
+      case "CameraController#close":
+        close();
+        result.success(null);
+        break;
+      case "CameraController#putRepeatingCaptureRequest":
+        Map<String, Object> settings = (Map<String, Object>) call.arguments;
+        putRepeatingCaptureRequest(settings, result);
+        break;
+      case "CameraController#stopRepeatingCaptureRequest":
+        stopRepeatingCaptureRequest();
+        result.success(null);
+        break;
+      default:
+        result.notImplemented();
+    }
   }
 
   @Override
@@ -80,7 +106,8 @@ public class CameraController extends BaseCameraController {
   }
 
   @Override
-  public void putRepeatingCaptureRequest(Map<String, Object> settings, MethodChannel.Result result) {
+  public void putRepeatingCaptureRequest(
+      Map<String, Object> settings, MethodChannel.Result result) {
     if (camera == null) {
       result.error("CameraNotOpenException", "Camera is not open.", null);
       return;
@@ -100,17 +127,23 @@ public class CameraController extends BaseCameraController {
       return;
     }
 
-    repeatingCaptureDelegate.initialize(textureRegistry);
+    Map<String, Object> delegateSettings = (Map<String, Object>)settings.get("delegateSettings");
+    repeatingCaptureDelegate.initialize(delegateSettings, textureRegistry);
 
     final SurfaceTexture surfaceTexture = repeatingCaptureDelegate.getSurfaceTexture();
     if (surfaceTexture != null) {
       try {
         camera.setPreviewTexture(surfaceTexture);
       } catch (IOException exception) {
-        repeatingCaptureDelegate = null;
+        closeRepeatingCaptureDelegate();
         result.error(exception.getClass().getSimpleName(), exception.getMessage(), null);
         return;
       }
+    }
+
+    final Camera.PreviewCallback callback = repeatingCaptureDelegate.getPreviewCallback();
+    if (callback != null) {
+      camera.setPreviewCallback(callback);
     }
 
     // Before API level 24, the default value for orientation is 0. However, the default could be
@@ -120,44 +153,42 @@ public class CameraController extends BaseCameraController {
 
     final Camera.Parameters parameters = camera.getParameters();
     setPreviewSize(parameters, (Double) settings.get("width"), (Double) settings.get("height"));
-
-    final Camera.PreviewCallback callback = repeatingCaptureDelegate.getPreviewCallback();
-    if (callback != null) {
-      camera.setPreviewCallback(callback);
-    }
+    camera.setParameters(parameters);
 
     camera.startPreview();
     repeatingCaptureDelegate.onStart(result);
   }
 
   @Override
-  public void stopRepeatingCaptureRequest(MethodChannel.Result result) {
+  public void stopRepeatingCaptureRequest() {
+    if (camera == null) return;
+
     camera.stopPreview();
-    closeRepeatingCaptureDelegate(result);
+    closeRepeatingCaptureDelegate();
   }
 
   @Override
-  public void close(MethodChannel.Result result) {
+  public void close() {
+    if (camera == null) return;
+
     camera.stopPreview();
     camera.release();
     camera = null;
-
-    closeRepeatingCaptureDelegate(result);
+    closeRepeatingCaptureDelegate();
   }
 
-  // Helper Methods
-  private void closeRepeatingCaptureDelegate(MethodChannel.Result result) {
-    if (repeatingCaptureDelegate != null) {
-      repeatingCaptureDelegate.close(result);
-      repeatingCaptureDelegate = null;
-    } else {
-      result.success(null);
-    }
-  }
-
+  // Settings Methods
   private void setPreviewSize(final Camera.Parameters parameters, Double width, Double height) {
     if (width != null && height != null) {
       parameters.setPreviewSize(width.intValue(), height.intValue());
     }
+  }
+
+  // Helper Methods
+  private void closeRepeatingCaptureDelegate() {
+    if (repeatingCaptureDelegate == null) return;
+
+    repeatingCaptureDelegate.close();
+    repeatingCaptureDelegate = null;
   }
 }

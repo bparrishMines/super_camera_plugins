@@ -2,7 +2,7 @@ package com.example.supercamera.camera1.repeating_capture_delegates;
 
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-
+import java.util.Map;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.view.TextureRegistry;
 
@@ -10,7 +10,7 @@ public class TextureDelegate implements RepeatingCaptureDelegate {
   private TextureRegistry.SurfaceTextureEntry entry;
 
   @Override
-  public void initialize(TextureRegistry textureRegistry) {
+  public void initialize(Map<String,Object> settings, TextureRegistry textureRegistry) {
     this.entry = textureRegistry.createSurfaceTexture();
   }
 
@@ -30,8 +30,7 @@ public class TextureDelegate implements RepeatingCaptureDelegate {
   }
 
   @Override
-  public void close(MethodChannel.Result result) {
+  public void close() {
     entry.release();
-    result.success(null);
   }
 }

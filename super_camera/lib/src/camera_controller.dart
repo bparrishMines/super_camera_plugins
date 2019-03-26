@@ -1,8 +1,29 @@
 part of super_camera;
 
 class CameraController {
-  CameraController(this.device) : assert(device != null);
+  CameraController._(this.device, this.channel);
 
+  factory CameraController(CameraDevice device) {
+    assert(device != null);
+
+    final String channelName = '${Camera.channel.name}/${_nextHandle++}';
+    final MethodChannel channel = MethodChannel(channelName);
+
+    Camera.channel.invokeMethod(
+      '$Camera#createCameraController',
+      <String, dynamic>{
+        'channelName': channelName,
+        'cameraId': device.cameraId,
+      },
+    );
+
+    return CameraController._(device, channel);
+  }
+
+  static int _nextHandle = 0;
+
+  @visibleForTesting
+  final MethodChannel channel;
   final CameraDevice device;
 
   void open({
@@ -10,10 +31,7 @@ class CameraController {
     Function(CameraException exception) onFailure,
   }) async {
     try {
-      await Camera.channel.invokeMethod(
-        'CameraController#open',
-        <String, dynamic>{'cameraId': device.cameraId},
-      );
+      await channel.invokeMethod('$CameraController#open');
 
       if (onSuccess != null) {
         onSuccess();
@@ -29,22 +47,18 @@ class CameraController {
   }
 
   Future<void> close() async {
-    return Camera.channel.invokeMethod(
-      'CameraController#close',
-      <String, dynamic>{'cameraId': device.cameraId},
-    );
+    return channel.invokeMethod('$CameraController#close');
   }
 
-  void putSingleCaptureRequest(SingleCaptureSettings settings) async {}
+  void putSingleCaptureRequest(SingleCaptureSettings settings) async {
+    throw UnimplementedError();
+  }
 
   void putRepeatingCaptureRequest(RepeatingCaptureSettings settings) async {
     try {
-      final dynamic result = await Camera.channel.invokeMethod(
-        'CameraController#putRepeatingCaptureRequest',
-        <String, dynamic>{
-          'cameraId': device.cameraId,
-          'settings': settings._serialize(),
-        },
+      final dynamic result = await channel.invokeMethod(
+        '$CameraController#putRepeatingCaptureRequest',
+        settings._serialize(),
       );
 
       if (settings.delegateSettings.onSuccess != null) {
@@ -61,9 +75,8 @@ class CameraController {
   }
 
   Future<void> stopRepeatingCaptureRequest() async {
-    return await Camera.channel.invokeMethod(
-      'CameraController#stopRepeatingCaptureRequest',
-      <String, dynamic>{'cameraId': device.cameraId},
+    return await channel.invokeMethod(
+      '$CameraController#stopRepeatingCaptureRequest',
     );
   }
 }

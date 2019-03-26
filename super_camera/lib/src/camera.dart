@@ -10,12 +10,16 @@ class Camera {
 
   static Future<List<CameraDevice>> availableCameras() async {
     final List<dynamic> result = await channel.invokeMethod(
-      'Camera#availableCameras',
+      '$Camera#availableCameras',
     );
 
-    return result.map<CameraDevice>((dynamic data) {
+    return List.unmodifiable(result.map<CameraDevice>((dynamic data) {
       return CameraDevice._fromMap(data);
-    }).toList();
+    }));
+  }
+
+  static Future<void> releaseAllResources() async {
+    return await channel.invokeMethod('$Camera#releaseAllResources');
   }
 }
 

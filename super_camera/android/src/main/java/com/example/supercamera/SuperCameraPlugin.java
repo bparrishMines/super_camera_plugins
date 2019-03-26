@@ -1,11 +1,10 @@
 package com.example.supercamera;
 
+import android.util.Pair;
 import com.example.supercamera.base.BaseCameraController;
 import com.example.supercamera.camera1.CameraController;
-
-import java.util.HashMap;
-import java.util.Map;
-
+import java.util.ArrayList;
+import java.util.List;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -14,8 +13,10 @@ import io.flutter.plugin.common.PluginRegistry.Registrar;
 
 /** SuperCameraPlugin */
 public class SuperCameraPlugin implements MethodCallHandler {
+  private static final String PLUGIN_CHANNEL_NAME = "bmparr2450.plugins/super_camera";
+
   private final Registrar registrar;
-  private final Map<String, BaseCameraController> controllers = new HashMap<>();
+  private final List<Pair<MethodChannel, BaseCameraController>> controllers = new ArrayList<>();
 
   private SuperCameraPlugin(Registrar registrar) {
     this.registrar = registrar;
@@ -23,7 +24,7 @@ public class SuperCameraPlugin implements MethodCallHandler {
 
   /** Plugin registration. */
   public static void registerWith(Registrar registrar) {
-    final MethodChannel channel = new MethodChannel(registrar.messenger(), "bmparr2450.plugins/super_camera");
+    final MethodChannel channel = new MethodChannel(registrar.messenger(), PLUGIN_CHANNEL_NAME);
     channel.setMethodCallHandler(new SuperCameraPlugin(registrar));
   }
 
@@ -33,76 +34,34 @@ public class SuperCameraPlugin implements MethodCallHandler {
       case "Camera#availableCameras":
         result.success(CameraController.availableCameras());
         break;
-      case "CameraController#open":
-        openController(call, result);
+      case "Camera#createCameraController":
+        createCameraController(call);
+        result.success(null);
         break;
-      case "CameraController#close":
-        closeController(call, result);
-        break;
-      case "CameraController#putRepeatingCaptureRequest":
-        putRepeatingCaptureRequest(call, result);
-        break;
-      case "CameraController#stopRepeatingCaptureRequest":
-        stopRepeatingCaptureRequest(call, result);
+      case "Camera#releaseAllResources":
+        releaseAllResources();
+        result.success(null);
         break;
       default:
         result.notImplemented();
     }
   }
 
-  private void openController(MethodCall call, Result result) {
+  private void createCameraController(MethodCall call) {
+    final String channelName = call.argument("channelName");
+    final MethodChannel channel = new MethodChannel(registrar.messenger(), channelName);
+
     final String cameraId = call.argument("cameraId");
-
-    if (controllers.containsKey(cameraId)) {
-      result.error(
-          "CameraAlreadyOpenException","CameraController has already been opened.", null);
-      return;
-    }
-
     final BaseCameraController controller = new CameraController(cameraId, registrar.textures());
-    controllers.put(cameraId, controller);
+    channel.setMethodCallHandler(controller);
 
-    controller.open(result);
+    controllers.add(new Pair<>(channel, controller));
   }
 
-  private void closeController(MethodCall call, Result result) {
-    final String cameraId = call.argument("cameraId");
-
-    final BaseCameraController controller = controllers.get(cameraId);
-
-    if (controller == null) {
-      result.success(null);
-      return;
+  private void releaseAllResources() {
+    for (Pair<MethodChannel, BaseCameraController> controllerPair : controllers) {
+      controllerPair.second.close();
+      controllerPair.first.setMethodCallHandler(null);
     }
-
-    controllers.remove(cameraId);
-    controller.close(result);
-  }
-
-  private void putRepeatingCaptureRequest(MethodCall call, Result result) {
-    final String cameraId = call.argument("cameraId");
-
-    final BaseCameraController controller = controllers.get(cameraId);
-
-    if (controller == null) {
-      result.error("CameraNotOpenException", "Camera is not open.", null);
-      return;
-    }
-
-    Map<String, Object> settings = call.argument("settings");
-    controller.putRepeatingCaptureRequest(settings, result);
-  }
-
-  private void stopRepeatingCaptureRequest(MethodCall call, Result result) {
-    final String cameraId = call.argument("cameraId");
-
-    final BaseCameraController controller = controllers.get(cameraId);
-
-    if (controller == null) {
-      result.success(null);
-      return;
-    }
-
-    controller.stopRepeatingCaptureRequest(result);
   }
 }
