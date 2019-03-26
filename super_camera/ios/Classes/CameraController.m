@@ -127,7 +127,16 @@
                                                output:_captureVideoOutput];
   [_captureSession addConnection:_captureVideoConnection];
 
-  [self setShouldMirror:settings[@"shouldMirror"]];
+  @try {
+    [self setShouldMirror:settings[@"shouldMirror"]];
+    [self setResolution:settings[@"width"] height:settings[@"height"]];
+  } @catch (NSException *exception) {
+    [self removeCaptureVideoInputsAndOutputs];
+    _captureSession = nil;
+    _repeatingCaptureDelegate = nil;
+    result([FlutterError errorWithCode:exception.name message:exception.reason details:nil]);
+    return;
+  }
 
   [_captureSession startRunning];
 
@@ -181,5 +190,36 @@
 
 - (void)setShouldMirror:(NSNumber *)shouldMirror {
   _captureVideoConnection.videoMirrored = shouldMirror.boolValue;
+}
+
+- (void)setResolution:(NSNumber *)width height:(NSNumber *)height {
+  if ([width isEqual:[NSNull null]] || [height isEqual:[NSNull null]]) {
+    return;
+  }
+
+  BOOL shouldThrowException = NO;
+
+  if (width.intValue == 3840 && height.intValue == 2160) {
+    if (@available(iOS 9.0, *)) {
+      _captureSession.sessionPreset = AVCaptureSessionPreset3840x2160;
+    } else {
+      shouldThrowException = YES;
+    }
+  } else if (width.intValue == 1920 && height.intValue == 1080) {
+    _captureSession.sessionPreset = AVCaptureSessionPreset1920x1080;
+  } else if (width.intValue == 1280 && height.intValue == 720) {
+    _captureSession.sessionPreset = AVCaptureSessionPreset1280x720;
+  } else if (width.intValue == 640 && height.intValue == 480) {
+    _captureSession.sessionPreset = AVCaptureSessionPreset640x480;
+  } else if (width.intValue == 352 && height.intValue == 288) {
+    _captureSession.sessionPreset = AVCaptureSessionPreset352x288;
+  } else {
+    shouldThrowException = YES;
+  }
+
+  if (shouldThrowException) {
+    NSString *reason = [NSString stringWithFormat:@"Invalid capture size of Size(%@, %@)", width, height];
+    @throw [NSException exceptionWithName:@"InvalidArgumentException" reason:reason userInfo:nil];
+  }
 }
 @end
