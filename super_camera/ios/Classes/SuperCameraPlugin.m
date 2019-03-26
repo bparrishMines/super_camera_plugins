@@ -1,104 +1,72 @@
 #import "SuperCameraPlugin.h"
 
+@interface Pair: NSObject
+@property FlutterMethodChannel *channel;
+@property CameraController *controller;
+@end
+
 @interface SuperCameraPlugin ()
-@property NSMutableDictionary *controllers;
-@property id<FlutterTextureRegistry> textureRegistry;
+@property NSMutableArray<Pair *> *controllers;
+@property id<FlutterPluginRegistrar> registrar;
 @end
 
 @implementation SuperCameraPlugin
-- (instancetype)initWithTextureRegistry:(NSObject<FlutterTextureRegistry> *)textureRegistry {
+static NSString *const kPluginChannelName = @"bmparr2450.plugins/super_camera";
+
+- (instancetype)initWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
   self = [super init];
   if (self) {
-    _controllers = [NSMutableDictionary new];
-    _textureRegistry = textureRegistry;
+    _controllers = [NSMutableArray new];
+    _registrar = registrar;
   }
   return self;
 }
 
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
   FlutterMethodChannel* channel = [FlutterMethodChannel
-      methodChannelWithName:@"bmparr2450.plugins/super_camera"
+      methodChannelWithName:kPluginChannelName
             binaryMessenger:[registrar messenger]];
   
-  SuperCameraPlugin* instance = [[SuperCameraPlugin alloc] initWithTextureRegistry:[registrar textures]];
+  SuperCameraPlugin* instance = [[SuperCameraPlugin alloc] initWithRegistrar:registrar];
   [registrar addMethodCallDelegate:instance channel:channel];
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
   if ([@"Camera#availableCameras" isEqualToString:call.method]) {
     result([CameraController availableCameras]);
-  } else if ([@"CameraController#open" isEqualToString:call.method]) {
-    [self openController:call result:result];
-  } else if ([@"CameraController#close" isEqualToString:call.method]) {
-    [self closeController:call result:result];
-  } else if ([@"CameraController#putRepeatingCaptureRequest" isEqualToString:call.method]) {
-    [self putRepeatingCaptureRequest:call result:result];
-  } else if ([@"CameraController#stopRepeatingCaptureRequest" isEqualToString:call.method]) {
-    [self stopRepeatingCaptureRequest:call result:result];
+  } else if ([@"Camera#createCameraController" isEqualToString:call.method]) {
+    [self createCameraController:call];
+    result(nil);
+  } else if ([@"Camera#releaseAllResources" isEqualToString:call.method]) {
+    [self releaseAllResources];
+    result(nil);
   } else {
     result(FlutterMethodNotImplemented);
   }
 }
 
-- (void)openController:(FlutterMethodCall*)call result:(FlutterResult)result {
-  NSDictionary *arguments = call.arguments;
-  NSString *cameraId = arguments[@"cameraId"];
+- (void)createCameraController:(FlutterMethodCall*)call {
+  NSString *channelName = call.arguments[@"channelName"];
+  FlutterMethodChannel* channel = [FlutterMethodChannel
+                                methodChannelWithName:channelName
+                                      binaryMessenger:[_registrar messenger]];
 
-  if (_controllers[cameraId]) {
-    result([FlutterError errorWithCode:@"CameraAlreadyOpenException"
-                               message:@"CameraController has already been opened."
-                               details:nil]);
-    return;
-  }
+  NSString *cameraId = call.arguments[@"cameraId"];
+  CameraController *controller = [[CameraController alloc] initWithCameraId:cameraId textureRegistry:[_registrar textures]];
 
-  CameraController *controller = [[CameraController alloc] initWithCameraId:cameraId
-                                                            textureRegistry:_textureRegistry];
-  _controllers[cameraId] = controller;
-  [controller open:result];
+  [_registrar addMethodCallDelegate:controller channel:channel];
+
+  Pair *pair = [Pair new];
+  pair.channel = channel;
+  pair.controller = controller;
+  [_controllers addObject:pair];
 }
 
-- (void)closeController:(FlutterMethodCall*)call result:(FlutterResult)result {
-  NSDictionary *arguments = call.arguments;
-  NSString *cameraId = arguments[@"cameraId"];
-
-  CameraController *controller = _controllers[cameraId];
-
-  if (!controller) {
-    result(nil);
-    return;
+- (void)releaseAllResources {
+  for (Pair *controllerPair in _controllers) {
+    [controllerPair.controller close];
   }
 
-  [_controllers removeObjectForKey:cameraId];
-  [controller close:result];
-}
-
-- (void)putRepeatingCaptureRequest:(FlutterMethodCall*)call result:(FlutterResult)result {
-  NSDictionary *arguments = call.arguments;
-  NSString *cameraId = arguments[@"cameraId"];
-
-  CameraController *controller = _controllers[cameraId];
-
-  if (!controller) {
-    result([FlutterError errorWithCode:@"CameraNotOpenException"
-                               message:@"Camera is not open."
-                               details:nil]);
-    return;
-  }
-
-  [controller putRepeatingCaptureRequest:arguments[@"settings"] result:result];
-}
-
-- (void)stopRepeatingCaptureRequest:(FlutterMethodCall*)call result:(FlutterResult)result {
-  NSDictionary *arguments = call.arguments;
-  NSString *cameraId = arguments[@"cameraId"];
-
-  CameraController *controller = _controllers[cameraId];
-
-  if (!controller) {
-    result(nil);
-    return;
-  }
-
-  [controller stopRepeatingCaptureRequest:result];
+  [_controllers removeAllObjects];
 }
 @end

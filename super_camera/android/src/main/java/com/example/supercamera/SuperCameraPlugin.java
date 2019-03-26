@@ -63,5 +63,7 @@ public class SuperCameraPlugin implements MethodCallHandler {
       controllerPair.second.close();
       controllerPair.first.setMethodCallHandler(null);
     }
+
+    controllers.clear();
   }
 }
