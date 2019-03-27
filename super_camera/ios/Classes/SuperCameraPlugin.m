@@ -1,8 +1,11 @@
 #import "SuperCameraPlugin.h"
 
-@interface Pair: NSObject
-@property FlutterMethodChannel *channel;
-@property CameraController *controller;
+@interface Pair : NSObject
+@property(readwrite) FlutterMethodChannel *channel;
+@property(readwrite) CameraController *controller;
+@end
+
+@implementation Pair
 @end
 
 @interface SuperCameraPlugin ()

@@ -1,5 +1,4 @@
 #import "SuperCameraPlugin.h"
-#import <libkern/OSAtomic.h>
 
 @interface CameraController ()
 @property id<FlutterTextureRegistry> textureRegistry;
@@ -12,30 +11,21 @@
 @end
 
 @implementation CameraController
-- (instancetype)initWithCameraId:(NSString *)cameraId
-                 textureRegistry:(NSObject<FlutterTextureRegistry> *)textureRegistry {
-  self = [super init];
-  if (self) {
-    _cameraId = cameraId;
-    _textureRegistry = textureRegistry;
-  }
-  return self;
-}
-
 + (NSArray<NSDictionary *> *)availableCameras {
   NSArray<AVCaptureDevice *> *devices;
 
   if (@available(iOS 10.0, *)) {
     AVCaptureDeviceDiscoverySession *discoverySession = [AVCaptureDeviceDiscoverySession
-          discoverySessionWithDeviceTypes:@[ AVCaptureDeviceTypeBuiltInWideAngleCamera ]
-                                mediaType:AVMediaTypeVideo
-                                 position:AVCaptureDevicePositionUnspecified];
+                          discoverySessionWithDeviceTypes:@[AVCaptureDeviceTypeBuiltInWideAngleCamera]
+                                                mediaType:AVMediaTypeVideo
+                                                 position:AVCaptureDevicePositionUnspecified];
     devices = discoverySession.devices;
   } else {
     devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
   }
 
-  NSMutableArray<NSDictionary<NSString *, NSObject *> *> *allCameraData = [[NSMutableArray alloc] initWithCapacity:devices.count];
+  NSMutableArray<NSDictionary<NSString *, NSObject *> *> *allCameraData =
+      [[NSMutableArray alloc] initWithCapacity:devices.count];
 
   for (AVCaptureDevice *device in devices) {
     NSString *lensFacing;
@@ -81,6 +71,37 @@
   return allCameraData;
 }
 
+- (instancetype)initWithCameraId:(NSString *)cameraId
+                 textureRegistry:(NSObject<FlutterTextureRegistry> *)textureRegistry {
+  self = [super init];
+  if (self) {
+    _cameraId = cameraId;
+    _textureRegistry = textureRegistry;
+  }
+  return self;
+}
+
+- (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
+  if ([@"CameraController#open" isEqualToString:call.method]) {
+    [self open:result];
+    result(nil);
+  } else if ([@"CameraController#close" isEqualToString:call.method]) {
+    [self close];
+    result(nil);
+  } else if ([@"CameraController#putRepeatingCaptureRequest" isEqualToString:call.method]) {
+    [self putRepeatingCaptureRequest:call.arguments result:result];
+    result(nil);
+  } else if ([@"CameraController#stopRepeatingCaptureRequest" isEqualToString:call.method]) {
+    [self stopRepeatingCaptureRequest];
+  } else {
+    result(FlutterMethodNotImplemented);
+  }
+}
+
++ (void)registerWithRegistrar:(nonnull NSObject<FlutterPluginRegistrar> *)registrar {
+  // Do nothing
+}
+
 - (void) open:(FlutterResult _Nonnull)result {
   _captureSession = [AVCaptureSession new];
   _captureDevice = [AVCaptureDevice deviceWithUniqueID:_cameraId];
@@ -109,7 +130,7 @@
 
   _repeatingCaptureDelegate = [NSClassFromString(iOSDelegateName) new];
 
-  [_repeatingCaptureDelegate initialize:_textureRegistry];
+  [_repeatingCaptureDelegate initialize:settings[@"delegateSettings"] textureRegistry:_textureRegistry];
 
   _captureVideoInput = [AVCaptureDeviceInput deviceInputWithDevice:_captureDevice
                                                              error:nil];
@@ -143,19 +164,20 @@
   [_repeatingCaptureDelegate onStart:result];
 }
 
-- (void)stopRepeatingCaptureRequest:(FlutterResult)result {
+- (void)stopRepeatingCaptureRequest {
   if (![_captureSession isRunning] || ![[_captureSession outputs] containsObject:_captureVideoOutput]) {
-    result(nil);
     return;
   }
 
   [_captureSession stopRunning];
 
   [self removeCaptureVideoInputsAndOutputs];
-  [self closeRepeatingCaptureDelegate:result];
+  [self closeRepeatingCaptureDelegate];
 }
 
-- (void) close:(FlutterResult)result {
+- (void) close {
+  if (!_captureSession) return;
+
   if ([_captureSession isRunning]) {
     [_captureSession stopRunning];
     [self removeCaptureVideoInputsAndOutputs];
@@ -163,21 +185,20 @@
 
   _captureSession = nil;
   _captureDevice = nil;
-  [self closeRepeatingCaptureDelegate:result];
+  [self closeRepeatingCaptureDelegate];
 }
 
 // Helper Methods
-- (void)closeRepeatingCaptureDelegate:(FlutterResult)result {
-  if (!_repeatingCaptureDelegate) {
-    result(nil);
-    return;
-  }
+- (void)closeRepeatingCaptureDelegate {
+  if (!_repeatingCaptureDelegate) return;
 
-  [_repeatingCaptureDelegate close:result];
+  [_repeatingCaptureDelegate close];
   _repeatingCaptureDelegate = nil;
 }
 
 - (void)removeCaptureVideoInputsAndOutputs {
+  if (!_captureSession) return;
+
   [_captureSession removeConnection:_captureVideoConnection];
   _captureVideoConnection = nil;
 

@@ -4,7 +4,7 @@
 @interface SuperCameraPlugin : NSObject<FlutterPlugin>
 @end
 
-@interface CameraController : NSObject<FlutterPlugin>
+@interface CameraController : NSObject<FlutterPlugin>
 @property NSString *_Nonnull cameraId;
 
 + (NSArray<NSDictionary *> *_Nonnull)availableCameras;

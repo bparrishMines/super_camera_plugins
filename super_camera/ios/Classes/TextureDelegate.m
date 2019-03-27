@@ -8,7 +8,8 @@
 @end
 
 @implementation TextureDelegate
-- (void)initialize:(NSObject<FlutterTextureRegistry> * _Nonnull) textureRegistry {
+- (void)initialize:(NSDictionary * _Nullable)settings
+   textureRegistry:(NSObject<FlutterTextureRegistry> * _Nonnull) textureRegistry {
   _textureRegistry = textureRegistry;
   _textureId = [_textureRegistry registerTexture:self];
 }
@@ -17,12 +18,11 @@
   result(@(_textureId));
 }
 
-- (void)close:(FlutterResult)result {
+- (void)close {
   [_textureRegistry unregisterTexture:_textureId];
   if (_latestPixelBuffer) {
     CFRelease(_latestPixelBuffer);
   }
-  result(nil);
 }
 
 - (void)captureOutput:(AVCaptureOutput *)output
