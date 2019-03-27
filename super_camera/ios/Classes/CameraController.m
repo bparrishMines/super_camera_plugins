@@ -152,39 +152,36 @@
     [self setShouldMirror:settings[@"shouldMirror"]];
     [self setResolution:settings[@"width"] height:settings[@"height"]];
   } @catch (NSException *exception) {
-    [self removeCaptureVideoInputsAndOutputs];
-    _repeatingCaptureDelegate = nil;
+    [self stopRepeatingCaptureRequest];
     result([FlutterError errorWithCode:exception.name message:exception.reason details:nil]);
     return;
   }
 
   [_captureSession startRunning];
-
   [_repeatingCaptureDelegate onStart:result];
 }
 
 - (void)stopRepeatingCaptureRequest {
-  if (![_captureSession isRunning] || ![[_captureSession outputs] containsObject:_captureVideoOutput]) {
-    return;
+  if (!_captureSession) return;
+
+  if ([_captureSession isRunning]) {
+    [_captureSession stopRunning];
   }
 
-  [_captureSession stopRunning];
+  if ([[_captureSession outputs] containsObject:_captureVideoOutput]) {
+    [self removeCaptureVideoInputsAndOutputs];
+  }
 
-  [self removeCaptureVideoInputsAndOutputs];
   [self closeRepeatingCaptureDelegate];
 }
 
 - (void) close {
   if (!_captureSession) return;
 
-  if ([_captureSession isRunning]) {
-    [_captureSession stopRunning];
-    [self removeCaptureVideoInputsAndOutputs];
-  }
+  [self stopRepeatingCaptureRequest];
 
   _captureSession = nil;
   _captureDevice = nil;
-  [self closeRepeatingCaptureDelegate];
 }
 
 // Helper Methods

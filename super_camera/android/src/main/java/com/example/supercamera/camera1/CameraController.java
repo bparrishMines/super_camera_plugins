@@ -135,7 +135,7 @@ public class CameraController extends BaseCameraController {
       try {
         camera.setPreviewTexture(surfaceTexture);
       } catch (IOException exception) {
-        closeRepeatingCaptureDelegate();
+        stopRepeatingCaptureRequest();
         result.error(exception.getClass().getSimpleName(), exception.getMessage(), null);
         return;
       }
@@ -171,10 +171,10 @@ public class CameraController extends BaseCameraController {
   public void close() {
     if (camera == null) return;
 
-    camera.stopPreview();
+    stopRepeatingCaptureRequest();
+
     camera.release();
     camera = null;
-    closeRepeatingCaptureDelegate();
   }
 
   // Settings Methods
