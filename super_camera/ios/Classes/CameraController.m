@@ -153,7 +153,6 @@
     [self setResolution:settings[@"width"] height:settings[@"height"]];
   } @catch (NSException *exception) {
     [self removeCaptureVideoInputsAndOutputs];
-    _captureSession = nil;
     _repeatingCaptureDelegate = nil;
     result([FlutterError errorWithCode:exception.name message:exception.reason details:nil]);
     return;
