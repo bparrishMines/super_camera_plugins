@@ -51,7 +51,23 @@ class CameraController {
   }
 
   void putSingleCaptureRequest(SingleCaptureSettings settings) async {
-    throw UnimplementedError();
+    try {
+      final dynamic result = await channel.invokeMethod(
+        '$CameraController#putSingleCaptureRequest',
+        settings._serialize(),
+      );
+
+      if (settings.delegateSettings.onSuccess != null) {
+        settings.delegateSettings.onSuccess(result);
+      }
+    } on PlatformException catch (exception) {
+      if (settings.delegateSettings.onFailure != null) {
+        settings.delegateSettings.onFailure(CameraException(
+          code: exception.code,
+          description: exception.message,
+        ));
+      }
+    }
   }
 
   void putRepeatingCaptureRequest(RepeatingCaptureSettings settings) async {

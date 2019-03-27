@@ -3,11 +3,14 @@
 @interface CameraController ()
 @property id<FlutterTextureRegistry> textureRegistry;
 @property id<RepeatingCaptureDelegate> repeatingCaptureDelegate;
-@property AVCaptureSession *captureSession;
-@property AVCaptureDevice *captureDevice;
-@property AVCaptureInput *captureVideoInput;
-@property AVCaptureVideoDataOutput *captureVideoOutput;
-@property AVCaptureConnection *captureVideoConnection;
+@property id<SingleCaptureDelegate> singleCaptureDelegate;
+@property AVCaptureSession *session;
+@property AVCaptureDevice *device;
+@property AVCaptureInput *videoInput;
+@property AVCaptureVideoDataOutput *videoOutput;
+@property AVCaptureConnection *videoConnection;
+@property AVCaptureStillImageOutput *stillImageOutput;
+@property AVCaptureConnection *stillImageConnection;
 @end
 
 @implementation CameraController
@@ -84,15 +87,16 @@
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
   if ([@"CameraController#open" isEqualToString:call.method]) {
     [self open:result];
-    result(nil);
   } else if ([@"CameraController#close" isEqualToString:call.method]) {
     [self close];
     result(nil);
+  } else if ([@"CameraController#putSingleCaptureRequest" isEqualToString:call.method]) {
+    [self putSingleCaptureRequest:call.arguments result:result];
   } else if ([@"CameraController#putRepeatingCaptureRequest" isEqualToString:call.method]) {
     [self putRepeatingCaptureRequest:call.arguments result:result];
-    result(nil);
   } else if ([@"CameraController#stopRepeatingCaptureRequest" isEqualToString:call.method]) {
     [self stopRepeatingCaptureRequest];
+    result(nil);
   } else {
     result(FlutterMethodNotImplemented);
   }
@@ -103,17 +107,52 @@
 }
 
 - (void) open:(FlutterResult _Nonnull)result {
-  _captureSession = [AVCaptureSession new];
-  _captureDevice = [AVCaptureDevice deviceWithUniqueID:_cameraId];
+  _session = [AVCaptureSession new];
+  _device = [AVCaptureDevice deviceWithUniqueID:_cameraId];
   result(nil);
 }
 
 - (void) putSingleCaptureRequest:(NSDictionary *)settings result:(FlutterResult _Nonnull)result {
+  if (!_session) {
+    result([FlutterError errorWithCode:@"CameraNotOpenException"
+                               message:@"Camera is not open."
+                               details:nil]);
+    return;
+  }
 
+  NSString *iOSDelegateName = settings[@"iOSDelegateName"];
+  if ([iOSDelegateName isEqual:[NSNull null]]) {
+    result([FlutterError errorWithCode:@"CameraDelegateNameIsNull"
+                               message:@"Camera delegate name is null."
+                               details:nil]);
+    return;
+  }
+
+  _singleCaptureDelegate = [NSClassFromString(iOSDelegateName) new];
+
+  [_singleCaptureDelegate initialize:settings[@"delegateSettings"]
+                     textureRegistry:_textureRegistry
+                              result:result];
+
+  _stillImageOutput = [AVCaptureStillImageOutput new];
+  [_session addOutputWithNoConnections:_stillImageOutput];
+
+  _stillImageConnection = [AVCaptureConnection
+                           connectionWithInputPorts:_videoInput.ports
+                           output:_stillImageOutput];
+  [_session addConnection:_stillImageConnection];
+
+  [_stillImageOutput captureStillImageAsynchronouslyFromConnection:_stillImageConnection completionHandler:^(CMSampleBufferRef _Nullable imageDataSampleBuffer, NSError *_Nullable error) {
+    [self->_singleCaptureDelegate onImageTaken:imageDataSampleBuffer error:error];
+
+    self->_singleCaptureDelegate = nil;
+    self->_stillImageConnection = nil;
+    [self->_singleCaptureDelegate onRelease];
+  }];
 }
 
 - (void) putRepeatingCaptureRequest:(NSDictionary *)settings result:(FlutterResult _Nonnull)result {
-  if (!_captureSession) {
+  if (!_session) {
     result([FlutterError errorWithCode:@"CameraNotOpenException"
                                message:@"Camera is not open."
                                details:nil]);
@@ -132,21 +171,21 @@
 
   [_repeatingCaptureDelegate initialize:settings[@"delegateSettings"] textureRegistry:_textureRegistry];
 
-  _captureVideoInput = [AVCaptureDeviceInput deviceInputWithDevice:_captureDevice
+  _videoInput = [AVCaptureDeviceInput deviceInputWithDevice:_device
                                                              error:nil];
-  [_captureSession addInputWithNoConnections:_captureVideoInput];
+  [_session addInputWithNoConnections:_videoInput];
 
-  _captureVideoOutput = [AVCaptureVideoDataOutput new];
-  _captureVideoOutput.videoSettings =
+  _videoOutput = [AVCaptureVideoDataOutput new];
+  _videoOutput.videoSettings =
       @{(NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA)};
-  [_captureVideoOutput setAlwaysDiscardsLateVideoFrames:YES];
-  [_captureSession addOutputWithNoConnections:_captureVideoOutput];
-  [_captureVideoOutput setSampleBufferDelegate:_repeatingCaptureDelegate queue:dispatch_get_main_queue()];
+  [_videoOutput setAlwaysDiscardsLateVideoFrames:YES];
+  [_session addOutputWithNoConnections:_videoOutput];
+  [_videoOutput setSampleBufferDelegate:_repeatingCaptureDelegate queue:dispatch_get_main_queue()];
 
-  _captureVideoConnection = [AVCaptureConnection
-                             connectionWithInputPorts:_captureVideoInput.ports
-                                               output:_captureVideoOutput];
-  [_captureSession addConnection:_captureVideoConnection];
+  _videoConnection = [AVCaptureConnection
+                             connectionWithInputPorts:_videoInput.ports
+                                               output:_videoOutput];
+  [_session addConnection:_videoConnection];
 
   @try {
     [self setShouldMirror:settings[@"shouldMirror"]];
@@ -157,18 +196,18 @@
     return;
   }
 
-  [_captureSession startRunning];
+  [_session startRunning];
   [_repeatingCaptureDelegate onStart:result];
 }
 
 - (void)stopRepeatingCaptureRequest {
-  if (!_captureSession) return;
+  if (!_session) return;
 
-  if ([_captureSession isRunning]) {
-    [_captureSession stopRunning];
+  if ([_session isRunning]) {
+    [_session stopRunning];
   }
 
-  if ([[_captureSession outputs] containsObject:_captureVideoOutput]) {
+  if ([[_session outputs] containsObject:_videoOutput]) {
     [self removeCaptureVideoInputsAndOutputs];
   }
 
@@ -176,12 +215,12 @@
 }
 
 - (void) close {
-  if (!_captureSession) return;
+  if (!_session) return;
 
   [self stopRepeatingCaptureRequest];
 
-  _captureSession = nil;
-  _captureDevice = nil;
+  _session = nil;
+  _device = nil;
 }
 
 // Helper Methods
@@ -193,20 +232,20 @@
 }
 
 - (void)removeCaptureVideoInputsAndOutputs {
-  if (!_captureSession) return;
+  if (!_session) return;
 
-  [_captureSession removeConnection:_captureVideoConnection];
-  _captureVideoConnection = nil;
+  [_session removeConnection:_videoConnection];
+  _videoConnection = nil;
 
-  [_captureSession removeInput:_captureVideoInput];
-  _captureVideoInput = nil;
+  [_session removeInput:_videoInput];
+  _videoInput = nil;
 
-  [_captureSession removeOutput:_captureVideoOutput];
-  _captureVideoOutput = nil;
+  [_session removeOutput:_videoOutput];
+  _videoOutput = nil;
 }
 
 - (void)setShouldMirror:(NSNumber *)shouldMirror {
-  _captureVideoConnection.videoMirrored = shouldMirror.boolValue;
+  _videoConnection.videoMirrored = shouldMirror.boolValue;
 }
 
 - (void)setResolution:(NSNumber *)width height:(NSNumber *)height {
@@ -218,18 +257,18 @@
 
   if (width.intValue == 3840 && height.intValue == 2160) {
     if (@available(iOS 9.0, *)) {
-      _captureSession.sessionPreset = AVCaptureSessionPreset3840x2160;
+      _session.sessionPreset = AVCaptureSessionPreset3840x2160;
     } else {
       shouldThrowException = YES;
     }
   } else if (width.intValue == 1920 && height.intValue == 1080) {
-    _captureSession.sessionPreset = AVCaptureSessionPreset1920x1080;
+    _session.sessionPreset = AVCaptureSessionPreset1920x1080;
   } else if (width.intValue == 1280 && height.intValue == 720) {
-    _captureSession.sessionPreset = AVCaptureSessionPreset1280x720;
+    _session.sessionPreset = AVCaptureSessionPreset1280x720;
   } else if (width.intValue == 640 && height.intValue == 480) {
-    _captureSession.sessionPreset = AVCaptureSessionPreset640x480;
+    _session.sessionPreset = AVCaptureSessionPreset640x480;
   } else if (width.intValue == 352 && height.intValue == 288) {
-    _captureSession.sessionPreset = AVCaptureSessionPreset352x288;
+    _session.sessionPreset = AVCaptureSessionPreset352x288;
   } else {
     shouldThrowException = YES;
   }

@@ -28,5 +28,18 @@
 - (void)close;
 @end
 
+@protocol SingleCaptureDelegate <AVCapturePhotoCaptureDelegate>
+@required
+- (void)initialize:(NSDictionary *_Nullable)settings
+   textureRegistry:(NSObject<FlutterTextureRegistry> *_Nonnull)textureRegistry
+            result:(FlutterResult _Nonnull)result;
+- (void)onImageTaken:(CMSampleBufferRef _Nullable)imageDataSampleBuffer
+               error:(NSError *_Nullable)error;
+- (void)onRelease;
+@end
+
 @interface TextureDelegate : NSObject<RepeatingCaptureDelegate, FlutterTexture>
+@end
+
+@interface DataDelegate : NSObject<SingleCaptureDelegate>
 @end

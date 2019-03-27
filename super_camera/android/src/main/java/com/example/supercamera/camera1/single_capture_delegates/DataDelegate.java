@@ -6,7 +6,7 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.view.TextureRegistry;
 
 public class DataDelegate implements SingleCaptureDelegate {
-  MethodChannel.Result result;
+  private MethodChannel.Result result;
 
   @Override
   public void initialize(

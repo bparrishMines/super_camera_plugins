@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -86,23 +87,34 @@ class _MyAppState extends State<MyApp> {
                     resolution.width / resolution.height,
                   );
                 });
+
+                _controller.putSingleCaptureRequest(SingleCaptureSettings(
+                  delegateSettings: DataSettings(
+                    onImageDataAvailable: (Uint8List bytes) {
+                      print(bytes.length);
+                    },
+                    onFailure: onFailure(completer),
+                  ),
+                ));
+
                 completer.complete();
               },
-              onFailure: (CameraException exception) {
-                print(exception);
-                completer.complete();
-              },
+              onFailure: onFailure(completer),
             ),
           ),
         );
       },
-      onFailure: (CameraException exception) {
-        print(exception);
-        completer.complete();
-      },
+      onFailure: onFailure(completer),
     );
 
     return completer.future;
+  }
+
+  Function(CameraException) onFailure(Completer completer) {
+    return (CameraException exception) {
+      print(exception);
+      completer.complete();
+    };
   }
 
   Future<bool> _getCameraPermission() async {

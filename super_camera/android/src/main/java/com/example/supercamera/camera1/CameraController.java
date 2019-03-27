@@ -129,6 +129,7 @@ public class CameraController extends BaseCameraController {
     Map<String, Object> delegateSettings = (Map<String, Object>) settings.get("delegateSettings");
     delegate.initialize(delegateSettings, textureRegistry, result);
 
+
     camera.takePicture(
         delegate.getShutterCallback(),
         delegate.getRawCallback(),
