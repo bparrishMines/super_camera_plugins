@@ -4,6 +4,7 @@ import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import com.example.supercamera.base.BaseCameraController;
 import com.example.supercamera.camera1.repeating_capture_delegates.RepeatingCaptureDelegate;
+import com.example.supercamera.camera1.single_capture_delegates.SingleCaptureDelegate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -81,9 +82,13 @@ public class CameraController extends BaseCameraController {
         close();
         result.success(null);
         break;
-      case "CameraController#putRepeatingCaptureRequest":
+      case "CameraController#putSingleCaptureRequest":
         Map<String, Object> settings = (Map<String, Object>) call.arguments;
-        putRepeatingCaptureRequest(settings, result);
+        putSingleCaptureRequest(settings, result);
+        break;
+      case "CameraController#putRepeatingCaptureRequest":
+        Map<String, Object> repeatingSettings = (Map<String, Object>) call.arguments;
+        putRepeatingCaptureRequest(repeatingSettings, result);
         break;
       case "CameraController#stopRepeatingCaptureRequest":
         stopRepeatingCaptureRequest();
@@ -102,7 +107,33 @@ public class CameraController extends BaseCameraController {
 
   @Override
   public void putSingleCaptureRequest(Map<String, Object> settings, MethodChannel.Result result) {
-    throw new UnsupportedOperationException();
+    if (camera == null) {
+      result.error("CameraNotOpenException", "Camera is not open.", null);
+      return;
+    }
+
+    final String androidDelegateName = (String) settings.get("androidDelegateName");
+    if (androidDelegateName == null) {
+      result.error("CameraDelegateNameIsNull", "Camera delegate name is null.", null);
+      return;
+    }
+
+    SingleCaptureDelegate delegate;
+    try {
+      delegate = (SingleCaptureDelegate) Class.forName(androidDelegateName).newInstance();
+    } catch (Exception exception) {
+      result.error(exception.getClass().getSimpleName(), exception.getMessage(), null);
+      return;
+    }
+
+    Map<String, Object> delegateSettings = (Map<String, Object>) settings.get("delegateSettings");
+    delegate.initialize(delegateSettings, textureRegistry, result);
+
+    camera.takePicture(
+        delegate.getShutterCallback(),
+        delegate.getRawCallback(),
+        delegate.getPostViewCallback(),
+        delegate.getJpegCallback());
   }
 
   @Override
@@ -127,7 +158,7 @@ public class CameraController extends BaseCameraController {
       return;
     }
 
-    Map<String, Object> delegateSettings = (Map<String, Object>)settings.get("delegateSettings");
+    Map<String, Object> delegateSettings = (Map<String, Object>) settings.get("delegateSettings");
     repeatingCaptureDelegate.initialize(delegateSettings, textureRegistry);
 
     final SurfaceTexture surfaceTexture = repeatingCaptureDelegate.getSurfaceTexture();
