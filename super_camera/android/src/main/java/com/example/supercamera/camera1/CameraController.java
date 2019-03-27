@@ -118,7 +118,7 @@ public class CameraController extends BaseCameraController {
       return;
     }
 
-    SingleCaptureDelegate delegate;
+    final SingleCaptureDelegate delegate;
     try {
       delegate = (SingleCaptureDelegate) Class.forName(androidDelegateName).newInstance();
     } catch (Exception exception) {
@@ -129,12 +129,17 @@ public class CameraController extends BaseCameraController {
     Map<String, Object> delegateSettings = (Map<String, Object>) settings.get("delegateSettings");
     delegate.initialize(delegateSettings, textureRegistry, result);
 
-
     camera.takePicture(
         delegate.getShutterCallback(),
         delegate.getRawCallback(),
         delegate.getPostViewCallback(),
-        delegate.getJpegCallback());
+        new Camera.PictureCallback() {
+          @Override
+          public void onPictureTaken(byte[] data, Camera camera) {
+            delegate.getJpegCallback().onPictureTaken(data, camera);
+            camera.startPreview();
+          }
+        });
   }
 
   @Override
