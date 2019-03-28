@@ -66,8 +66,8 @@ class _MyAppState extends State<MyApp> {
       onSuccess: () {
         print("Camera Opened!");
 
-        _controller.putRepeatingCaptureRequest(
-          RepeatingCaptureSettings(
+        _controller.setVideoSettings(
+          VideoSettings(
             shouldMirror: shouldMirror,
             resolution: resolution,
             delegateSettings: TextureSettings(
@@ -88,16 +88,18 @@ class _MyAppState extends State<MyApp> {
                   );
                 });
 
-                _controller.putSingleCaptureRequest(SingleCaptureSettings(
-                  delegateSettings: DataSettings(
-                    onImageDataAvailable: (Uint8List bytes) {
-                      print(bytes.length);
-                    },
-                    onFailure: onFailure(completer),
-                  ),
-                ));
+                _controller.startRunning().then((_) {
+                  _controller.takePhoto(PhotoSettings(
+                    delegateSettings: DataSettings(
+                      onImageDataAvailable: (Uint8List bytes) {
+                        print(bytes.length);
+                      },
+                      onFailure: onFailure(completer),
+                    ),
+                  ));
 
-                completer.complete();
+                  completer.complete();
+                });
               },
               onFailure: onFailure(completer),
             ),

@@ -1,7 +1,7 @@
 part of super_camera;
 
-class SingleCaptureSettings {
-  const SingleCaptureSettings({@required this.delegateSettings})
+class PhotoSettings {
+  const PhotoSettings({@required this.delegateSettings})
       : assert(delegateSettings != null);
 
   final CaptureDelegateSettings delegateSettings;
@@ -15,8 +15,8 @@ class SingleCaptureSettings {
   }
 }
 
-class RepeatingCaptureSettings {
-  const RepeatingCaptureSettings({
+class VideoSettings {
+  const VideoSettings({
     @required this.delegateSettings,
     this.shouldMirror = false,
     this.resolution,

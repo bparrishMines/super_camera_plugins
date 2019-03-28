@@ -14,7 +14,7 @@ class TextureSettings extends CaptureDelegateSettings {
         );
 
   static const String _androidName =
-      'com.example.supercamera.camera1.repeating_capture_delegates.TextureDelegate';
+      'com.example.supercamera.camera1.video_delegates.TextureDelegate';
   static const String _iOSName = 'TextureDelegate';
 }
 
@@ -32,6 +32,6 @@ class DataSettings extends CaptureDelegateSettings {
         );
 
   static const String _androidName =
-      'com.example.supercamera.camera1.single_capture_delegates.DataDelegate';
+      'com.example.supercamera.camera1.photo_delegates.DataDelegate';
   static const String _iOSName = 'DataDelegate';
 }

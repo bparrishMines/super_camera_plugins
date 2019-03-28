@@ -46,53 +46,55 @@ class CameraController {
     }
   }
 
-  Future<void> close() async {
+  Future<void> startRunning() {
+    return channel.invokeMethod('$CameraController#startRunning');
+  }
+
+  void takePhoto(PhotoSettings settings) async {
+    try {
+      final dynamic result = await channel.invokeMethod(
+        '$CameraController#takePhoto',
+        settings._serialize(),
+      );
+
+      if (settings.delegateSettings.onSuccess != null) {
+        settings.delegateSettings.onSuccess(result);
+      }
+    } on PlatformException catch (exception) {
+      if (settings.delegateSettings.onFailure != null) {
+        settings.delegateSettings.onFailure(CameraException(
+          code: exception.code,
+          description: exception.message,
+        ));
+      }
+    }
+  }
+
+  void setVideoSettings(VideoSettings settings) async {
+    try {
+      final dynamic result = await channel.invokeMethod(
+        '$CameraController#setVideoSettings',
+        settings._serialize(),
+      );
+
+      if (settings.delegateSettings.onSuccess != null) {
+        settings.delegateSettings.onSuccess(result);
+      }
+    } on PlatformException catch (exception) {
+      if (settings.delegateSettings.onFailure != null) {
+        settings.delegateSettings.onFailure(CameraException(
+          code: exception.code,
+          description: exception.message,
+        ));
+      }
+    }
+  }
+
+  Future<void> stopRunning() {
+    return channel.invokeMethod('$CameraController#stopRunning');
+  }
+
+  Future<void> close() {
     return channel.invokeMethod('$CameraController#close');
-  }
-
-  void putSingleCaptureRequest(SingleCaptureSettings settings) async {
-    try {
-      final dynamic result = await channel.invokeMethod(
-        '$CameraController#putSingleCaptureRequest',
-        settings._serialize(),
-      );
-
-      if (settings.delegateSettings.onSuccess != null) {
-        settings.delegateSettings.onSuccess(result);
-      }
-    } on PlatformException catch (exception) {
-      if (settings.delegateSettings.onFailure != null) {
-        settings.delegateSettings.onFailure(CameraException(
-          code: exception.code,
-          description: exception.message,
-        ));
-      }
-    }
-  }
-
-  void putRepeatingCaptureRequest(RepeatingCaptureSettings settings) async {
-    try {
-      final dynamic result = await channel.invokeMethod(
-        '$CameraController#putRepeatingCaptureRequest',
-        settings._serialize(),
-      );
-
-      if (settings.delegateSettings.onSuccess != null) {
-        settings.delegateSettings.onSuccess(result);
-      }
-    } on PlatformException catch (exception) {
-      if (settings.delegateSettings.onFailure != null) {
-        settings.delegateSettings.onFailure(CameraException(
-          code: exception.code,
-          description: exception.message,
-        ));
-      }
-    }
-  }
-
-  Future<void> stopRepeatingCaptureRequest() async {
-    return await channel.invokeMethod(
-      '$CameraController#stopRepeatingCaptureRequest',
-    );
   }
 }
