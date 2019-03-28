@@ -51,6 +51,8 @@ class CameraController {
   }
 
   void takePhoto(PhotoSettings settings) async {
+    assert(settings != null);
+
     try {
       final dynamic result = await channel.invokeMethod(
         '$CameraController#takePhoto',
@@ -71,6 +73,8 @@ class CameraController {
   }
 
   void setVideoSettings(VideoSettings settings) async {
+    assert(settings != null);
+
     try {
       final dynamic result = await channel.invokeMethod(
         '$CameraController#setVideoSettings',
