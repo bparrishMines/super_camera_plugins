@@ -12,34 +12,35 @@
 - (instancetype _Nonnull)initWithCameraId:(NSString *_Nonnull)cameraId
                           textureRegistry:(NSObject<FlutterTextureRegistry> *_Nonnull)textureRegistry;
 
-- (void) putSingleCaptureRequest:(NSDictionary *_Nonnull)settings result:(FlutterResult _Nonnull)result;
-- (void) putRepeatingCaptureRequest:(NSDictionary *_Nonnull)settings result:(FlutterResult _Nonnull)result;
-- (void) stopRepeatingCaptureRequest;
-
 - (void) open:(FlutterResult _Nonnull)result;
+- (void) startRunning:(FlutterResult _Nonnull)result;
+
+- (void) takePhoto:(NSDictionary *_Nonnull)settings result:(FlutterResult _Nonnull)result;
+- (void) setVideoSettings:(NSDictionary *_Nonnull)settings result:(FlutterResult _Nonnull)result;
+
+- (void) stopRunning;
 - (void) close;
 @end
 
-@protocol RepeatingCaptureDelegate <AVCaptureVideoDataOutputSampleBufferDelegate>
+@protocol VideoDelegate <AVCaptureVideoDataOutputSampleBufferDelegate>
 @required
 - (void)initialize:(NSDictionary * _Nullable)settings
    textureRegistry:(NSObject<FlutterTextureRegistry> *_Nonnull)textureRegistry;
-- (void)onStart:(FlutterResult _Nonnull)result;
+- (void)onFinishSetup:(FlutterResult _Nonnull)result;
 - (void)close;
 @end
 
-@protocol SingleCaptureDelegate <AVCapturePhotoCaptureDelegate>
+@protocol PhotoDelegate <AVCapturePhotoCaptureDelegate>
 @required
 - (void)initialize:(NSDictionary *_Nullable)settings
    textureRegistry:(NSObject<FlutterTextureRegistry> *_Nonnull)textureRegistry
             result:(FlutterResult _Nonnull)result;
 - (void)onImageTaken:(CMSampleBufferRef _Nullable)imageDataSampleBuffer
                error:(NSError *_Nullable)error;
-- (void)onRelease;
 @end
 
-@interface TextureDelegate : NSObject<RepeatingCaptureDelegate, FlutterTexture>
+@interface TextureDelegate : NSObject<VideoDelegate, FlutterTexture>
 @end
 
-@interface DataDelegate : NSObject<SingleCaptureDelegate>
+@interface DataDelegate : NSObject<PhotoDelegate>
 @end

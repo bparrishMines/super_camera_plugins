@@ -11,11 +11,14 @@
   _result = result;
 }
 
-- (void)onRelease {
-
-}
-
 - (void)onImageTaken:(CMSampleBufferRef _Nullable)imageDataSampleBuffer error:(NSError *_Nullable)error {
+  if (error) {
+    _result([FlutterError errorWithCode:@"CameraNotOpenException"
+                               message:error.description
+                               details:nil]);
+    return;
+  }
+
   NSData *bytes = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
   _result(bytes);
 }

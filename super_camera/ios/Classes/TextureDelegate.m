@@ -14,7 +14,7 @@
   _textureId = [_textureRegistry registerTexture:self];
 }
 
-- (void)onStart:(FlutterResult _Nonnull)result {
+- (void)onFinishSetup:(FlutterResult _Nonnull)result {
   result(@(_textureId));
 }
 
@@ -25,6 +25,7 @@
   }
 }
 
+// Helper Methods
 - (void)captureOutput:(AVCaptureOutput *)output
     didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
             fromConnection:(AVCaptureConnection *)connection {

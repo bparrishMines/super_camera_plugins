@@ -212,7 +212,6 @@ public class CameraController extends BaseCameraController {
     if (camera == null) return;
 
     camera.stopPreview();
-    closeVideoDelegate();
   }
 
   @Override
@@ -220,6 +219,7 @@ public class CameraController extends BaseCameraController {
     if (camera == null) return;
 
     stopRunning();
+    closeVideoDelegate();
 
     camera.release();
     camera = null;
