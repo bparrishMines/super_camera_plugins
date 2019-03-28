@@ -15,10 +15,13 @@ public abstract class BaseCameraController implements MethodChannel.MethodCallHa
 
   public abstract void open(MethodChannel.Result result);
 
-  public abstract void putSingleCaptureRequest(Map<String, Object> settings, MethodChannel.Result result);
+  public abstract void startRunning(MethodChannel.Result result);
 
-  public abstract void putRepeatingCaptureRequest(Map<String, Object> settings, MethodChannel.Result result);
-  public abstract void stopRepeatingCaptureRequest();
+  public abstract void takePhoto(Map<String, Object> settings, MethodChannel.Result result);
+
+  public abstract void setVideoSettings(Map<String, Object> settings, MethodChannel.Result result);
+
+  public abstract void stopRunning();
 
   public abstract void close();
 }

@@ -3,8 +3,8 @@ package com.example.supercamera.camera1;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import com.example.supercamera.base.BaseCameraController;
-import com.example.supercamera.camera1.repeating_capture_delegates.RepeatingCaptureDelegate;
-import com.example.supercamera.camera1.single_capture_delegates.SingleCaptureDelegate;
+import com.example.supercamera.camera1.video_delegates.VideoDelegate;
+import com.example.supercamera.camera1.photo_delegates.PhotoDelegate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,7 +66,7 @@ public class CameraController extends BaseCameraController {
   }
 
   private Camera camera;
-  private RepeatingCaptureDelegate repeatingCaptureDelegate;
+  private VideoDelegate videoDelegate;
 
   public CameraController(final String cameraId, final TextureRegistry textureRegistry) {
     super(cameraId, textureRegistry);
@@ -78,20 +78,25 @@ public class CameraController extends BaseCameraController {
       case "CameraController#open":
         open(result);
         break;
-      case "CameraController#close":
-        close();
+      case "CameraController#startRunning":
+        startRunning(result);
+        break;
+      case "CameraController#takePhoto":
+        @SuppressWarnings("unchecked")
+        Map<String, Object> photoSettings = (Map<String, Object>) call.arguments;
+        takePhoto(photoSettings, result);
+        break;
+      case "CameraController#setVideoSettings":
+        @SuppressWarnings("unchecked")
+        Map<String, Object> videoSettings = (Map<String, Object>) call.arguments;
+        setVideoSettings(videoSettings, result);
+        break;
+      case "CameraController#stopRunning":
+        stopRunning();
         result.success(null);
         break;
-      case "CameraController#putSingleCaptureRequest":
-        Map<String, Object> settings = (Map<String, Object>) call.arguments;
-        putSingleCaptureRequest(settings, result);
-        break;
-      case "CameraController#putRepeatingCaptureRequest":
-        Map<String, Object> repeatingSettings = (Map<String, Object>) call.arguments;
-        putRepeatingCaptureRequest(repeatingSettings, result);
-        break;
-      case "CameraController#stopRepeatingCaptureRequest":
-        stopRepeatingCaptureRequest();
+      case "CameraController#close":
+        close();
         result.success(null);
         break;
       default:
@@ -106,7 +111,18 @@ public class CameraController extends BaseCameraController {
   }
 
   @Override
-  public void putSingleCaptureRequest(Map<String, Object> settings, MethodChannel.Result result) {
+  public void startRunning(MethodChannel.Result result) {
+    if (camera == null) {
+      result.error("CameraNotOpenException", "Camera is not open.", null);
+      return;
+    }
+
+    camera.startPreview();
+    result.success(null);
+  }
+
+  @Override
+  public void takePhoto(Map<String, Object> settings, MethodChannel.Result result) {
     if (camera == null) {
       result.error("CameraNotOpenException", "Camera is not open.", null);
       return;
@@ -118,14 +134,15 @@ public class CameraController extends BaseCameraController {
       return;
     }
 
-    final SingleCaptureDelegate delegate;
+    final PhotoDelegate delegate;
     try {
-      delegate = (SingleCaptureDelegate) Class.forName(androidDelegateName).newInstance();
+      delegate = (PhotoDelegate) Class.forName(androidDelegateName).newInstance();
     } catch (Exception exception) {
       result.error(exception.getClass().getSimpleName(), exception.getMessage(), null);
       return;
     }
 
+    @SuppressWarnings("unchecked")
     Map<String, Object> delegateSettings = (Map<String, Object>) settings.get("delegateSettings");
     delegate.initialize(delegateSettings, textureRegistry, result);
 
@@ -143,8 +160,7 @@ public class CameraController extends BaseCameraController {
   }
 
   @Override
-  public void putRepeatingCaptureRequest(
-      Map<String, Object> settings, MethodChannel.Result result) {
+  public void setVideoSettings(Map<String, Object> settings, MethodChannel.Result result) {
     if (camera == null) {
       result.error("CameraNotOpenException", "Camera is not open.", null);
       return;
@@ -157,31 +173,27 @@ public class CameraController extends BaseCameraController {
     }
 
     try {
-      repeatingCaptureDelegate =
-          (RepeatingCaptureDelegate) Class.forName(androidDelegateName).newInstance();
+      videoDelegate = (VideoDelegate) Class.forName(androidDelegateName).newInstance();
     } catch (Exception exception) {
       result.error(exception.getClass().getSimpleName(), exception.getMessage(), null);
       return;
     }
 
+    @SuppressWarnings("unchecked")
     Map<String, Object> delegateSettings = (Map<String, Object>) settings.get("delegateSettings");
-    repeatingCaptureDelegate.initialize(delegateSettings, textureRegistry);
+    videoDelegate.initialize(delegateSettings, textureRegistry);
 
-    final SurfaceTexture surfaceTexture = repeatingCaptureDelegate.getSurfaceTexture();
-    if (surfaceTexture != null) {
-      try {
-        camera.setPreviewTexture(surfaceTexture);
-      } catch (IOException exception) {
-        stopRepeatingCaptureRequest();
-        result.error(exception.getClass().getSimpleName(), exception.getMessage(), null);
-        return;
-      }
+    final SurfaceTexture surfaceTexture = videoDelegate.getSurfaceTexture();
+    try {
+      camera.setPreviewTexture(surfaceTexture);
+    } catch (IOException exception) {
+      closeVideoDelegate();
+      result.error(exception.getClass().getSimpleName(), exception.getMessage(), null);
+      return;
     }
 
-    final Camera.PreviewCallback callback = repeatingCaptureDelegate.getPreviewCallback();
-    if (callback != null) {
-      camera.setPreviewCallback(callback);
-    }
+    final Camera.PreviewCallback callback = videoDelegate.getPreviewCallback();
+    camera.setPreviewCallback(callback);
 
     // Before API level 24, the default value for orientation is 0. However, the default could be
     // different for 24+. See
@@ -192,23 +204,22 @@ public class CameraController extends BaseCameraController {
     setPreviewSize(parameters, (Double) settings.get("width"), (Double) settings.get("height"));
     camera.setParameters(parameters);
 
-    camera.startPreview();
-    repeatingCaptureDelegate.onStart(result);
+    videoDelegate.onFinishSetup(result);
   }
 
   @Override
-  public void stopRepeatingCaptureRequest() {
+  public void stopRunning() {
     if (camera == null) return;
 
     camera.stopPreview();
-    closeRepeatingCaptureDelegate();
+    closeVideoDelegate();
   }
 
   @Override
   public void close() {
     if (camera == null) return;
 
-    stopRepeatingCaptureRequest();
+    stopRunning();
 
     camera.release();
     camera = null;
@@ -222,10 +233,10 @@ public class CameraController extends BaseCameraController {
   }
 
   // Helper Methods
-  private void closeRepeatingCaptureDelegate() {
-    if (repeatingCaptureDelegate == null) return;
+  private void closeVideoDelegate() {
+    if (videoDelegate == null) return;
 
-    repeatingCaptureDelegate.close();
-    repeatingCaptureDelegate = null;
+    videoDelegate.close();
+    videoDelegate = null;
   }
 }
