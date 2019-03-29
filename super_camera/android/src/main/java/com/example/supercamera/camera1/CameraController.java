@@ -112,8 +112,8 @@ public class CameraController extends BaseCameraController {
 
   @Override
   public void startRunning(MethodChannel.Result result) {
-    if (camera == null) {
-      result.error("CameraNotOpenException", "Camera is not open.", null);
+    if (!cameraIsOpen()) {
+      result.error(ErrorCodes.CAMERA_CONTROLLER_NOT_OPEN, "CameraController is not open.", null);
       return;
     }
 
@@ -123,14 +123,14 @@ public class CameraController extends BaseCameraController {
 
   @Override
   public void takePhoto(Map<String, Object> settings, MethodChannel.Result result) {
-    if (camera == null) {
-      result.error("CameraNotOpenException", "Camera is not open.", null);
+    if (!cameraIsOpen()) {
+      result.error(ErrorCodes.CAMERA_CONTROLLER_NOT_OPEN, "CameraController is not open.", null);
       return;
     }
 
     final String androidDelegateName = (String) settings.get("androidDelegateName");
     if (androidDelegateName == null) {
-      result.error("CameraDelegateNameIsNull", "Camera delegate name is null.", null);
+      result.error(ErrorCodes.INVALID_DELEGATE_NAME, "Camera delegate name is null.", null);
       return;
     }
 
@@ -138,7 +138,7 @@ public class CameraController extends BaseCameraController {
     try {
       delegate = (PhotoDelegate) Class.forName(androidDelegateName).newInstance();
     } catch (Exception exception) {
-      result.error(exception.getClass().getSimpleName(), exception.getMessage(), null);
+      result.error(ErrorCodes.INVALID_DELEGATE_NAME, exception.getMessage(), null);
       return;
     }
 
@@ -161,21 +161,21 @@ public class CameraController extends BaseCameraController {
 
   @Override
   public void setVideoSettings(Map<String, Object> settings, MethodChannel.Result result) {
-    if (camera == null) {
-      result.error("CameraNotOpenException", "Camera is not open.", null);
+    if (!cameraIsOpen()) {
+      result.error(ErrorCodes.CAMERA_CONTROLLER_NOT_OPEN, "CameraController is not open.", null);
       return;
     }
 
     final String androidDelegateName = (String) settings.get("androidDelegateName");
     if (androidDelegateName == null) {
-      result.error("CameraDelegateNameIsNull", "Camera delegate name is null.", null);
+      result.error(ErrorCodes.INVALID_DELEGATE_NAME, "Camera delegate name is null.", null);
       return;
     }
 
     try {
       videoDelegate = (VideoDelegate) Class.forName(androidDelegateName).newInstance();
     } catch (Exception exception) {
-      result.error(exception.getClass().getSimpleName(), exception.getMessage(), null);
+      result.error(ErrorCodes.INVALID_DELEGATE_NAME, exception.getMessage(), null);
       return;
     }
 
@@ -209,14 +209,14 @@ public class CameraController extends BaseCameraController {
 
   @Override
   public void stopRunning() {
-    if (camera == null) return;
+    if (!cameraIsOpen()) return;
 
     camera.stopPreview();
   }
 
   @Override
   public void close() {
-    if (camera == null) return;
+    if (!cameraIsOpen()) return;
 
     stopRunning();
     closeVideoDelegate();
@@ -238,5 +238,9 @@ public class CameraController extends BaseCameraController {
 
     videoDelegate.close();
     videoDelegate = null;
+  }
+
+  private boolean cameraIsOpen() {
+    return camera != null;
   }
 }
