@@ -29,25 +29,23 @@ class CameraExceptionType {
   static const CameraExceptionType cameraControllerNotOpen =
       CameraExceptionType._('CameraControllerNotOpen');
 
-  static const CameraExceptionType delegateNameIsNull =
-      CameraExceptionType._('DelegateNameIsNull');
+  static const CameraExceptionType invalidDelegateName =
+      CameraExceptionType._('InvalidDelegateName');
 
   static const CameraExceptionType invalidSetting =
       CameraExceptionType._('InvalidSetting');
 
-  static const CameraExceptionType miscellaneous =
-      CameraExceptionType._('Miscellaneous');
+  static const CameraExceptionType unknown = CameraExceptionType._('Unknown');
 
   final String value;
 
-  List<CameraExceptionType> get values {
-    return <CameraExceptionType>[
-      cameraControllerNotOpen,
-      delegateNameIsNull,
-      invalidSetting,
-      miscellaneous,
-    ];
-  }
+  static Map<String, CameraExceptionType> _allTypesMap =
+      <String, CameraExceptionType>{
+    cameraControllerNotOpen.value: cameraControllerNotOpen,
+    invalidDelegateName.value: invalidDelegateName,
+    invalidSetting.value: invalidSetting,
+    unknown.value: unknown,
+  };
 
   @override
   int get hashCode => value.hashCode;
@@ -62,9 +60,23 @@ class CameraExceptionType {
 }
 
 class CameraException implements Exception {
-  const CameraException({this.type, this.description});
+  const CameraException._({this.type, this.code, this.description});
+
+  factory CameraException({String code, String description}) {
+    CameraExceptionType type = CameraExceptionType._allTypesMap[code];
+    if (type == null) {
+      type = CameraExceptionType.unknown;
+    }
+
+    return CameraException._(
+      type: type,
+      code: code,
+      description: description,
+    );
+  }
 
   final CameraExceptionType type;
+  final String code;
   final String description;
 
   @override
