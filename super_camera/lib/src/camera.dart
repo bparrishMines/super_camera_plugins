@@ -40,12 +40,12 @@ class CameraExceptionType {
   final String value;
 
   static Map<String, CameraExceptionType> _allTypesMap =
-      <String, CameraExceptionType>{
+      Map.unmodifiable(<String, CameraExceptionType>{
     cameraControllerNotOpen.value: cameraControllerNotOpen,
     invalidDelegateName.value: invalidDelegateName,
     invalidSetting.value: invalidSetting,
     unknown.value: unknown,
-  };
+  });
 
   @override
   int get hashCode => value.hashCode;
@@ -56,7 +56,7 @@ class CameraExceptionType {
   }
 
   @override
-  String toString() => '$runtimeType($value)';
+  String toString() => '$runtimeType.$value';
 }
 
 class CameraException implements Exception {
