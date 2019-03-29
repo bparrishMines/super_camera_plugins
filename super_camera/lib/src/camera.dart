@@ -29,6 +29,9 @@ class CameraExceptionType {
   static const CameraExceptionType cameraControllerNotOpen =
       CameraExceptionType._('CameraControllerNotOpen');
 
+  static const CameraExceptionType cameraControllerAlreadyOpen =
+      CameraExceptionType._('CameraControllerAlreadyOpen');
+
   static const CameraExceptionType invalidDelegateName =
       CameraExceptionType._('InvalidDelegateName');
 
@@ -42,6 +45,7 @@ class CameraExceptionType {
   static Map<String, CameraExceptionType> _allTypesMap =
       Map.unmodifiable(<String, CameraExceptionType>{
     cameraControllerNotOpen.value: cameraControllerNotOpen,
+    cameraControllerAlreadyOpen.value: cameraControllerAlreadyOpen,
     invalidDelegateName.value: invalidDelegateName,
     invalidSetting.value: invalidSetting,
     unknown.value: unknown,

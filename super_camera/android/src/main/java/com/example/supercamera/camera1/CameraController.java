@@ -106,6 +106,11 @@ public class CameraController extends BaseCameraController {
 
   @Override
   public void open(MethodChannel.Result result) {
+    if (cameraIsOpen()) {
+      result.error(ErrorCodes.CAMERA_CONTROLLER_ALREADY_OPEN, "CameraController is already open.", null);
+      return;
+    }
+
     camera = Camera.open(Integer.parseInt(cameraId));
     result.success(null);
   }

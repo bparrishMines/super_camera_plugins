@@ -7,6 +7,7 @@ import io.flutter.view.TextureRegistry;
 public abstract class BaseCameraController implements MethodChannel.MethodCallHandler {
   public class ErrorCodes {
     static final public String CAMERA_CONTROLLER_NOT_OPEN = "CameraControllerNotOpen";
+    static final public String CAMERA_CONTROLLER_ALREADY_OPEN = "CameraControllerAlreadyOpen";
     static final public String INVALID_DELEGATE_NAME = "InvalidDelegateName";
     static final public String INVALID_SETTING = "InvalidSetting";
     static final public String UNKNOWN = "Unknown";
