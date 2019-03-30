@@ -4,21 +4,19 @@
 @interface SuperCameraPlugin : NSObject<FlutterPlugin>
 @end
 
+typedef NSString *CameraControllerErrorCode;
+static CameraControllerErrorCode const _Nonnull kCameraControllerNotOpen = @"CameraControllerNotOpen";
+static CameraControllerErrorCode const _Nonnull kCameraControllerAlreadyOpen = @"CameraControllerAlreadyOpen";
+static CameraControllerErrorCode const _Nonnull kInvalidDelegateName = @"InvalidDelegateName";
+static CameraControllerErrorCode const _Nonnull kInvalidSetting = @"InvalidSetting";
+static CameraControllerErrorCode const _Nonnull kUnknown = @"Unknown";
+
 @interface CameraController : NSObject<FlutterPlugin>
 @property NSString *_Nonnull cameraId;
-
 + (NSArray<NSDictionary *> *_Nonnull)availableCameras;
 
 - (instancetype _Nonnull)initWithCameraId:(NSString *_Nonnull)cameraId
                           textureRegistry:(NSObject<FlutterTextureRegistry> *_Nonnull)textureRegistry;
-
-- (void) open:(FlutterResult _Nonnull)result;
-- (void) startRunning:(FlutterResult _Nonnull)result;
-
-- (void) takePhoto:(NSDictionary *_Nonnull)settings result:(FlutterResult _Nonnull)result;
-- (void) setVideoSettings:(NSDictionary *_Nonnull)settings result:(FlutterResult _Nonnull)result;
-
-- (void) stopRunning;
 - (void) close;
 @end
 

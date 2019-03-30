@@ -107,15 +107,22 @@
 }
 
 - (void)open:(FlutterResult _Nonnull)result {
+  if ([self cameraIsOpen]) {
+    result([FlutterError errorWithCode:kCameraControllerAlreadyOpen
+                               message:@"CameraController is already open."
+                               details:nil]);
+    return;
+  }
+
   _session = [AVCaptureSession new];
   _device = [AVCaptureDevice deviceWithUniqueID:_cameraId];
   result(nil);
 }
 
 - (void)startRunning:(FlutterResult)result {
-  if (!_session) {
-    result([FlutterError errorWithCode:@"CameraNotOpenException"
-                               message:@"Camera is not open."
+  if (![self cameraIsOpen]) {
+    result([FlutterError errorWithCode:kCameraControllerNotOpen
+                               message:@"CameraController is not open."
                                details:nil]);
     return;
   }
@@ -125,17 +132,17 @@
 }
 
 - (void)takePhoto:(NSDictionary *)settings result:(FlutterResult _Nonnull)result {
-  if (!_session) {
-    result([FlutterError errorWithCode:@"CameraNotOpenException"
-                               message:@"Camera is not open."
+  if (![self cameraIsOpen]) {
+    result([FlutterError errorWithCode:kCameraControllerNotOpen
+                               message:@"CameraController is not open."
                                details:nil]);
     return;
   }
 
   NSString *iOSDelegateName = settings[@"iOSDelegateName"];
   if ([iOSDelegateName isEqual:[NSNull null]]) {
-    result([FlutterError errorWithCode:@"CameraDelegateNameIsNull"
-                               message:@"Camera delegate name is null."
+    result([FlutterError errorWithCode:kInvalidDelegateName
+                               message:@"CameraController delegate name is null."
                                details:nil]);
     return;
   }
@@ -172,17 +179,17 @@
 }
 
 - (void)setVideoSettings:(NSDictionary *)settings result:(FlutterResult _Nonnull)result {
-  if (!_session) {
-    result([FlutterError errorWithCode:@"CameraNotOpenException"
-                               message:@"Camera is not open."
+  if (![self cameraIsOpen]) {
+    result([FlutterError errorWithCode:kCameraControllerNotOpen
+                               message:@"CameraController is not open."
                                details:nil]);
     return;
   }
 
   NSString *iOSDelegateName = settings[@"iOSDelegateName"];
   if ([iOSDelegateName isEqual:[NSNull null]]) {
-    result([FlutterError errorWithCode:@"CameraDelegateNameIsNull"
-                               message:@"Camera delegate name is null."
+    result([FlutterError errorWithCode:kInvalidDelegateName
+                               message:@"CameraController delegate name is null."
                                details:nil]);
     return;
   }
@@ -212,7 +219,8 @@
     [self setResolution:settings[@"width"] height:settings[@"height"]];
   } @catch (NSException *exception) {
     [self removeVideoInputsAndOutputs];
-    result([FlutterError errorWithCode:exception.name message:exception.reason details:nil]);
+    NSString *message = [NSString stringWithFormat:@"%@: %@", exception.name, exception.description];
+    result([FlutterError errorWithCode:kInvalidSetting message:message details:nil]);
     return;
   }
 
@@ -220,7 +228,7 @@
 }
 
 - (void)stopRunning {
-  if (!_session) return;
+  if (![self cameraIsOpen]) return;
 
   if ([_session isRunning]) {
     [_session stopRunning];
@@ -228,7 +236,7 @@
 }
 
 - (void) close {
-  if (!_session) return;
+  if (![self cameraIsOpen]) return;
 
   if ([_session isRunning]) {
     [_session stopRunning];
@@ -284,7 +292,7 @@
 }
 
 - (void)removeVideoInputsAndOutputs {
-  if (!_session) return;
+  if (![self cameraIsOpen]) return;
 
   [_session removeConnection:_videoConnection];
   _videoConnection = nil;
@@ -297,12 +305,16 @@
 }
 
 - (void)removePhotoOutputAndConnection {
-  if (!_session) return;
+  if (![self cameraIsOpen]) return;
 
   [_session removeConnection:_stillImageConnection];
   _stillImageConnection = nil;
 
   [_session removeOutput:_stillImageOutput];
   _stillImageOutput = nil;
+}
+
+- (BOOL)cameraIsOpen {
+  return _session != nil;
 }
 @end
