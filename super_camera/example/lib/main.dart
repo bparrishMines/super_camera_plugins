@@ -167,9 +167,6 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Plugin example app'),
-        ),
         body: _cameraWidget ?? Text('Running Super Camera'),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
