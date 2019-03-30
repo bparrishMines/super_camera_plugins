@@ -1,13 +1,19 @@
 import 'dart:async';
-import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:super_camera/super_camera.dart';
 
-void main() => runApp(MyApp());
+const DeviceOrientation appDeviceOrientation = DeviceOrientation.portraitUp;
+
+void main() {
+  SystemChrome.setPreferredOrientations(<DeviceOrientation>[
+    appDeviceOrientation,
+  ]);
+  runApp(MyApp());
+}
 
 class MyApp extends StatefulWidget {
   @override
@@ -62,6 +68,26 @@ class _MyAppState extends State<MyApp> {
 
     final bool shouldMirror = device.lensDirection == LensDirection.front;
 
+    VideoOrientation videoOrientation;
+    double aspectRatio;
+    switch (appDeviceOrientation) {
+      case DeviceOrientation.portraitDown:
+        videoOrientation = VideoOrientation.portraitDown;
+        aspectRatio = resolution.height / resolution.width;
+        break;
+      case DeviceOrientation.landscapeRight:
+        videoOrientation = VideoOrientation.landscapeRight;
+        aspectRatio = resolution.width / resolution.height;
+        break;
+      case DeviceOrientation.landscapeLeft:
+        videoOrientation = VideoOrientation.landscapeLeft;
+        aspectRatio = resolution.width / resolution.height;
+        break;
+      default:
+        videoOrientation = VideoOrientation.portraitUp;
+        aspectRatio = resolution.height / resolution.width;
+    }
+
     _controller.open(
       onSuccess: () {
         print("Camera Opened!");
@@ -70,21 +96,15 @@ class _MyAppState extends State<MyApp> {
           VideoSettings(
             shouldMirror: shouldMirror,
             resolution: resolution,
+            orientation: videoOrientation,
             delegateSettings: TextureSettings(
               onTextureReady: (Texture texture) {
                 print("Got texture!");
 
-                int orientation = device.orientation;
-                if (defaultTargetPlatform == TargetPlatform.iOS &&
-                    shouldMirror) {
-                  orientation = orientation + 180 % 360;
-                }
-
                 setState(() {
                   _cameraWidget = _buildCameraWidget(
-                    orientation,
                     texture,
-                    resolution.width / resolution.height,
+                    aspectRatio,
                   );
                 });
 
@@ -148,16 +168,13 @@ class _MyAppState extends State<MyApp> {
     _isToggling = false;
   }
 
-  Widget _buildCameraWidget(int degrees, Texture texture, double aspectRatio) {
+  Widget _buildCameraWidget(Texture texture, double aspectRatio) {
     return Container(
       constraints: BoxConstraints.expand(),
       alignment: Alignment.center,
       child: AspectRatio(
         aspectRatio: aspectRatio,
-        child: Transform.rotate(
-          angle: degrees * pi / 180,
-          child: texture,
-        ),
+        child: texture,
       ),
       decoration: BoxDecoration(color: Colors.black),
     );

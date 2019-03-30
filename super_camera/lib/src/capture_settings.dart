@@ -1,5 +1,12 @@
 part of super_camera;
 
+enum VideoOrientation {
+  portraitUp,
+  portraitDown,
+  landscapeRight,
+  landscapeLeft,
+}
+
 class PhotoSettings {
   const PhotoSettings({@required this.delegateSettings})
       : assert(delegateSettings != null);
@@ -18,10 +25,12 @@ class PhotoSettings {
 class VideoSettings {
   const VideoSettings({
     @required this.delegateSettings,
-    this.shouldMirror = false,
+    bool shouldMirror,
+    VideoOrientation orientation,
     this.resolution,
-  })  : assert(delegateSettings != null),
-        assert(shouldMirror != null);
+  })  : shouldMirror = shouldMirror ?? false,
+        orientation = orientation ?? VideoOrientation.portraitUp,
+        assert(delegateSettings != null);
 
   final CaptureDelegateSettings delegateSettings;
   final Size resolution;
@@ -38,6 +47,8 @@ class VideoSettings {
   /// https://developer.android.com/reference/android/hardware/Camera.html#setDisplayOrientation(int)
   final bool shouldMirror;
 
+  final VideoOrientation orientation;
+
   Map<String, dynamic> _serialize() {
     return <String, dynamic>{
       'androidDelegateName': delegateSettings.androidDelegateName,
@@ -46,6 +57,7 @@ class VideoSettings {
       'shouldMirror': shouldMirror,
       'width': resolution?.width,
       'height': resolution?.height,
+      'orientation': orientation.toString(),
     };
   }
 }

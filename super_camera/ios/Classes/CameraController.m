@@ -217,6 +217,7 @@
   @try {
     [self setShouldMirror:settings[@"shouldMirror"]];
     [self setResolution:settings[@"width"] height:settings[@"height"]];
+    [self setVideoOrientation:settings[@"orientation"]];
   } @catch (NSException *exception) {
     [self removeVideoInputsAndOutputs];
     NSString *message = [NSString stringWithFormat:@"%@: %@", exception.name, exception.description];
@@ -279,6 +280,21 @@
 
   if (shouldThrowException) {
     NSString *reason = [NSString stringWithFormat:@"Invalid capture size of Size(%@, %@)", width, height];
+    @throw [NSException exceptionWithName:@"InvalidArgumentException" reason:reason userInfo:nil];
+  }
+}
+
+- (void)setVideoOrientation:(NSString *)orientation {
+  if ([@"VideoOrientation.portraitUp" isEqualToString:orientation]) {
+    _videoConnection.videoOrientation = AVCaptureVideoOrientationPortrait;
+  } else if ([@"VideoOrientation.portraitDown" isEqualToString:orientation]) {
+    _videoConnection.videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
+  } else if ([@"VideoOrientation.landscapeRight" isEqualToString:orientation]) {
+    _videoConnection.videoOrientation = AVCaptureVideoOrientationLandscapeRight;
+  } else if ([@"VideoOrientation.landscapeLeft" isEqualToString:orientation]) {
+    _videoConnection.videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
+  } else {
+    NSString *reason = [NSString stringWithFormat:@"Invalid video orientation of %@", orientation];
     @throw [NSException exceptionWithName:@"InvalidArgumentException" reason:reason userInfo:nil];
   }
 }
