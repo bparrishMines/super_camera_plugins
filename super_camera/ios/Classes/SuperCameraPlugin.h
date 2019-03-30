@@ -28,7 +28,7 @@ static CameraControllerErrorCode const _Nonnull kUnknown = @"Unknown";
 - (void)close;
 @end
 
-@protocol PhotoDelegate <AVCapturePhotoCaptureDelegate>
+@protocol PhotoDelegate
 @required
 - (void)initialize:(NSDictionary *_Nullable)settings
    textureRegistry:(NSObject<FlutterTextureRegistry> *_Nonnull)textureRegistry
