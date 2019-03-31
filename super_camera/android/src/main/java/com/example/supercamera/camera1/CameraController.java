@@ -47,14 +47,14 @@ public class CameraController extends BaseCameraController {
       final Camera camera = Camera.open(i);
       final Camera.Parameters parameters = camera.getParameters();
 
-      final List<Camera.Size> repeatingCaptureSizes = parameters.getSupportedPreviewSizes();
+      final List<Camera.Size> supportedVideoSizes = parameters.getSupportedPreviewSizes();
 
-      final List<int[]> allRepeatingCaptureSizeData = new ArrayList<>();
-      for (Camera.Size size : repeatingCaptureSizes) {
-        allRepeatingCaptureSizeData.add(new int[]{size.width, size.height});
+      final List<int[]> supportedVideoSizesData = new ArrayList<>();
+      for (Camera.Size size : supportedVideoSizes) {
+        supportedVideoSizesData.add(new int[]{size.width, size.height});
       }
 
-      cameraData.put("repeatingCaptureSizes", allRepeatingCaptureSizeData);
+      cameraData.put("supportedVideoSizes", supportedVideoSizesData);
 
       camera.release();
 

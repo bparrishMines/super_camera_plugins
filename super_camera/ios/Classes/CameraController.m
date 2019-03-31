@@ -46,30 +46,30 @@
         break;
     }
 
-    NSMutableArray<NSArray *> *repeatingCaptureSizes = [NSMutableArray array];
+    NSMutableArray<NSArray *> *supportedVideoSizes = [NSMutableArray array];
     if (@available(iOS 9.0, *)) {
       if ([device supportsAVCaptureSessionPreset:AVCaptureSessionPreset3840x2160]) {
-        [repeatingCaptureSizes addObject:@[@(3840), @(2160)]];
+        [supportedVideoSizes addObject:@[@(3840), @(2160)]];
       }
     }
     if ([device supportsAVCaptureSessionPreset:AVCaptureSessionPreset1920x1080]) {
-      [repeatingCaptureSizes addObject:@[@(1920), @(1080)]];
+      [supportedVideoSizes addObject:@[@(1920), @(1080)]];
     }
     if ([device supportsAVCaptureSessionPreset:AVCaptureSessionPreset1280x720]) {
-      [repeatingCaptureSizes addObject:@[@(1280), @(720)]];
+      [supportedVideoSizes addObject:@[@(1280), @(720)]];
     }
     if ([device supportsAVCaptureSessionPreset:AVCaptureSessionPreset640x480]) {
-      [repeatingCaptureSizes addObject:@[@(640), @(480)]];
+      [supportedVideoSizes addObject:@[@(640), @(480)]];
     }
     if ([device supportsAVCaptureSessionPreset:AVCaptureSessionPreset352x288]) {
-      [repeatingCaptureSizes addObject:@[@(352), @(288)]];
+      [supportedVideoSizes addObject:@[@(352), @(288)]];
     }
 
     [allCameraData addObject:@{
       @"cameraId": [device uniqueID],
       @"lensDirection": lensFacing,
       @"orientation": @(90),
-      @"repeatingCaptureSizes": repeatingCaptureSizes,
+      @"supportedVideoSizes": supportedVideoSizes,
     }];
   }
 

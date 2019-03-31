@@ -57,7 +57,7 @@ class _MyAppState extends State<MyApp> {
       (CameraDevice device) => device.lensDirection == _lensDirection,
     );
 
-    final List<Size> sortedSizes = List.from(device.repeatingCaptureSizes);
+    final List<Size> sortedSizes = List.from(device.supportedVideoSizes);
     sortedSizes.sort((Size one, Size two) {
       final double areaOne = one.width * one.height;
       final double areaTwo = two.width * two.height;

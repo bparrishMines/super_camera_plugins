@@ -7,7 +7,7 @@ class CameraDevice {
     @required this.cameraId,
     @required this.lensDirection,
     @required this.orientation,
-    @required this.repeatingCaptureSizes,
+    @required this.supportedVideoSizes,
   });
 
   factory CameraDevice._fromMap(Map<dynamic, dynamic> data) {
@@ -21,7 +21,7 @@ class CameraDevice {
       cameraId: data['cameraId'],
       lensDirection: lensDirection,
       orientation: data['orientation'],
-      repeatingCaptureSizes: List.unmodifiable(data['repeatingCaptureSizes']
+      supportedVideoSizes: List.unmodifiable(data['supportedVideoSizes']
           .map<Size>(
               (dynamic size) => Size(size[0].toDouble(), size[1].toDouble()))),
     );
@@ -29,7 +29,7 @@ class CameraDevice {
 
   final String cameraId;
   final LensDirection lensDirection;
-  final List<Size> repeatingCaptureSizes;
+  final List<Size> supportedVideoSizes;
 
   /// Clockwise angle through which the output image needs to be rotated to be upright on the device screen in its native orientation.
   ///
