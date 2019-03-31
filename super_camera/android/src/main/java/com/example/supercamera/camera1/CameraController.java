@@ -158,7 +158,11 @@ public class CameraController extends BaseCameraController {
         new Camera.PictureCallback() {
           @Override
           public void onPictureTaken(byte[] data, Camera camera) {
-            delegate.getJpegCallback().onPictureTaken(data, camera);
+            final Camera.PictureCallback callback = delegate.getJpegCallback();
+
+            if (callback != null) {
+              callback.onPictureTaken(data, camera);
+            }
             camera.startPreview();
           }
         });
@@ -206,8 +210,19 @@ public class CameraController extends BaseCameraController {
     camera.setDisplayOrientation(0);
 
     final Camera.Parameters parameters = camera.getParameters();
-    setPreviewSize(parameters, (Double) settings.get("width"), (Double) settings.get("height"));
-    camera.setParameters(parameters);
+    try {
+      setResolution(parameters, (Double) settings.get("width"), (Double) settings.get("height"));
+      camera.setParameters(parameters);
+      setVideoOrientation((String) settings.get("orientation"));
+    } catch (Exception exception) {
+      closeVideoDelegate();
+
+      final String exceptionName = exception.getClass().getSimpleName();
+      final String message = String.format("%s: %s", exceptionName, exception.getMessage());
+      result.error(ErrorCodes.INVALID_SETTING, message, null);
+
+      return;
+    }
 
     videoDelegate.onFinishSetup(result);
   }
@@ -231,9 +246,48 @@ public class CameraController extends BaseCameraController {
   }
 
   // Settings Methods
-  private void setPreviewSize(final Camera.Parameters parameters, Double width, Double height) {
+  private void setResolution(final Camera.Parameters parameters, Double width, Double height) {
     if (width != null && height != null) {
       parameters.setPreviewSize(width.intValue(), height.intValue());
+    }
+  }
+
+  // TODO(Maurice): Design way for this to work with tablets.
+  private void setVideoOrientation(String orientation) throws IllegalAccessException {
+    final Camera.CameraInfo info = new Camera.CameraInfo();
+    Camera.getCameraInfo(Integer.parseInt(cameraId), info);
+
+    final int cameraOrientation;
+    switch(info.facing) {
+      case Camera.CameraInfo.CAMERA_FACING_FRONT:
+        // We subtract orientation from 360 to compensate for the automatic mirroring of the front
+        // camera. See
+        // https://developer.android.com/reference/android/hardware/Camera.html#setDisplayOrientation(int)
+        cameraOrientation = 360 - info.orientation % 360;
+        break;
+      case Camera.CameraInfo.CAMERA_FACING_BACK:
+        cameraOrientation = info.orientation;
+        break;
+      default:
+        throw new IllegalAccessException("Using non front or back camera with Camera API");
+    }
+
+    switch(orientation) {
+      case "VideoOrientation.portraitUp":
+        camera.setDisplayOrientation(cameraOrientation);
+        break;
+      case "VideoOrientation.landscapeRight":
+        camera.setDisplayOrientation((cameraOrientation + 90) % 360);
+        break;
+      case "VideoOrientation.portraitDown":
+        camera.setDisplayOrientation((cameraOrientation + 180) % 360);
+        break;
+      case "VideoOrientation.landscapeLeft":
+        camera.setDisplayOrientation((cameraOrientation + 270) % 360);
+        break;
+      default:
+        final String message = String.format("Invalid video orientation of %s", orientation);
+        throw new IllegalArgumentException(message);
     }
   }
 
@@ -243,6 +297,13 @@ public class CameraController extends BaseCameraController {
 
     videoDelegate.close();
     videoDelegate = null;
+
+    try {
+      camera.setPreviewTexture(null);
+    } catch (IOException exception) {
+      // Do nothing. Exception won't throw when setting to null;
+    }
+    camera.setPreviewCallback(null);
   }
 
   private boolean cameraIsOpen() {

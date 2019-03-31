@@ -47,6 +47,8 @@ class VideoSettings {
   /// https://developer.android.com/reference/android/hardware/Camera.html#setDisplayOrientation(int)
   final bool shouldMirror;
 
+  // TODO(Maurice): Include information bout VideoOrientation.landscapeRight
+  // probably won't work. setDisplayOrientation on Anroid.
   final VideoOrientation orientation;
 
   Map<String, dynamic> _serialize() {
