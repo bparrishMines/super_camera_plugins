@@ -114,6 +114,7 @@ class _MyAppState extends State<MyApp> {
                 });
 
                 _controller.startRunning();
+                completer.complete();
               },
               onFailure: onFailure(completer),
             ),
@@ -180,12 +181,28 @@ class _MyAppState extends State<MyApp> {
               constraints: BoxConstraints.expand(),
               padding: EdgeInsets.all(10),
               child: Center(
-                child: FlatButton(
-                  onPressed: () {},
-                  color: Colors.white,
-                  child: null,
-                  shape: CircleBorder(
-                    side: BorderSide(color: Colors.grey),
+                child: InkResponse(
+                  onTap: () {
+                    _controller.takePhoto(
+                      PhotoSettings(
+                        delegateSettings: DataSettings(
+                          onImageDataAvailable: (_) => print('Picture Taken!'),
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 65,
+                    height: 65,
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey, width: 2)),
+                    child: new Icon(
+                      Icons.camera,
+                      color: Colors.grey,
+                      size: 60,
+                    ),
                   ),
                 ),
               ),
@@ -205,5 +222,11 @@ class _MyAppState extends State<MyApp> {
             : const Icon(Icons.camera_rear),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    Camera.releaseAllResources();
   }
 }
