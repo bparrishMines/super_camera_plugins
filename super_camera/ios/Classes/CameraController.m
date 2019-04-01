@@ -116,6 +116,27 @@
 
   _session = [AVCaptureSession new];
   _device = [AVCaptureDevice deviceWithUniqueID:_cameraId];
+
+  _videoInput = [AVCaptureDeviceInput deviceInputWithDevice:_device
+                                                      error:nil];
+  [_session addInputWithNoConnections:_videoInput];
+
+  _videoOutput = [AVCaptureVideoDataOutput new];
+  [_session addOutputWithNoConnections:_videoOutput];
+
+  _videoConnection = [AVCaptureConnection
+                      connectionWithInputPorts:_videoInput.ports
+                                        output:_videoOutput];
+  [_session addConnection:_videoConnection];
+
+  _stillImageOutput = [AVCaptureStillImageOutput new];
+  [_session addOutputWithNoConnections:_stillImageOutput];
+
+  _stillImageConnection = [AVCaptureConnection
+                           connectionWithInputPorts:_videoInput.ports
+                                             output:_stillImageOutput];
+  [_session addConnection:_stillImageConnection];
+
   result(nil);
 }
 
@@ -153,28 +174,10 @@
              textureRegistry:_textureRegistry
                       result:result];
 
-  BOOL sessionWasRunning = [_session isRunning];
-  if (sessionWasRunning) {
-    [_session stopRunning];
-  }
-
-  _stillImageOutput = [AVCaptureStillImageOutput new];
-  [_session addOutputWithNoConnections:_stillImageOutput];
-
-  _stillImageConnection = [AVCaptureConnection
-                           connectionWithInputPorts:_videoInput.ports
-                           output:_stillImageOutput];
-  [_session addConnection:_stillImageConnection];
-
-  if (sessionWasRunning) {
-    [_session startRunning];
-  }
-
   [_stillImageOutput captureStillImageAsynchronouslyFromConnection:_stillImageConnection completionHandler:^(CMSampleBufferRef _Nullable imageDataSampleBuffer, NSError *_Nullable error) {
     [self->_photoDelegate onImageTaken:imageDataSampleBuffer error:error];
 
     self->_photoDelegate = nil;
-    [self removePhotoOutputAndConnection];
   }];
 }
 
@@ -194,32 +197,21 @@
     return;
   }
 
+  [self closeVideoDelegate];
+
   _videoDelegate = [NSClassFromString(iOSDelegateName) new];
-
   [_videoDelegate initialize:settings[@"delegateSettings"] textureRegistry:_textureRegistry];
-
-  _videoInput = [AVCaptureDeviceInput deviceInputWithDevice:_device
-                                                             error:nil];
-  [_session addInputWithNoConnections:_videoInput];
-
-  _videoOutput = [AVCaptureVideoDataOutput new];
-  _videoOutput.videoSettings =
-      @{(NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA)};
-  [_videoOutput setAlwaysDiscardsLateVideoFrames:YES];
-  [_session addOutputWithNoConnections:_videoOutput];
   [_videoOutput setSampleBufferDelegate:_videoDelegate queue:dispatch_get_main_queue()];
 
-  _videoConnection = [AVCaptureConnection
-                             connectionWithInputPorts:_videoInput.ports
-                                               output:_videoOutput];
-  [_session addConnection:_videoConnection];
-
   @try {
+    _videoOutput.videoSettings =
+        @{(NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA)};
     [self setShouldMirror:settings[@"shouldMirror"]];
     [self setResolution:settings[@"width"] height:settings[@"height"]];
     [self setVideoOrientation:settings[@"orientation"]];
   } @catch (NSException *exception) {
-    [self removeVideoInputsAndOutputs];
+    [self closeVideoDelegate];
+
     NSString *message = [NSString stringWithFormat:@"%@: %@", exception.name, exception.description];
     result([FlutterError errorWithCode:kInvalidSetting message:message details:nil]);
     return;
@@ -303,31 +295,10 @@
 - (void)closeVideoDelegate {
   if (!_videoDelegate) return;
 
+  [_videoOutput setSampleBufferDelegate:nil queue:nil];
+
   [_videoDelegate close];
   _videoDelegate = nil;
-}
-
-- (void)removeVideoInputsAndOutputs {
-  if (![self cameraIsOpen]) return;
-
-  [_session removeConnection:_videoConnection];
-  _videoConnection = nil;
-
-  [_session removeInput:_videoInput];
-  _videoInput = nil;
-
-  [_session removeOutput:_videoOutput];
-  _videoOutput = nil;
-}
-
-- (void)removePhotoOutputAndConnection {
-  if (![self cameraIsOpen]) return;
-
-  [_session removeConnection:_stillImageConnection];
-  _stillImageConnection = nil;
-
-  [_session removeOutput:_stillImageOutput];
-  _stillImageOutput = nil;
 }
 
 - (BOOL)cameraIsOpen {
