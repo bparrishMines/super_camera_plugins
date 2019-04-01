@@ -66,8 +66,6 @@ class _MyAppState extends State<MyApp> {
       return areaOne > areaTwo ? -1 : 1;
     });
 
-    final double desiredAspectRatio = 16 / 9;
-
     Size resolution = sortedSizes[0];
     double closestAspectRatio =
         (resolution.width / resolution.height) - desiredAspectRatio;
@@ -212,6 +210,8 @@ class _MyAppState extends State<MyApp> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
         onPressed: () {
           if (_isToggling) return;
           _isToggling = true;
