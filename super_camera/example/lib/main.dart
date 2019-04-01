@@ -217,9 +217,7 @@ class _MyAppState extends State<MyApp> {
           _isToggling = true;
           _toggleCamera();
         },
-        child: _lensDirection == LensDirection.back
-            ? const Icon(Icons.camera_front)
-            : const Icon(Icons.camera_rear),
+        child: const Icon(Icons.switch_camera),
       ),
     );
   }
