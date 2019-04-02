@@ -295,15 +295,15 @@ public class CameraController extends BaseCameraController {
   private void closeVideoDelegate() {
     if (videoDelegate == null) return;
 
-    videoDelegate.close();
-    videoDelegate = null;
-
     try {
       camera.setPreviewTexture(null);
     } catch (IOException exception) {
-      // Do nothing. Exception won't throw when setting to null;
+      // Do nothing. Exception won't throw when setting to null.
     }
     camera.setPreviewCallback(null);
+
+    videoDelegate.close();
+    videoDelegate = null;
   }
 
   private boolean cameraIsOpen() {

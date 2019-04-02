@@ -48,7 +48,7 @@ class VideoSettings {
   final bool shouldMirror;
 
   // TODO(Maurice): Include information bout VideoOrientation.landscapeRight
-  // probably won't work. setDisplayOrientation on Anroid.
+  // probably won't work. setDisplayOrientation on Android.
   final VideoOrientation orientation;
 
   Map<String, dynamic> _serialize() {
