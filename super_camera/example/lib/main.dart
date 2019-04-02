@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -9,13 +8,9 @@ import 'package:super_camera/super_camera.dart';
 DeviceOrientation appDeviceOrientation;
 
 void main() {
-  appDeviceOrientation = defaultTargetPlatform == TargetPlatform.iOS
-      ? DeviceOrientation.landscapeRight
-      : DeviceOrientation.landscapeLeft;
-
   SystemChrome.setEnabledSystemUIOverlays([]);
   SystemChrome.setPreferredOrientations(<DeviceOrientation>[
-    appDeviceOrientation,
+    DeviceOrientation.portraitUp,
   ]);
 
   runApp(MaterialApp(home: MyApp()));
@@ -27,12 +22,12 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  static const double _desiredAspectRatio = 16 / 9;
+
   CameraController _controller;
   LensDirection _lensDirection = LensDirection.back;
   Widget _cameraWidget;
   bool _isToggling = false;
-  final double desiredAspectRatio =
-      defaultTargetPlatform == TargetPlatform.iOS ? 16 / 9 : 4 / 3;
 
   @override
   void initState() {
@@ -68,10 +63,10 @@ class _MyAppState extends State<MyApp> {
 
     Size resolution = sortedSizes[0];
     double closestAspectRatio =
-        (resolution.width / resolution.height) - desiredAspectRatio;
+        (resolution.width / resolution.height) - _desiredAspectRatio;
     for (int i = 1; i < sortedSizes.length; i++) {
       final double difference =
-          (sortedSizes[i].width / sortedSizes[i].height) - desiredAspectRatio;
+          (sortedSizes[i].width / sortedSizes[i].height) - _desiredAspectRatio;
       if (closestAspectRatio.abs() > difference.abs()) {
         resolution = sortedSizes[i];
         closestAspectRatio = difference.abs();
@@ -79,17 +74,6 @@ class _MyAppState extends State<MyApp> {
     }
 
     _controller = CameraController(device);
-
-    VideoOrientation videoOrientation;
-    switch (appDeviceOrientation) {
-      case DeviceOrientation.landscapeLeft:
-        videoOrientation = VideoOrientation.landscapeLeft;
-        break;
-      default:
-        videoOrientation = VideoOrientation.landscapeRight;
-    }
-
-    final double aspectRatio = resolution.width / resolution.height;
 
     _controller.open(
       onSuccess: () {
@@ -99,7 +83,7 @@ class _MyAppState extends State<MyApp> {
           VideoSettings(
             shouldMirror: device.lensDirection == LensDirection.front,
             resolution: resolution,
-            orientation: videoOrientation,
+            orientation: VideoOrientation.portraitUp,
             delegateSettings: TextureSettings(
               onTextureReady: (Texture texture) {
                 print("Got texture!");
@@ -107,28 +91,28 @@ class _MyAppState extends State<MyApp> {
                 setState(() {
                   _cameraWidget = _buildCameraWidget(
                     texture,
-                    aspectRatio,
+                    resolution.height / resolution.width,
                   );
                 });
 
                 _controller.startRunning();
                 completer.complete();
               },
-              onFailure: onFailure(completer),
+              onFailure: _onFailure(completer),
             ),
           ),
         );
       },
-      onFailure: onFailure(completer),
+      onFailure: _onFailure(completer),
     );
 
     return completer.future;
   }
 
-  Function(CameraException) onFailure(Completer completer) {
+  Function(CameraException) _onFailure(Completer completer) {
     return (CameraException exception) {
       print(exception);
-      completer.complete();
+      completer?.complete();
     };
   }
 
@@ -150,15 +134,27 @@ class _MyAppState extends State<MyApp> {
 
   // Switches camera if another exists.
   Future<void> _toggleCamera() async {
+    _lensDirection = _lensDirection == LensDirection.back
+        ? LensDirection.front
+        : LensDirection.back;
+
     setState(() {
-      _lensDirection = _lensDirection == LensDirection.back
-          ? LensDirection.front
-          : LensDirection.back;
+      _cameraWidget = null;
     });
 
     await Camera.releaseAllResources();
     await _openCamera();
-    _isToggling = false;
+  }
+
+  void _takePicture() {
+    _controller.takePhoto(
+      PhotoSettings(
+        delegateSettings: DataSettings(
+          onImageDataAvailable: (_) => print('Picture Taken!'),
+          onFailure: _onFailure(null),
+        ),
+      ),
+    );
   }
 
   Widget _buildCameraWidget(Texture texture, double aspectRatio) {
@@ -168,56 +164,70 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  Widget _buildPictureButton() {
+    return InkResponse(
+      onTap: _takePicture,
+      child: Container(
+        width: 65,
+        height: 65,
+        decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.grey, width: 2)),
+        child: new Icon(
+          Icons.camera,
+          color: Colors.grey,
+          size: 60,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
+      body: Column(
         children: <Widget>[
-          _cameraWidget ?? Text('Running Super Camera'),
           Expanded(
             child: Container(
-              constraints: BoxConstraints.expand(),
-              padding: EdgeInsets.all(10),
               child: Center(
-                child: InkResponse(
-                  onTap: () {
-                    _controller.takePhoto(
-                      PhotoSettings(
-                        delegateSettings: DataSettings(
-                          onImageDataAvailable: (_) => print('Picture Taken!'),
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    width: 65,
-                    height: 65,
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.grey, width: 2)),
-                    child: new Icon(
-                      Icons.camera,
-                      color: Colors.grey,
-                      size: 60,
-                    ),
-                  ),
-                ),
+                child: _cameraWidget ?? Container(),
               ),
-              decoration: BoxDecoration(color: Colors.black),
+              decoration: BoxDecoration(
+                color: Colors.black,
+              ),
             ),
           ),
+          Container(
+            padding: EdgeInsets.only(bottom: 30, left: 10, right: 10, top: 15),
+            child: Stack(
+              children: <Widget>[
+                Container(
+                  margin: EdgeInsets.only(top: 10),
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.switch_camera,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                    onPressed: () {
+                      if (!_isToggling) {
+                        _isToggling = true;
+                        _toggleCamera().then((_) => _isToggling = false);
+                      }
+                    },
+                  ),
+                ),
+                Container(
+                  alignment: Alignment.center,
+                  child: _buildPictureButton(),
+                )
+              ],
+            ),
+            decoration: BoxDecoration(color: Colors.black),
+          ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        onPressed: () {
-          if (_isToggling) return;
-          _isToggling = true;
-          _toggleCamera();
-        },
-        child: const Icon(Icons.switch_camera),
       ),
     );
   }
