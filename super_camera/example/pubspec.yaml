@@ -8,8 +8,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
   permission_handler: ^3.0.0
+  sensors: ^0.4.0+1
 
   super_camera:
     path: ../

@@ -1,11 +1,11 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:super_camera/super_camera.dart';
-
-DeviceOrientation appDeviceOrientation;
+import 'package:sensors/sensors.dart';
 
 void main() {
   SystemChrome.setEnabledSystemUIOverlays([]);
@@ -23,16 +23,46 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   static const double _desiredAspectRatio = 16 / 9;
+  static const double _earthAcceleration = 9.81;
 
   CameraController _controller;
   LensDirection _lensDirection = LensDirection.back;
   Widget _cameraWidget;
   bool _isToggling = false;
+  double _deviceRotation = 0;
+  StreamSubscription<AccelerometerEvent> _accelerometerSubscription;
 
   @override
   void initState() {
     super.initState();
+    _setupAccelerometer();
     _toggleCamera();
+  }
+
+  void _setupAccelerometer() {
+    _accelerometerSubscription =
+        accelerometerEvents.listen((AccelerometerEvent event) {
+      final double maxAcceleration = _earthAcceleration * .75;
+
+      double newDeviceRotation;
+      if (event.x > maxAcceleration) {
+        newDeviceRotation = pi / 2.0;
+      } else if (event.y > maxAcceleration) {
+        newDeviceRotation = 0;
+      } else if (event.x < -maxAcceleration) {
+        newDeviceRotation = -pi / 2.0;
+      } else if (event.y < -maxAcceleration) {
+        newDeviceRotation = pi;
+      } else {
+        return;
+      }
+
+      if (_deviceRotation != newDeviceRotation) {
+        setState(() {
+          _deviceRotation = newDeviceRotation;
+        });
+      }
+    });
   }
 
   Future<void> _openCamera() async {
@@ -205,18 +235,21 @@ class _MyAppState extends State<MyApp> {
                 Container(
                   margin: EdgeInsets.only(top: 10),
                   alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.switch_camera,
-                      color: Colors.white,
-                      size: 32,
+                  child: Transform.rotate(
+                    angle: _deviceRotation,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.switch_camera,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                      onPressed: () {
+                        if (!_isToggling) {
+                          _isToggling = true;
+                          _toggleCamera().then((_) => _isToggling = false);
+                        }
+                      },
                     ),
-                    onPressed: () {
-                      if (!_isToggling) {
-                        _isToggling = true;
-                        _toggleCamera().then((_) => _isToggling = false);
-                      }
-                    },
                   ),
                 ),
                 Container(
@@ -235,6 +268,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     super.dispose();
+    _accelerometerSubscription.cancel();
     Camera.releaseAllResources();
   }
 }
