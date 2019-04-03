@@ -15,6 +15,7 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.view.TextureRegistry;
 
 public class CameraController extends BaseCameraController {
+  // We can store camera data because the Camera API can't access external cameras.
   private static List<Map<String, Object>> availableCameraData;
 
   public static List<Map<String, Object>> availableCameras() {
@@ -23,11 +24,11 @@ public class CameraController extends BaseCameraController {
     List<Map<String, Object>> allCameraData = new ArrayList<>();
 
     for (int i = 0, count = Camera.getNumberOfCameras(); i < count; i++) {
-      final Camera.CameraInfo info = new Camera.CameraInfo();
-      Camera.getCameraInfo(i, info);
-
       final Map<String, Object> cameraData = new HashMap<>();
       cameraData.put("cameraId", String.valueOf(i));
+
+      final Camera.CameraInfo info = new Camera.CameraInfo();
+      Camera.getCameraInfo(i, info);
 
       switch(info.facing) {
         case Camera.CameraInfo.CAMERA_FACING_FRONT:

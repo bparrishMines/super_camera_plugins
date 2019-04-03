@@ -1,8 +1,13 @@
 package com.example.supercamera;
 
+import android.content.Context;
+import android.hardware.camera2.CameraManager;
+import android.os.Build;
 import android.util.Pair;
 import com.example.supercamera.base.BaseCameraController;
 import com.example.supercamera.camera1.CameraController;
+import com.example.supercamera.camera2.CameraController2;
+
 import java.util.ArrayList;
 import java.util.List;
 import io.flutter.plugin.common.MethodCall;
@@ -32,7 +37,7 @@ public class SuperCameraPlugin implements MethodCallHandler {
   public void onMethodCall(MethodCall call, Result result) {
     switch(call.method) {
       case "Camera#availableCameras":
-        result.success(CameraController.availableCameras());
+        availableCameras(result);
         break;
       case "Camera#createCameraController":
         createCameraController(call);
@@ -45,6 +50,18 @@ public class SuperCameraPlugin implements MethodCallHandler {
       default:
         result.notImplemented();
     }
+  }
+
+  private void availableCameras(Result result) {
+    if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+      result.success(CameraController.availableCameras());
+      return;
+    }
+
+
+    final CameraManager manager =
+        (CameraManager) registrar.activity().getSystemService(Context.CAMERA_SERVICE);
+    CameraController2.returnAvailableCameras(manager, result);
   }
 
   private void createCameraController(MethodCall call) {
