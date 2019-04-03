@@ -11,5 +11,6 @@ part 'src/camera_controller.dart';
 part 'src/camera.dart';
 part 'src/camera_device.dart';
 part 'src/camera_exception.dart';
+part 'src/camera_utils.dart';
 part 'src/capture_settings.dart';
 part 'src/custom_delegate_settings.dart';

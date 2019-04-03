@@ -22,9 +22,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  static const double _desiredAspectRatio = 16 / 9;
-  static const double _earthAcceleration = 9.81;
-
   CameraController _controller;
   LensDirection _lensDirection = LensDirection.back;
   Widget _cameraWidget;
@@ -42,7 +39,7 @@ class _MyAppState extends State<MyApp> {
   void _setupAccelerometer() {
     _accelerometerSubscription =
         accelerometerEvents.listen((AccelerometerEvent event) {
-      final double maxAcceleration = _earthAcceleration * .75;
+      final double maxAcceleration = 9.81 * .75;
 
       double newDeviceRotation;
       if (event.x > maxAcceleration) {
@@ -76,34 +73,15 @@ class _MyAppState extends State<MyApp> {
       return completer.future;
     }
 
-    final List<CameraDevice> cameras = await Camera.availableCameras();
-
-    final CameraDevice device = cameras.firstWhere(
-      (CameraDevice device) => device.lensDirection == _lensDirection,
+    final CameraDevice device = await CameraUtils.cameraDeviceForDirection(
+      _lensDirection,
     );
-
-    final List<Size> sortedSizes = List.from(device.supportedVideoSizes);
-    sortedSizes.sort((Size one, Size two) {
-      final double areaOne = one.width * one.height;
-      final double areaTwo = two.width * two.height;
-
-      if (areaOne == areaTwo) return 0;
-      return areaOne > areaTwo ? -1 : 1;
-    });
-
-    Size resolution = sortedSizes[0];
-    double closestAspectRatio =
-        (resolution.width / resolution.height) - _desiredAspectRatio;
-    for (int i = 1; i < sortedSizes.length; i++) {
-      final double difference =
-          (sortedSizes[i].width / sortedSizes[i].height) - _desiredAspectRatio;
-      if (closestAspectRatio.abs() > difference.abs()) {
-        resolution = sortedSizes[i];
-        closestAspectRatio = difference.abs();
-      }
-    }
-
     _controller = CameraController(device);
+
+    final Size bestResolution = CameraUtils.bestSizeForAspectRatio(
+      device.supportedVideoSizes,
+      aspectRatio: 16 / 9,
+    );
 
     _controller.open(
       onSuccess: () {
@@ -112,7 +90,7 @@ class _MyAppState extends State<MyApp> {
         _controller.setVideoSettings(
           VideoSettings(
             shouldMirror: device.lensDirection == LensDirection.front,
-            resolution: resolution,
+            resolution: bestResolution,
             orientation: VideoOrientation.portraitUp,
             delegateSettings: TextureSettings(
               onTextureReady: (Texture texture) {
@@ -121,7 +99,7 @@ class _MyAppState extends State<MyApp> {
                 setState(() {
                   _cameraWidget = _buildCameraWidget(
                     texture,
-                    resolution.height / resolution.width,
+                    bestResolution.height / bestResolution.width,
                   );
                 });
 
