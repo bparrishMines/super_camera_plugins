@@ -69,7 +69,7 @@ class _MyAppState extends State<MyApp> {
 
     if (!hasCameraAccess) {
       print('No camera access!');
-      completer.isCompleted;
+      completer.complete();
       return completer.future;
     }
 
@@ -78,8 +78,9 @@ class _MyAppState extends State<MyApp> {
     );
     _controller = CameraController(device);
 
-    final Size bestResolution = CameraUtils.bestSizeForAspectRatio(
-      device.supportedVideoSizes,
+    final VideoFormat bestVideoFormat =
+        CameraUtils.bestVideoFormatForAspectRatio(
+      videoFormats: device.videoFormats,
       aspectRatio: 16 / 9,
     );
 
@@ -90,7 +91,7 @@ class _MyAppState extends State<MyApp> {
         _controller.setVideoSettings(
           VideoSettings(
             shouldMirror: device.lensDirection == LensDirection.front,
-            resolution: bestResolution,
+            videoFormat: bestVideoFormat,
             orientation: VideoOrientation.portraitUp,
             delegateSettings: TextureSettings(
               onTextureReady: (Texture texture) {
@@ -99,7 +100,8 @@ class _MyAppState extends State<MyApp> {
                 setState(() {
                   _cameraWidget = _buildCameraWidget(
                     texture,
-                    bestResolution.height / bestResolution.width,
+                    bestVideoFormat.dimensions.height /
+                        bestVideoFormat.dimensions.width,
                   );
                 });
 

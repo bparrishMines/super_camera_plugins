@@ -25,15 +25,16 @@ class PhotoSettings {
 class VideoSettings {
   const VideoSettings({
     @required this.delegateSettings,
+    @required this.videoFormat,
     bool shouldMirror,
     VideoOrientation orientation,
-    this.resolution,
   })  : shouldMirror = shouldMirror ?? false,
         orientation = orientation ?? VideoOrientation.portraitUp,
-        assert(delegateSettings != null);
+        assert(delegateSettings != null),
+        assert(videoFormat != null);
 
   final CaptureDelegateSettings delegateSettings;
-  final Size resolution;
+  final VideoFormat videoFormat;
 
   /// Indicates whether the video should be mirrored about its vertical axis for iOS.
   ///
@@ -57,8 +58,7 @@ class VideoSettings {
       'iOSDelegateName': delegateSettings.iOSDelegateName,
       'delegateSettings': delegateSettings.settings,
       'shouldMirror': shouldMirror,
-      'width': resolution?.width,
-      'height': resolution?.height,
+      'videoFormat': videoFormat._serialize(),
       'orientation': orientation.toString(),
     };
   }

@@ -33,6 +33,14 @@
       [[NSMutableArray alloc] initWithCapacity:devices.count];
 
   for (AVCaptureDevice *device in devices) {
+      /*
+  for (AVCaptureDeviceFormat *format in device.formats) {
+      CMFormatDescriptionRef description = format.formatDescription;
+      CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(description);
+      
+      NSLog(@"%d %d", dimensions.width, dimensions.height);
+  }
+      */
     NSString *lensFacing;
     switch ([device position]) {
       case AVCaptureDevicePositionBack:

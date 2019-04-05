@@ -7,7 +7,7 @@ class CameraDevice {
     @required this.cameraId,
     @required this.lensDirection,
     @required this.orientation,
-    @required this.supportedVideoSizes,
+    @required this.videoFormats,
   });
 
   factory CameraDevice._fromMap(Map<dynamic, dynamic> data) {
@@ -21,21 +21,31 @@ class CameraDevice {
       cameraId: data['cameraId'],
       lensDirection: lensDirection,
       orientation: data['orientation'],
-      supportedVideoSizes: List.unmodifiable(data['supportedVideoSizes']
-          .map<Size>(
-              (dynamic size) => Size(size[0].toDouble(), size[1].toDouble()))),
+      videoFormats: _videoFormatsFromList(data['videoFormats']),
     );
   }
 
   final String cameraId;
   final LensDirection lensDirection;
-  final List<Size> supportedVideoSizes;
 
   /// Clockwise angle through which the output image needs to be rotated to be upright on the device screen in its native orientation.
   ///
   /// **Range of valid values:**
   /// 0, 90, 180, 270
   final int orientation;
+
+  final List<VideoFormat> videoFormats;
+
+  static List<VideoFormat> _videoFormatsFromList(List<dynamic> data) {
+    return data.map<VideoFormat>(
+      (dynamic format) {
+        return VideoFormat._(
+          dimensions: Size(format['width'], format['height']),
+          pixelFormat: PixelFormat._fromMap(format['pixelFormat']),
+        );
+      },
+    );
+  }
 
   @override
   int get hashCode => cameraId.hashCode;

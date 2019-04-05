@@ -13,19 +13,20 @@ class CameraUtils {
     );
   }
 
-  static Size bestSizeForAspectRatio(
-    List<Size> sizes, {
-    double aspectRatio = 16 / 9,
+  static VideoFormat bestVideoFormatForAspectRatio({
+    @required List<VideoFormat> videoFormats,
+    @required double aspectRatio,
     bool largest = true,
   }) {
-    assert(sizes != null);
+    assert(videoFormats != null);
+    assert(videoFormats.isNotEmpty);
     assert(aspectRatio != null);
     assert(largest != null);
 
-    final List<Size> sortedSizes = List.from(sizes)
-      ..sort((Size one, Size two) {
-        final double areaOne = one.width * one.height;
-        final double areaTwo = two.width * two.height;
+    final List<VideoFormat> sortedVideoFormats = List.from(videoFormats)
+      ..sort((VideoFormat one, VideoFormat two) {
+        final double areaOne = one.dimensions.width * one.dimensions.height;
+        final double areaTwo = two.dimensions.width * two.dimensions.height;
 
         if (areaOne == areaTwo) return 0;
 
@@ -36,20 +37,27 @@ class CameraUtils {
         }
       });
 
-    Size resolution = sortedSizes[0];
-    double closestAspectRatio =
-        (resolution.width / resolution.height) - aspectRatio;
+    VideoFormat bestVideoFormat = sortedVideoFormats[0];
 
-    for (int i = 1; i < sortedSizes.length; i++) {
-      final double difference =
-          (sortedSizes[i].width / sortedSizes[i].height) - aspectRatio;
+    final Size dimensions = bestVideoFormat.dimensions;
+    final double formatAspectRatio = dimensions.width / dimensions.height;
 
-      if (closestAspectRatio.abs() > difference.abs()) {
-        resolution = sortedSizes[i];
-        closestAspectRatio = difference.abs();
+    double smallestDifference = formatAspectRatio - aspectRatio;
+
+    for (int i = 1; i < sortedVideoFormats.length; i++) {
+      final Size dimensions = sortedVideoFormats[i].dimensions;
+      final double formatAspectRatio = dimensions.width / dimensions.height;
+
+      final double difference = formatAspectRatio - aspectRatio;
+
+      if (smallestDifference.abs() > difference.abs()) {
+        bestVideoFormat = sortedVideoFormats[i];
+        smallestDifference = difference.abs();
+
+        if (smallestDifference <= .001) break;
       }
     }
 
-    return resolution;
+    return bestVideoFormat;
   }
 }
