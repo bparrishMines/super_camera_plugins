@@ -204,10 +204,8 @@
   [_videoOutput setSampleBufferDelegate:_videoDelegate queue:dispatch_get_main_queue()];
 
   @try {
-    _videoOutput.videoSettings =
-        @{(NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA)};
     [self setShouldMirror:settings[@"shouldMirror"]];
-    [self setResolution:settings[@"videoFormat"][@"width"] height:settings[@"videoFormat"][@"height"]];
+    [self setVideoFormat:settings[@"videoFormat"]];
     [self setVideoOrientation:settings[@"orientation"]];
   } @catch (NSException *exception) {
     [self closeVideoDelegate];
@@ -245,35 +243,37 @@
   _videoConnection.videoMirrored = shouldMirror.boolValue;
 }
 
-- (void)setResolution:(NSNumber *)width height:(NSNumber *)height {
-  if ([width isEqual:[NSNull null]] || [height isEqual:[NSNull null]]) {
-    return;
-  }
+- (void)setVideoFormat:(NSDictionary *)videoFormat {
+  if (!videoFormat) return;
 
-  BOOL shouldThrowException = NO;
+  NSError *error = nil;
+  [_device lockForConfiguration:&error];
 
-  if (width.intValue == 3840 && height.intValue == 2160) {
-    if (@available(iOS 9.0, *)) {
-      _session.sessionPreset = AVCaptureSessionPreset3840x2160;
-    } else {
-      shouldThrowException = YES;
+  if (error) @throw error;
+
+  for (NSNumber *pixelFormat in _videoOutput.availableVideoCVPixelFormatTypes) {
+    if ([CameraController stringForOSType:pixelFormat.intValue] == videoFormat[@"pixelFormat"]) {
+      _videoOutput.videoSettings = @{(NSString *)kCVPixelBufferPixelFormatTypeKey: pixelFormat};
     }
-  } else if (width.intValue == 1920 && height.intValue == 1080) {
-    _session.sessionPreset = AVCaptureSessionPreset1920x1080;
-  } else if (width.intValue == 1280 && height.intValue == 720) {
-    _session.sessionPreset = AVCaptureSessionPreset1280x720;
-  } else if (width.intValue == 640 && height.intValue == 480) {
-    _session.sessionPreset = AVCaptureSessionPreset640x480;
-  } else if (width.intValue == 352 && height.intValue == 288) {
-    _session.sessionPreset = AVCaptureSessionPreset352x288;
-  } else {
-    shouldThrowException = YES;
   }
 
-  if (shouldThrowException) {
-    NSString *reason = [NSString stringWithFormat:@"Invalid capture size of Size(%@, %@)", width, height];
-    @throw [NSException exceptionWithName:@"InvalidArgumentException" reason:reason userInfo:nil];
+  for (AVCaptureDeviceFormat *format in _device.formats) {
+    CMFormatDescriptionRef description = format.formatDescription;
+    CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(description);
+
+    NSNumber *width = videoFormat[@"width"];
+    NSNumber *height = videoFormat[@"height"];
+    if (dimensions.width == width.intValue && dimensions.height == height.intValue) {
+      _device.activeFormat = format;
+      [_device unlockForConfiguration];
+      return;
+    }
   }
+
+  NSString *reason = [NSString
+                  stringWithFormat:@"Invalid capture size of Size(%@, %@)",
+                  videoFormat[@"width"], videoFormat[@"height"]];
+  @throw [NSException exceptionWithName:@"InvalidArgumentException" reason:reason userInfo:nil];
 }
 
 - (void)setVideoOrientation:(NSString *)orientation {

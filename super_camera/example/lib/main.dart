@@ -78,9 +78,13 @@ class _MyAppState extends State<MyApp> {
     );
     _controller = CameraController(device);
 
+    final List<VideoFormat> videoFormats = device.videoFormats.where(
+      (VideoFormat format) => format.pixelFormat == PixelFormat.bgra8888,
+    ).toList();
+
     final VideoFormat bestVideoFormat =
         CameraUtils.bestVideoFormatForAspectRatio(
-      videoFormats: device.videoFormats,
+      videoFormats: videoFormats,
       aspectRatio: 16 / 9,
     );
 
