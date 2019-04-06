@@ -40,11 +40,14 @@ class CameraDevice {
     return data.map<VideoFormat>(
       (dynamic format) {
         return VideoFormat._(
-          dimensions: Size(format['width'], format['height']),
+          dimensions: Size(
+            format['width'].toDouble(),
+            format['height'].toDouble(),
+          ),
           pixelFormat: PixelFormat._fromMap(format['pixelFormat']),
         );
       },
-    );
+    ).toList();
   }
 
   @override
@@ -54,5 +57,6 @@ class CameraDevice {
   bool operator ==(other) => this.hashCode == other.hashCode;
 
   @override
-  String toString() => '$runtimeType($cameraId, $lensDirection, $orientation)';
+  String toString() => '''$runtimeType($cameraId, $lensDirection, $orientation,
+   $videoFormats)''';
 }

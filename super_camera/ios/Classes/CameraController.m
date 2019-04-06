@@ -33,14 +33,23 @@
       [[NSMutableArray alloc] initWithCapacity:devices.count];
 
   for (AVCaptureDevice *device in devices) {
-      /*
-  for (AVCaptureDeviceFormat *format in device.formats) {
-      CMFormatDescriptionRef description = format.formatDescription;
-      CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(description);
-      
-      NSLog(@"%d %d", dimensions.width, dimensions.height);
-  }
-      */
+    AVCaptureVideoDataOutput *output = [AVCaptureVideoDataOutput new];
+
+    NSMutableArray<NSDictionary *> *allVideoFormatData = [NSMutableArray array];
+
+    for (NSNumber *pixelFormat in output.availableVideoCVPixelFormatTypes) {
+      for (AVCaptureDeviceFormat *format in device.formats) {
+        CMFormatDescriptionRef description = format.formatDescription;
+        CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(description);
+
+        [allVideoFormatData addObject:@{
+                                  @"width": @(dimensions.width),
+                                  @"height": @(dimensions.height),
+                                  @"pixelFormat": @{@"rawIos": [self stringForOSType:pixelFormat.intValue]},
+                                }];
+      }
+    }
+
     NSString *lensFacing;
     switch ([device position]) {
       case AVCaptureDevicePositionBack:
@@ -54,30 +63,13 @@
         break;
     }
 
-    NSMutableArray<NSArray *> *supportedVideoSizes = [NSMutableArray array];
-    if (@available(iOS 9.0, *)) {
-      if ([device supportsAVCaptureSessionPreset:AVCaptureSessionPreset3840x2160]) {
-        [supportedVideoSizes addObject:@[@(3840), @(2160)]];
-      }
-    }
-    if ([device supportsAVCaptureSessionPreset:AVCaptureSessionPreset1920x1080]) {
-      [supportedVideoSizes addObject:@[@(1920), @(1080)]];
-    }
-    if ([device supportsAVCaptureSessionPreset:AVCaptureSessionPreset1280x720]) {
-      [supportedVideoSizes addObject:@[@(1280), @(720)]];
-    }
-    if ([device supportsAVCaptureSessionPreset:AVCaptureSessionPreset640x480]) {
-      [supportedVideoSizes addObject:@[@(640), @(480)]];
-    }
-    if ([device supportsAVCaptureSessionPreset:AVCaptureSessionPreset352x288]) {
-      [supportedVideoSizes addObject:@[@(352), @(288)]];
-    }
-
+    // We use 90 as the orientation because the default video orientation is
+    // AVCaptureVideoOrientationLandscapeLeft
     [allCameraData addObject:@{
       @"cameraId": [device uniqueID],
       @"lensDirection": lensFacing,
       @"orientation": @(90),
-      @"supportedVideoSizes": supportedVideoSizes,
+      @"videoFormats": allVideoFormatData,
     }];
   }
 
@@ -215,7 +207,7 @@
     _videoOutput.videoSettings =
         @{(NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA)};
     [self setShouldMirror:settings[@"shouldMirror"]];
-    [self setResolution:settings[@"width"] height:settings[@"height"]];
+    [self setResolution:settings[@"videoFormat"][@"width"] height:settings[@"videoFormat"][@"height"]];
     [self setVideoOrientation:settings[@"orientation"]];
   } @catch (NSException *exception) {
     [self closeVideoDelegate];
@@ -311,5 +303,14 @@
 
 - (BOOL)cameraIsOpen {
   return _session != nil;
+}
+
++ (NSString *)stringForOSType:(OSType)type {
+  unichar c[4];
+  c[0] = (type >> 24) & 0xFF;
+  c[1] = (type >> 16) & 0xFF;
+  c[2] = (type >> 8) & 0xFF;
+  c[3] = (type >> 0) & 0xFF;
+  return [NSString stringWithCharacters:c length:4];
 }
 @end

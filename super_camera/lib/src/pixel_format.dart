@@ -16,10 +16,10 @@ class PixelFormat {
       },
       orElse: () {
         if (defaultTargetPlatform == TargetPlatform.iOS) {
-          return PixelFormat._(rawAndroid: map['rawAndroid'], rawIos: null);
+          return PixelFormat._(rawAndroid: null, rawIos: map['rawIos']);
         }
 
-        return PixelFormat._(rawAndroid: null, rawIos: map['rawIod']);
+        return PixelFormat._(rawAndroid: map['rawAndroid'], rawIos: null);
       },
     );
   }
@@ -29,13 +29,18 @@ class PixelFormat {
     rawIos: 'BGRA',
   );
 
-  static const PixelFormat yuv420 = PixelFormat._(
-    rawAndroid: 35,
-    rawIos: '420v',
+  static const PixelFormat yuv420f = PixelFormat._(
+    rawAndroid: null,
+    rawIos: '420f',
   );
 
   final int rawAndroid;
   final String rawIos;
 
-  static List<PixelFormat> get values => <PixelFormat>[bgra8888, yuv420];
+  static List<PixelFormat> get values => <PixelFormat>[bgra8888, yuv420f];
+
+  @override
+  String toString() {
+    return '$runtimeType(android: $rawAndroid, ios: $rawIos)';
+  }
 }

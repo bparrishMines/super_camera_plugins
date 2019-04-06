@@ -13,4 +13,9 @@ class VideoFormat {
             ? pixelFormat.rawIos
             : pixelFormat.rawAndroid,
       };
+
+  @override
+  String toString() {
+    return '$runtimeType($dimensions, $pixelFormat)';
+  }
 }
