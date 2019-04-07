@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -78,13 +79,17 @@ class _MyAppState extends State<MyApp> {
     );
     _controller = CameraController(device);
 
-    final List<VideoFormat> videoFormats = device.videoFormats.where(
-      (VideoFormat format) => format.pixelFormat == PixelFormat.bgra8888,
-    ).toList();
+    final List<VideoFormat> videoFormats = device.videoFormats
+        .where(
+          (VideoFormat format) => format.pixelFormat == PixelFormat.bgra8888,
+        )
+        .toList();
 
     final VideoFormat bestVideoFormat =
         CameraUtils.bestVideoFormatForAspectRatio(
-      videoFormats: videoFormats,
+      videoFormats: defaultTargetPlatform == TargetPlatform.iOS
+          ? videoFormats
+          : device.videoFormats,
       aspectRatio: 16 / 9,
     );
 

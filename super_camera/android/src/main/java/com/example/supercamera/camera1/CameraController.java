@@ -48,14 +48,23 @@ public class CameraController extends BaseCameraController {
       final Camera camera = Camera.open(i);
       final Camera.Parameters parameters = camera.getParameters();
 
-      final List<Camera.Size> supportedVideoSizes = parameters.getSupportedPreviewSizes();
+      final List<Map<String, Object>> allVideoFormatData = new ArrayList<>();
+      for (Integer format : parameters.getSupportedPreviewFormats()) {
+        final Map<String, Object> videoFormatData = new HashMap<>();
 
-      final List<int[]> supportedVideoSizesData = new ArrayList<>();
-      for (Camera.Size size : supportedVideoSizes) {
-        supportedVideoSizesData.add(new int[]{size.width, size.height});
+        for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
+          videoFormatData.put("width", size.width);
+          videoFormatData.put("height", size.height);
+
+          final Map<String, Object> pixelFormat = new HashMap<>();
+          pixelFormat.put("rawAndroid", format);
+          videoFormatData.put("pixelFormat", pixelFormat);
+        }
+
+        allVideoFormatData.add(videoFormatData);
       }
 
-      cameraData.put("supportedVideoSizes", supportedVideoSizesData);
+      cameraData.put("videoFormats", allVideoFormatData);
 
       camera.release();
 
@@ -212,7 +221,9 @@ public class CameraController extends BaseCameraController {
 
     final Camera.Parameters parameters = camera.getParameters();
     try {
-      setResolution(parameters, (Double) settings.get("width"), (Double) settings.get("height"));
+      @SuppressWarnings("unchecked")
+      final Map<String, Object> videoFormat = (Map<String, Object>) settings.get("videoFormat");
+      setVideoFormat(parameters, videoFormat);
       camera.setParameters(parameters);
       setVideoOrientation((String) settings.get("orientation"));
     } catch (Exception exception) {
@@ -247,10 +258,16 @@ public class CameraController extends BaseCameraController {
   }
 
   // Settings Methods
-  private void setResolution(final Camera.Parameters parameters, Double width, Double height) {
-    if (width != null && height != null) {
-      parameters.setPreviewSize(width.intValue(), height.intValue());
-    }
+  private void setVideoFormat(
+      final Camera.Parameters parameters, Map<String, Object> videoFormatData) {
+    if (videoFormatData == null) return;
+
+    final Double width = (Double) videoFormatData.get("width");
+    final Double height = (Double) videoFormatData.get("height");
+    final Integer format = (Integer) videoFormatData.get("pixelFormat");
+
+    parameters.setPreviewSize(width.intValue(), height.intValue());
+    parameters.setPreviewFormat(format);
   }
 
   // TODO(Maurice): Design way for this to work with tablets.
