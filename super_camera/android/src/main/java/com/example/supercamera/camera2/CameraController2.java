@@ -4,7 +4,9 @@ import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Build;
+import android.util.Size;
 import com.example.supercamera.base.BaseCameraController;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,8 +42,30 @@ public class CameraController2 extends BaseCameraController {
             break;
         }
 
-        Integer sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+        final Integer sensorOrientation = characteristics.get(
+            CameraCharacteristics.SENSOR_ORIENTATION);
         cameraData.put("orientation", sensorOrientation);
+
+        final StreamConfigurationMap configs = characteristics.get(
+            CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+
+        final List<Map<String, Object>> allVideoFormatData = new ArrayList<>();
+        for (Integer format : configs.getOutputFormats()) {
+          for (Size size : configs.getOutputSizes(format)) {
+            final Map<String, Object> videoFormatData = new HashMap<>();
+
+            videoFormatData.put("width", size.getWidth());
+            videoFormatData.put("height", size.getHeight());
+
+            final Map<String, Object> pixelFormat = new HashMap<>();
+            pixelFormat.put("rawAndroid", format);
+            videoFormatData.put("pixelFormat", pixelFormat);
+
+            allVideoFormatData.add(videoFormatData);
+          }
+        }
+
+        cameraData.put("videoFormats", allVideoFormatData);
 
         allCameraData.add(cameraData);
       }

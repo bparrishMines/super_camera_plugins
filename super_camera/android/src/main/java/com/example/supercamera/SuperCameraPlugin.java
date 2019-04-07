@@ -37,7 +37,7 @@ public class SuperCameraPlugin implements MethodCallHandler {
   public void onMethodCall(MethodCall call, Result result) {
     switch(call.method) {
       case "Camera#availableCameras":
-        result.success(CameraController.availableCameras());
+        availableCameras(result);
         break;
       case "Camera#createCameraController":
         createCameraController(call);
