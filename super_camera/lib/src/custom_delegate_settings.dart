@@ -14,7 +14,7 @@ class TextureSettings extends CaptureDelegateSettings {
         );
 
   static const String _androidName =
-      'com.example.supercamera.camera1.video_delegates.TextureDelegate';
+      'com.example.supercamera.camera2.video_delegates.TextureDelegate';
   static const String _iOSName = 'TextureDelegate';
 }
 

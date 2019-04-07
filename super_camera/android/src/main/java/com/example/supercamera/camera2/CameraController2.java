@@ -1,5 +1,6 @@
 package com.example.supercamera.camera2;
 
+import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -12,6 +13,7 @@ import android.os.Build;
 import android.util.Size;
 import android.view.Surface;
 import com.example.supercamera.base.BaseCameraController;
+import com.example.supercamera.camera2.video_delegates.VideoDelegate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -75,21 +77,19 @@ public class CameraController2 extends BaseCameraController {
         allCameraData.add(cameraData);
       }
     } catch (CameraAccessException exception) {
-      final String exceptionName = exception.getClass().getSimpleName();
-      final String message = String.format("%s: %s", exceptionName, exception.getMessage());
-
-      result.error(ErrorCodes.UNKNOWN, message, null);
+      handleCameraAccessException(exception, result);
       return;
     }
 
     result.success(allCameraData);
   }
 
-  private CameraManager cameraManager;
+  private final CameraManager cameraManager;
+  private final List<Surface> videoSurfaces = new ArrayList<>();
   private CameraDevice cameraDevice;
   private CameraCaptureSession session;
-  private final List<Surface> videoSurfaces = new ArrayList<>();
   private CaptureRequest videoCaptureRequest;
+  private VideoDelegate videoDelegate;
 
   public CameraController2(
       String cameraId, TextureRegistry textureRegistry, CameraManager manager) {
@@ -133,7 +133,8 @@ public class CameraController2 extends BaseCameraController {
   @Override
   public void open(final MethodChannel.Result result) {
     if (cameraIsOpen()) {
-      result.error(ErrorCodes.CAMERA_CONTROLLER_ALREADY_OPEN, "CameraController is already open.", null);
+      result.error(
+          ErrorCodes.CAMERA_CONTROLLER_ALREADY_OPEN, "CameraController is already open.", null);
       return;
     }
 
@@ -154,20 +155,30 @@ public class CameraController2 extends BaseCameraController {
 
             @Override
             public void onError(@NonNull CameraDevice camera, int error) {
-              // TODO: Add ErrorCallback for camera1 and iOS
+              result.error(ErrorCodes.UNKNOWN, null, null);
             }
           }, null
       );
     } catch(CameraAccessException exception) {
-      final String exceptionName = exception.getClass().getSimpleName();
-      final String message = String.format("%s: %s", exceptionName, exception.getMessage());
-
-      result.error(ErrorCodes.UNKNOWN, message, null);
+      handleCameraAccessException(exception, result);
     }
   }
 
   @Override
   public void startRunning(final MethodChannel.Result result) {
+    if (!videoSettingsSet()) {
+      result.success(null);
+      return;
+    }
+
+    if (videoSurfaces.isEmpty()) {
+      result.error(
+          "NeedsSurfaceTarget",
+          "Must call `setVideoSettings()` with a CaptureDelegate with at least one Surface target",
+          null);
+      return;
+    }
+
     try {
       cameraDevice.createCaptureSession(
           videoSurfaces,
@@ -178,16 +189,11 @@ public class CameraController2 extends BaseCameraController {
               session = captureSession;
 
               try {
-                if (videoCaptureRequest == null) {
-                  final CaptureRequest.Builder builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-                  session.setRepeatingRequest(builder.build(), null, null);
-                  return;
-                }
-
                 session.setRepeatingRequest(videoCaptureRequest, null, null);
-              } catch (CameraAccessException
-                  | IllegalStateException
-                  | IllegalArgumentException exception) {
+                result.success(null);
+              } catch (CameraAccessException exception) {
+                handleCameraAccessException(exception, result);
+              } catch (IllegalStateException | IllegalArgumentException exception) {
                 final String exceptionName = exception.getClass().getSimpleName();
                 final String message = String.format("%s: %s", exceptionName, exception.getMessage());
 
@@ -197,16 +203,12 @@ public class CameraController2 extends BaseCameraController {
 
             @Override
             public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
-              final String message = "ConfigurationFailed";
-              result.error(ErrorCodes.UNKNOWN, message, null);
+              result.error("ConfigurationFailed", "Failed to configure camera session.", null);
             }
           },
           null);
     } catch (CameraAccessException exception) {
-      final String exceptionName = exception.getClass().getSimpleName();
-      final String message = String.format("%s: %s", exceptionName, exception.getMessage());
-
-      result.error(ErrorCodes.UNKNOWN, message, null);
+      handleCameraAccessException(exception, result);
     }
   }
 
@@ -217,22 +219,76 @@ public class CameraController2 extends BaseCameraController {
 
   @Override
   public void setVideoSettings(Map<String, Object> settings, MethodChannel.Result result) {
-    try {
-      final CaptureRequest.Builder builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-      videoCaptureRequest = builder.build();
+    if (!cameraIsOpen()) {
+      result.error(ErrorCodes.CAMERA_CONTROLLER_NOT_OPEN, "CameraController is not open.", null);
+      return;
+    }
 
-      result.success(15);
-    } catch (CameraAccessException exception) {
+    final String androidDelegateName = (String) settings.get("androidDelegateName");
+    if (androidDelegateName == null) {
+      result.error(ErrorCodes.INVALID_DELEGATE_NAME, "Camera delegate name is null.", null);
+      return;
+    }
+
+    try {
+      videoDelegate = (VideoDelegate) Class.forName(androidDelegateName).newInstance();
+    } catch (Exception exception) {
+      result.error(ErrorCodes.INVALID_DELEGATE_NAME, exception.getMessage(), null);
+      return;
+    }
+
+    @SuppressWarnings("unchecked")
+    Map<String, Object> delegateSettings = (Map<String, Object>) settings.get("delegateSettings");
+    videoDelegate.initialize(delegateSettings, textureRegistry);
+
+    final SurfaceTexture surfaceTexture = videoDelegate.getSurfaceTexture();
+
+    try {
+      @SuppressWarnings("unchecked")
+      final Map<String, Object> videoFormat = (Map<String, Object>) settings.get("videoFormat");
+      setVideoFormat(surfaceTexture, videoFormat);
+    } catch (Exception exception) {
+      closeVideoDelegate();
+
       final String exceptionName = exception.getClass().getSimpleName();
       final String message = String.format("%s: %s", exceptionName, exception.getMessage());
+      result.error(ErrorCodes.INVALID_SETTING, message, null);
 
-      result.error(ErrorCodes.UNKNOWN, message, null);
+      return;
     }
+
+    final Surface previewSurface = new Surface(surfaceTexture);
+    videoSurfaces.add(previewSurface);
+
+    final CaptureRequest.Builder builder;
+    try {
+      builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+    } catch (CameraAccessException exception) {
+      closeVideoDelegate();
+      handleCameraAccessException(exception, result);
+      return;
+    }
+
+    builder.addTarget(previewSurface);
+    videoCaptureRequest = builder.build();
+
+    videoDelegate.onFinishSetup(result);
   }
 
   @Override
   public void stopRunning() {
+    if (!cameraIsOpen()) return;
 
+    if (session != null) {
+      try {
+        session.stopRepeating();
+      } catch (CameraAccessException exception) {
+        // Do nothing
+      }
+
+      session.close();
+      session = null;
+    }
   }
 
   @Override
@@ -240,13 +296,43 @@ public class CameraController2 extends BaseCameraController {
     if (!cameraIsOpen()) return;
 
     stopRunning();
+    closeVideoDelegate();
 
     cameraDevice.close();
     cameraDevice = null;
   }
 
+  // Settings Methods
+  private void setVideoFormat(SurfaceTexture texture, Map<String, Object> videoFormatData) {
+    if (videoFormatData == null) return;
+
+    final Double width = (Double) videoFormatData.get("width");
+    final Double height = (Double) videoFormatData.get("height");
+    final Integer format = (Integer) videoFormatData.get("pixelFormat");
+
+    texture.setDefaultBufferSize(width.intValue(), height.intValue());
+  }
+
   // Helper Methods
+  private void closeVideoDelegate() {
+    if (videoDelegate == null) return;
+
+    videoDelegate.close();
+    videoSurfaces.clear();
+
+    videoDelegate = null;
+  }
+
+  private static void handleCameraAccessException(
+      Exception exception, MethodChannel.Result result) {
+    result.error("CameraAccess", exception.getMessage(), null);
+  }
+
   private boolean cameraIsOpen() {
     return cameraDevice != null;
+  }
+
+  private boolean videoSettingsSet() {
+    return videoDelegate != null;
   }
 }
