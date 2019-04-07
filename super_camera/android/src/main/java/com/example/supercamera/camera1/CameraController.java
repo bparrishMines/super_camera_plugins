@@ -50,18 +50,18 @@ public class CameraController extends BaseCameraController {
 
       final List<Map<String, Object>> allVideoFormatData = new ArrayList<>();
       for (Integer format : parameters.getSupportedPreviewFormats()) {
-        final Map<String, Object> videoFormatData = new HashMap<>();
-
         for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
+          final Map<String, Object> videoFormatData = new HashMap<>();
+
           videoFormatData.put("width", size.width);
           videoFormatData.put("height", size.height);
 
           final Map<String, Object> pixelFormat = new HashMap<>();
           pixelFormat.put("rawAndroid", format);
           videoFormatData.put("pixelFormat", pixelFormat);
-        }
 
-        allVideoFormatData.add(videoFormatData);
+          allVideoFormatData.add(videoFormatData);
+        }
       }
 
       cameraData.put("videoFormats", allVideoFormatData);
