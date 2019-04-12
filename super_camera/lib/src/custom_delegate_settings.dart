@@ -32,6 +32,6 @@ class DataSettings extends CaptureDelegateSettings {
         );
 
   static const String _androidName =
-      'com.example.supercamera.camera1.photo_delegates.DataDelegate';
+      'com.example.supercamera.camera2.photo_delegates.DataDelegate';
   static const String _iOSName = 'DataDelegate';
 }

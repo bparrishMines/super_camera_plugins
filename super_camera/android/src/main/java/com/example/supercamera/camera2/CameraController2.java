@@ -85,7 +85,7 @@ public class CameraController2 extends BaseCameraController {
   }
 
   private final CameraManager cameraManager;
-  private final List<Surface> videoSurfaces = new ArrayList<>();
+  private final List<Surface> outputSurfaces = new ArrayList<>();
   private CameraDevice cameraDevice;
   private CameraCaptureSession session;
   private CaptureRequest videoCaptureRequest;
@@ -166,14 +166,7 @@ public class CameraController2 extends BaseCameraController {
 
   @Override
   public void startRunning(final MethodChannel.Result result) {
-    // Camera2 can't start a CameraCaptureSession without a surface, so if no video settings have
-    // been set we just return.
-    if (!videoSettingsSet()) {
-      result.success(null);
-      return;
-    }
-
-    if (videoSurfaces.isEmpty()) {
+    if (outputSurfaces.isEmpty()) {
       result.error(
           "NeedsSurfaceTarget",
           "Must call `setVideoSettings()` with a CaptureDelegate with at least one Surface target",
@@ -183,7 +176,7 @@ public class CameraController2 extends BaseCameraController {
 
     try {
       cameraDevice.createCaptureSession(
-          videoSurfaces,
+          outputSurfaces,
           new CameraCaptureSession.StateCallback() {
 
             @Override
@@ -215,8 +208,63 @@ public class CameraController2 extends BaseCameraController {
   }
 
   @Override
-  public void takePhoto(Map<String, Object> settings, MethodChannel.Result result) {
+  public void takePhoto(Map<String, Object> settings, final MethodChannel.Result result) {
+    /*
+    if (!cameraIsOpen()) {
+      result.error(ErrorCodes.CAMERA_CONTROLLER_NOT_OPEN, "CameraController is not open.", null);
+      return;
+    }
 
+    final String androidDelegateName = (String) settings.get("androidDelegateName");
+    if (androidDelegateName == null) {
+      result.error(ErrorCodes.INVALID_DELEGATE_NAME, "Camera delegate name is null.", null);
+      return;
+    }
+
+    final PhotoDelegate delegate;
+    try {
+      delegate = (PhotoDelegate) Class.forName(androidDelegateName).newInstance();
+    } catch (Exception exception) {
+      result.error(ErrorCodes.INVALID_DELEGATE_NAME, exception.getMessage(), null);
+      return;
+    }
+
+    @SuppressWarnings("unchecked")
+    Map<String, Object> delegateSettings = (Map<String, Object>) settings.get("delegateSettings");
+    delegate.initialize(delegateSettings, textureRegistry, result);
+
+    final CaptureRequest.Builder captureBuilder;
+    try {
+      captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+    } catch (CameraAccessException exception) {
+      handleCameraAccessException(exception, result);
+      return;
+    }
+
+    final ImageReader imageReader = ImageReader.newInstance(1080, 720, ImageFormat.JPEG, 1);
+    captureBuilder.addTarget(imageReader.getSurface());
+
+    imageReader.setOnImageAvailableListener(delegate.getOnImageAvailableListener(), null);
+
+    final CameraCaptureSession.CaptureCallback captureCallback =
+      new CameraCaptureSession.CaptureCallback() {
+        @Override
+        public void onCaptureCompleted(
+            @NonNull CameraCaptureSession session,
+            @NonNull CaptureRequest request,
+            @NonNull TotalCaptureResult totalCaptureResult) {
+          super.onCaptureCompleted(session, request, totalCaptureResult);
+
+
+        }
+      };
+
+    try {
+      session.capture(captureBuilder.build(), captureCallback, null);
+    } catch (CameraAccessException exception) {
+      handleCameraAccessException(exception, result);
+    }
+    */
   }
 
   @Override
@@ -262,7 +310,7 @@ public class CameraController2 extends BaseCameraController {
     }
 
     final Surface previewSurface = new Surface(surfaceTexture);
-    videoSurfaces.add(previewSurface);
+    outputSurfaces.add(previewSurface);
 
     final CaptureRequest.Builder builder;
     try {
@@ -286,12 +334,10 @@ public class CameraController2 extends BaseCameraController {
     if (session != null) {
       try {
         session.stopRepeating();
+        session.abortCaptures();
       } catch (CameraAccessException exception) {
         // Do nothing
       }
-
-      session.close();
-      session = null;
     }
   }
 
@@ -301,6 +347,9 @@ public class CameraController2 extends BaseCameraController {
 
     stopRunning();
     closeVideoDelegate();
+
+    session.close();
+    session = null;
 
     cameraDevice.close();
     cameraDevice = null;
@@ -321,7 +370,7 @@ public class CameraController2 extends BaseCameraController {
     if (videoDelegate == null) return;
 
     videoDelegate.close();
-    videoSurfaces.clear();
+    outputSurfaces.clear();
 
     videoDelegate = null;
   }
@@ -333,9 +382,5 @@ public class CameraController2 extends BaseCameraController {
 
   private boolean cameraIsOpen() {
     return cameraDevice != null;
-  }
-
-  private boolean videoSettingsSet() {
-    return videoDelegate != null;
   }
 }
