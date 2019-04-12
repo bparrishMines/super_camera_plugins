@@ -180,6 +180,8 @@ public class CameraController extends BaseCameraController {
 
   @Override
   public void setVideoSettings(Map<String, Object> settings, MethodChannel.Result result) {
+    closeVideoDelegate();
+
     if (!cameraIsOpen()) {
       result.error(ErrorCodes.CAMERA_CONTROLLER_NOT_OPEN, "CameraController is not open.", null);
       return;
@@ -202,7 +204,7 @@ public class CameraController extends BaseCameraController {
     Map<String, Object> delegateSettings = (Map<String, Object>) settings.get("delegateSettings");
     videoDelegate.initialize(delegateSettings, textureRegistry);
 
-    final SurfaceTexture surfaceTexture = videoDelegate.getSurfaceTexture();
+    final SurfaceTexture surfaceTexture = videoDelegate.getPreviewTexture();
     try {
       camera.setPreviewTexture(surfaceTexture);
     } catch (IOException exception) {

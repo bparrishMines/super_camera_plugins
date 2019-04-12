@@ -166,6 +166,8 @@ public class CameraController2 extends BaseCameraController {
 
   @Override
   public void startRunning(final MethodChannel.Result result) {
+    // Camera2 can't start a CameraCaptureSession without a surface, so if no video settings have
+    // been set we just return.
     if (!videoSettingsSet()) {
       result.success(null);
       return;
@@ -219,6 +221,8 @@ public class CameraController2 extends BaseCameraController {
 
   @Override
   public void setVideoSettings(Map<String, Object> settings, MethodChannel.Result result) {
+    closeVideoDelegate();
+
     if (!cameraIsOpen()) {
       result.error(ErrorCodes.CAMERA_CONTROLLER_NOT_OPEN, "CameraController is not open.", null);
       return;
@@ -241,7 +245,7 @@ public class CameraController2 extends BaseCameraController {
     Map<String, Object> delegateSettings = (Map<String, Object>) settings.get("delegateSettings");
     videoDelegate.initialize(delegateSettings, textureRegistry);
 
-    final SurfaceTexture surfaceTexture = videoDelegate.getSurfaceTexture();
+    final SurfaceTexture surfaceTexture = videoDelegate.getPreviewSurfaceTexture();
 
     try {
       @SuppressWarnings("unchecked")
@@ -308,7 +312,6 @@ public class CameraController2 extends BaseCameraController {
 
     final Double width = (Double) videoFormatData.get("width");
     final Double height = (Double) videoFormatData.get("height");
-    final Integer format = (Integer) videoFormatData.get("pixelFormat");
 
     texture.setDefaultBufferSize(width.intValue(), height.intValue());
   }

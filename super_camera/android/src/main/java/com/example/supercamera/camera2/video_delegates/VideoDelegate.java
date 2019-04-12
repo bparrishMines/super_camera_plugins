@@ -7,7 +7,7 @@ import io.flutter.view.TextureRegistry;
 
 public interface VideoDelegate {
   void initialize(Map<String, Object> settings, TextureRegistry textureRegistry);
-  SurfaceTexture getSurfaceTexture();
+  SurfaceTexture getPreviewSurfaceTexture();
   void onFinishSetup(MethodChannel.Result result);
   void close();
 }

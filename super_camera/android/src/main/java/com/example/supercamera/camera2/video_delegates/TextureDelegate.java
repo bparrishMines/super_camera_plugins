@@ -14,7 +14,7 @@ public class TextureDelegate implements VideoDelegate {
   }
 
   @Override
-  public SurfaceTexture getSurfaceTexture() {
+  public SurfaceTexture getPreviewSurfaceTexture() {
     return entry.surfaceTexture();
   }
 
