@@ -1,5 +1,7 @@
 part of super_camera;
 
+typedef CameraFailureCallback = Function(CameraException exception);
+
 class Camera {
   Camera._();
 

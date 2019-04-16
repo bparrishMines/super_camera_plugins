@@ -48,7 +48,7 @@ class VideoSettings {
   /// https://developer.android.com/reference/android/hardware/Camera.html#setDisplayOrientation(int)
   final bool shouldMirror;
 
-  // TODO(Maurice): Include information bout VideoOrientation.landscapeRight
+  // TODO(Maurice): Include information about VideoOrientation.landscapeRight
   // probably won't work. setDisplayOrientation on Android.
   final VideoOrientation orientation;
 
@@ -74,7 +74,7 @@ abstract class CaptureDelegateSettings {
   }) : assert(androidDelegateName != null || iOSDelegateName != null);
 
   final Function(dynamic result) onSuccess;
-  final Function(CameraException exception) onFailure;
+  final CameraFailureCallback onFailure;
   final String androidDelegateName;
   final String iOSDelegateName;
   final Map<String, dynamic> settings;

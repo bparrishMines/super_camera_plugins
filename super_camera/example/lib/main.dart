@@ -97,6 +97,15 @@ class _MyAppState extends State<MyApp> {
       onSuccess: () {
         print("Camera Opened!");
 
+        _controller.setPhotoSettings(
+          PhotoSettings(
+            delegateSettings: DataSettings(
+              onImageDataAvailable: (_) => print('Picture Taken!'),
+              onFailure: _onFailure(),
+            ),
+          ),
+        );
+
         _controller.setVideoSettings(
           VideoSettings(
             shouldMirror: device.lensDirection == LensDirection.front,
@@ -128,7 +137,7 @@ class _MyAppState extends State<MyApp> {
     return completer.future;
   }
 
-  Function(CameraException) _onFailure(Completer completer) {
+  Function(CameraException) _onFailure([Completer completer]) {
     return (CameraException exception) {
       print(exception);
       completer?.complete();
@@ -165,17 +174,6 @@ class _MyAppState extends State<MyApp> {
     await _openCamera();
   }
 
-  void _takePicture() {
-    _controller.takePhoto(
-      PhotoSettings(
-        delegateSettings: DataSettings(
-          onImageDataAvailable: (_) => print('Picture Taken!'),
-          onFailure: _onFailure(null),
-        ),
-      ),
-    );
-  }
-
   Widget _buildCameraWidget(Texture texture, double aspectRatio) {
     return AspectRatio(
       aspectRatio: aspectRatio,
@@ -185,7 +183,7 @@ class _MyAppState extends State<MyApp> {
 
   Widget _buildPictureButton() {
     return InkResponse(
-      onTap: _takePicture,
+      onTap: () => _controller.takePhoto(_onFailure()),
       child: Container(
         width: 65,
         height: 65,
