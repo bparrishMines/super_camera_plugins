@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.view.TextureRegistry;
@@ -77,9 +78,13 @@ public class CameraController extends BaseCameraController {
 
   private Camera camera;
   private VideoDelegate videoDelegate;
+  private PhotoDelegate photoDelegate;
 
-  public CameraController(final String cameraId, final TextureRegistry textureRegistry) {
-    super(cameraId, textureRegistry);
+  public CameraController(
+      final String cameraId,
+      final TextureRegistry textureRegistry,
+      final BinaryMessenger messenger) {
+    super(cameraId, textureRegistry, messenger);
   }
 
   @Override
@@ -91,15 +96,18 @@ public class CameraController extends BaseCameraController {
       case "CameraController#startRunning":
         startRunning(result);
         break;
-      case "CameraController#takePhoto":
+      case "CameraController#setPhotoSettings":
         @SuppressWarnings("unchecked")
         Map<String, Object> photoSettings = (Map<String, Object>) call.arguments;
-        takePhoto(photoSettings, result);
+        setPhotoSettings(photoSettings, result);
         break;
       case "CameraController#setVideoSettings":
         @SuppressWarnings("unchecked")
         Map<String, Object> videoSettings = (Map<String, Object>) call.arguments;
         setVideoSettings(videoSettings, result);
+        break;
+      case "CameraController#takePhoto":
+        takePhoto(result);
         break;
       case "CameraController#stopRunning":
         stopRunning();
@@ -137,21 +145,22 @@ public class CameraController extends BaseCameraController {
   }
 
   @Override
-  public void takePhoto(Map<String, Object> settings, MethodChannel.Result result) {
+  public void setPhotoSettings(Map<String, Object> settings, MethodChannel.Result result) {
+    closePhotoDelegate();
+
     if (!cameraIsOpen()) {
       result.error(ErrorCodes.CAMERA_CONTROLLER_NOT_OPEN, "CameraController is not open.", null);
       return;
     }
 
-    final String androidDelegateName = (String) settings.get("androidDelegateName");
-    if (androidDelegateName == null) {
+    final String delegateName = (String) settings.get("androidClassName");
+    if (delegateName == null) {
       result.error(ErrorCodes.INVALID_DELEGATE_NAME, "Camera delegate name is null.", null);
       return;
     }
 
-    final PhotoDelegate delegate;
     try {
-      delegate = (PhotoDelegate) Class.forName(androidDelegateName).newInstance();
+      photoDelegate = (PhotoDelegate) Class.forName(delegateName).newInstance();
     } catch (Exception exception) {
       result.error(ErrorCodes.INVALID_DELEGATE_NAME, exception.getMessage(), null);
       return;
@@ -159,21 +168,40 @@ public class CameraController extends BaseCameraController {
 
     @SuppressWarnings("unchecked")
     Map<String, Object> delegateSettings = (Map<String, Object>) settings.get("delegateSettings");
-    delegate.initialize(delegateSettings, textureRegistry, result);
+    photoDelegate.initialize(delegateSettings, textureRegistry, binaryMessenger);
+
+    photoDelegate.onFinishSetup(result);
+  }
+
+  @Override
+  public void takePhoto(final MethodChannel.Result result) {
+    if (!cameraIsOpen()) {
+      result.error(ErrorCodes.CAMERA_CONTROLLER_NOT_OPEN, "CameraController is not open.", null);
+      return;
+    }
+
+    // Still take a photo even if settings are not set.
+    if (!photoSettingsSet()) {
+      camera.takePicture(null, null, null);
+      result.success(null);
+      return;
+    }
 
     camera.takePicture(
-        delegate.getShutterCallback(),
-        delegate.getRawCallback(),
-        delegate.getPostViewCallback(),
+        photoDelegate.getShutterCallback(),
+        photoDelegate.getRawCallback(),
+        photoDelegate.getPostViewCallback(),
         new Camera.PictureCallback() {
           @Override
           public void onPictureTaken(byte[] data, Camera camera) {
-            final Camera.PictureCallback callback = delegate.getJpegCallback();
+            final Camera.PictureCallback callback = photoDelegate.getJpegCallback();
 
             if (callback != null) {
               callback.onPictureTaken(data, camera);
             }
+
             camera.startPreview();
+            result.success(null);
           }
         });
   }
@@ -187,7 +215,7 @@ public class CameraController extends BaseCameraController {
       return;
     }
 
-    final String androidDelegateName = (String) settings.get("androidDelegateName");
+    final String androidDelegateName = (String) settings.get("androidClassName");
     if (androidDelegateName == null) {
       result.error(ErrorCodes.INVALID_DELEGATE_NAME, "Camera delegate name is null.", null);
       return;
@@ -326,7 +354,18 @@ public class CameraController extends BaseCameraController {
     videoDelegate = null;
   }
 
+  private void closePhotoDelegate() {
+    if (photoDelegate == null) return;
+
+    photoDelegate.close();
+    photoDelegate = null;
+  }
+
   private boolean cameraIsOpen() {
     return camera != null;
+  }
+
+  private boolean photoSettingsSet() {
+    return photoDelegate != null;
   }
 }

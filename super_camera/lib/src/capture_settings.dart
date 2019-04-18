@@ -14,7 +14,7 @@ class PhotoSettings {
 
   Map<String, dynamic> _serialize() {
     return <String, dynamic>{
-      'androidDelegateName': delegate.androidClassName,
+      'androidClassName': delegate.androidClassName,
       'androidClassNameCamera2': delegate.androidClassNameCamera2,
       'iOSDelegateName': delegate.iOSClassName,
       'delegateSettings': delegate.settings,

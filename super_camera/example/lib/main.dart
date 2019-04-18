@@ -117,7 +117,7 @@ class _MyAppState extends State<MyApp> {
       await _controller.setPhotoSettings(
         PhotoSettings(
           delegate: DataSettings(
-            onImageDataAvailable: (_) => print('Picture Taken!'),
+            onImageDataAvailable: (bytes) => print(bytes.length),
           ),
         ),
       );

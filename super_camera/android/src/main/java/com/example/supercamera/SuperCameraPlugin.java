@@ -61,7 +61,7 @@ public class SuperCameraPlugin implements MethodCallHandler {
   }
 
   private void availableCameras(Result result) {
-    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+    if (false && android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
       CameraController2.returnAvailableCameras(cameraManager, result);
     } else {
       result.success(CameraController.availableCameras());
@@ -75,10 +75,11 @@ public class SuperCameraPlugin implements MethodCallHandler {
     final String cameraId = call.argument("cameraId");
 
     final BaseCameraController controller;
-    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-      controller = new CameraController2(cameraId, registrar.textures(), cameraManager);
+    if (false && android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+      controller = new CameraController2(
+          cameraId, registrar.textures(), registrar.messenger(), cameraManager);
     } else {
-      controller = new CameraController(cameraId, registrar.textures());
+      controller = new CameraController(cameraId, registrar.textures(), registrar.messenger());
     }
 
     channel.setMethodCallHandler(controller);

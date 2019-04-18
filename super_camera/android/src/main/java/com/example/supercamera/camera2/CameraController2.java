@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.view.TextureRegistry;
@@ -92,8 +93,9 @@ public class CameraController2 extends BaseCameraController {
   private VideoDelegate videoDelegate;
 
   public CameraController2(
-      String cameraId, TextureRegistry textureRegistry, CameraManager manager) {
-    super(cameraId, textureRegistry);
+      String cameraId,
+      TextureRegistry textureRegistry, BinaryMessenger messenger, CameraManager manager) {
+    super(cameraId, textureRegistry, messenger);
     cameraManager = manager;
   }
 
@@ -109,7 +111,7 @@ public class CameraController2 extends BaseCameraController {
       case "CameraController#takePhoto":
         @SuppressWarnings("unchecked")
         Map<String, Object> photoSettings = (Map<String, Object>) call.arguments;
-        takePhoto(photoSettings, result);
+        takePhoto(result);
         break;
       case "CameraController#setVideoSettings":
         @SuppressWarnings("unchecked")
@@ -208,7 +210,12 @@ public class CameraController2 extends BaseCameraController {
   }
 
   @Override
-  public void takePhoto(Map<String, Object> settings, final MethodChannel.Result result) {
+  public void setPhotoSettings(Map<String, Object> settings, MethodChannel.Result result) {
+
+  }
+
+  @Override
+  public void takePhoto(final MethodChannel.Result result) {
     /*
     if (!cameraIsOpen()) {
       result.error(ErrorCodes.CAMERA_CONTROLLER_NOT_OPEN, "CameraController is not open.", null);
