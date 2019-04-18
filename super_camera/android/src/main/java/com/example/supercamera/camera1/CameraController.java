@@ -282,6 +282,7 @@ public class CameraController extends BaseCameraController {
 
     stopRunning();
     closeVideoDelegate();
+    closePhotoDelegate();
 
     camera.release();
     camera = null;

@@ -1,5 +1,6 @@
 package com.example.supercamera.camera2;
 
+import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -9,10 +10,12 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.ImageReader;
 import android.os.Build;
 import android.util.Size;
 import android.view.Surface;
 import com.example.supercamera.base.BaseCameraController;
+import com.example.supercamera.camera2.photo_delegates.PhotoDelegate;
 import com.example.supercamera.camera2.video_delegates.VideoDelegate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -86,15 +89,22 @@ public class CameraController2 extends BaseCameraController {
   }
 
   private final CameraManager cameraManager;
-  private final List<Surface> outputSurfaces = new ArrayList<>();
   private CameraDevice cameraDevice;
   private CameraCaptureSession session;
+
   private CaptureRequest videoCaptureRequest;
   private VideoDelegate videoDelegate;
+  private Surface videoSurface;
+
+  private CaptureRequest photoCaptureRequest;
+  private PhotoDelegate photoDelegate;
+  private ImageReader photoImageReader;
 
   public CameraController2(
       String cameraId,
-      TextureRegistry textureRegistry, BinaryMessenger messenger, CameraManager manager) {
+      TextureRegistry textureRegistry,
+      BinaryMessenger messenger,
+      CameraManager manager) {
     super(cameraId, textureRegistry, messenger);
     cameraManager = manager;
   }
@@ -108,15 +118,18 @@ public class CameraController2 extends BaseCameraController {
       case "CameraController#startRunning":
         startRunning(result);
         break;
-      case "CameraController#takePhoto":
+      case "CameraController#setPhotoSettings":
         @SuppressWarnings("unchecked")
         Map<String, Object> photoSettings = (Map<String, Object>) call.arguments;
-        takePhoto(result);
+        setPhotoSettings(photoSettings, result);
         break;
       case "CameraController#setVideoSettings":
         @SuppressWarnings("unchecked")
         Map<String, Object> videoSettings = (Map<String, Object>) call.arguments;
         setVideoSettings(videoSettings, result);
+        break;
+      case "CameraController#takePhoto":
+        takePhoto(result);
         break;
       case "CameraController#stopRunning":
         stopRunning();
@@ -152,12 +165,10 @@ public class CameraController2 extends BaseCameraController {
 
             @Override
             public void onDisconnected(@NonNull CameraDevice camera) {
-              // Do nothing for now
             }
 
             @Override
             public void onError(@NonNull CameraDevice camera, int error) {
-              result.error(ErrorCodes.UNKNOWN, null, null);
             }
           }, null
       );
@@ -168,17 +179,18 @@ public class CameraController2 extends BaseCameraController {
 
   @Override
   public void startRunning(final MethodChannel.Result result) {
-    if (outputSurfaces.isEmpty()) {
-      result.error(
-          "NeedsSurfaceTarget",
-          "Must call `setVideoSettings()` with a CaptureDelegate with at least one Surface target",
-          null);
-      return;
+    final List<Surface> surfaces = new ArrayList<>();
+
+    if (videoSettingsSet()) {
+      surfaces.add(videoSurface);
+    }
+    if (photoSettingsSet()) {
+      surfaces.add(photoImageReader.getSurface());
     }
 
     try {
       cameraDevice.createCaptureSession(
-          outputSurfaces,
+          surfaces,
           new CameraCaptureSession.StateCallback() {
 
             @Override
@@ -211,26 +223,21 @@ public class CameraController2 extends BaseCameraController {
 
   @Override
   public void setPhotoSettings(Map<String, Object> settings, MethodChannel.Result result) {
+    closePhotoDelegate();
 
-  }
-
-  @Override
-  public void takePhoto(final MethodChannel.Result result) {
-    /*
     if (!cameraIsOpen()) {
       result.error(ErrorCodes.CAMERA_CONTROLLER_NOT_OPEN, "CameraController is not open.", null);
       return;
     }
 
-    final String androidDelegateName = (String) settings.get("androidDelegateName");
-    if (androidDelegateName == null) {
+    final String delegateName = (String) settings.get("androidClassNameCamera2");
+    if (delegateName == null) {
       result.error(ErrorCodes.INVALID_DELEGATE_NAME, "Camera delegate name is null.", null);
       return;
     }
 
-    final PhotoDelegate delegate;
     try {
-      delegate = (PhotoDelegate) Class.forName(androidDelegateName).newInstance();
+      photoDelegate = (PhotoDelegate) Class.forName(delegateName).newInstance();
     } catch (Exception exception) {
       result.error(ErrorCodes.INVALID_DELEGATE_NAME, exception.getMessage(), null);
       return;
@@ -238,7 +245,7 @@ public class CameraController2 extends BaseCameraController {
 
     @SuppressWarnings("unchecked")
     Map<String, Object> delegateSettings = (Map<String, Object>) settings.get("delegateSettings");
-    delegate.initialize(delegateSettings, textureRegistry, result);
+    photoDelegate.initialize(delegateSettings, textureRegistry, binaryMessenger);
 
     final CaptureRequest.Builder captureBuilder;
     try {
@@ -249,29 +256,33 @@ public class CameraController2 extends BaseCameraController {
     }
 
     final ImageReader imageReader = ImageReader.newInstance(1080, 720, ImageFormat.JPEG, 1);
+    imageReader.setOnImageAvailableListener(photoDelegate.getOnImageAvailableListener(), null);
+
     captureBuilder.addTarget(imageReader.getSurface());
+    photoCaptureRequest = captureBuilder.build();
 
-    imageReader.setOnImageAvailableListener(delegate.getOnImageAvailableListener(), null);
+    photoImageReader = imageReader;
 
-    final CameraCaptureSession.CaptureCallback captureCallback =
-      new CameraCaptureSession.CaptureCallback() {
-        @Override
-        public void onCaptureCompleted(
-            @NonNull CameraCaptureSession session,
-            @NonNull CaptureRequest request,
-            @NonNull TotalCaptureResult totalCaptureResult) {
-          super.onCaptureCompleted(session, request, totalCaptureResult);
+    photoDelegate.onFinishSetup(result);
+  }
 
+  @Override
+  public void takePhoto(final MethodChannel.Result result) {
+    if (!cameraIsOpen()) {
+      result.error(ErrorCodes.CAMERA_CONTROLLER_NOT_OPEN, "CameraController is not open.", null);
+      return;
+    }
 
-        }
-      };
+    if (!photoSettingsSet()) {
+      result.success(null);
+      return;
+    }
 
     try {
-      session.capture(captureBuilder.build(), captureCallback, null);
+      session.capture(photoCaptureRequest, null, null);
     } catch (CameraAccessException exception) {
       handleCameraAccessException(exception, result);
     }
-    */
   }
 
   @Override
@@ -283,14 +294,14 @@ public class CameraController2 extends BaseCameraController {
       return;
     }
 
-    final String androidDelegateName = (String) settings.get("androidDelegateName");
-    if (androidDelegateName == null) {
+    final String delegateName = (String) settings.get("androidClassNameCamera2");
+    if (delegateName == null) {
       result.error(ErrorCodes.INVALID_DELEGATE_NAME, "Camera delegate name is null.", null);
       return;
     }
 
     try {
-      videoDelegate = (VideoDelegate) Class.forName(androidDelegateName).newInstance();
+      videoDelegate = (VideoDelegate) Class.forName(delegateName).newInstance();
     } catch (Exception exception) {
       result.error(ErrorCodes.INVALID_DELEGATE_NAME, exception.getMessage(), null);
       return;
@@ -316,8 +327,7 @@ public class CameraController2 extends BaseCameraController {
       return;
     }
 
-    final Surface previewSurface = new Surface(surfaceTexture);
-    outputSurfaces.add(previewSurface);
+    videoSurface = new Surface(surfaceTexture);
 
     final CaptureRequest.Builder builder;
     try {
@@ -328,7 +338,7 @@ public class CameraController2 extends BaseCameraController {
       return;
     }
 
-    builder.addTarget(previewSurface);
+    builder.addTarget(videoSurface);
     videoCaptureRequest = builder.build();
 
     videoDelegate.onFinishSetup(result);
@@ -354,6 +364,7 @@ public class CameraController2 extends BaseCameraController {
 
     stopRunning();
     closeVideoDelegate();
+    closePhotoDelegate();
 
     session.close();
     session = null;
@@ -377,9 +388,15 @@ public class CameraController2 extends BaseCameraController {
     if (videoDelegate == null) return;
 
     videoDelegate.close();
-    outputSurfaces.clear();
-
     videoDelegate = null;
+  }
+
+  private void closePhotoDelegate() {
+    if (photoDelegate == null) return;
+
+    photoDelegate.close();
+    photoImageReader.close();
+    photoDelegate = null;
   }
 
   private static void handleCameraAccessException(
@@ -389,5 +406,13 @@ public class CameraController2 extends BaseCameraController {
 
   private boolean cameraIsOpen() {
     return cameraDevice != null;
+  }
+
+  private boolean videoSettingsSet() {
+    return videoDelegate != null;
+  }
+
+  private boolean photoSettingsSet() {
+    return photoDelegate != null;
   }
 }

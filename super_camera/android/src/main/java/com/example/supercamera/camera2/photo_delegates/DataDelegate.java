@@ -1,12 +1,17 @@
-package com.example.supercamera.camera1.photo_delegates;
+package com.example.supercamera.camera2.photo_delegates;
 
-import android.hardware.Camera;
+import android.media.Image;
+import android.media.ImageReader;
+import android.os.Build;
+import java.nio.ByteBuffer;
 import java.util.Map;
+import androidx.annotation.RequiresApi;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.view.TextureRegistry;
 
+@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class DataDelegate implements PhotoDelegate {
   private EventChannel.EventSink eventSink;
 
@@ -29,26 +34,18 @@ public class DataDelegate implements PhotoDelegate {
   }
 
   @Override
-  public Camera.ShutterCallback getShutterCallback() {
-    return null;
-  }
-
-  @Override
-  public Camera.PictureCallback getRawCallback() {
-    return null;
-  }
-
-  @Override
-  public Camera.PictureCallback getPostViewCallback() {
-    return null;
-  }
-
-  @Override
-  public Camera.PictureCallback getJpegCallback() {
-    return new Camera.PictureCallback() {
+  public ImageReader.OnImageAvailableListener getOnImageAvailableListener() {
+    return new ImageReader.OnImageAvailableListener() {
       @Override
-      public void onPictureTaken(byte[] data, Camera camera) {
-        eventSink.success(data);
+      public void onImageAvailable(ImageReader reader) {
+        final Image image = reader.acquireLatestImage();
+        final ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+
+        byte[] bytes = new byte[buffer.remaining()];
+        buffer.get(bytes, 0, bytes.length);
+        eventSink.success(bytes);
+
+        image.close();
       }
     };
   }
