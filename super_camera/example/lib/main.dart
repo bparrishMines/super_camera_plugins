@@ -64,20 +64,16 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _openCamera() async {
-    Completer<void> completer = Completer<void>();
-
     final bool hasCameraAccess = await _getCameraPermission();
 
     if (!hasCameraAccess) {
       print('No camera access!');
-      completer.complete();
-      return completer.future;
+      return;
     }
 
     final CameraDevice device = await CameraUtils.cameraDeviceForDirection(
       _lensDirection,
     );
-    _controller = CameraController(device);
 
     final List<VideoFormat> videoFormats = device.videoFormats
         .where(
@@ -93,55 +89,44 @@ class _MyAppState extends State<MyApp> {
       aspectRatio: 16 / 9,
     );
 
-    _controller.open(
-      onSuccess: () {
-        print("Camera Opened!");
+    _controller = CameraController(device);
+    try {
+      await _controller.open();
 
-        _controller.setPhotoSettings(
-          PhotoSettings(
-            delegateSettings: DataSettings(
-              onImageDataAvailable: (_) => print('Picture Taken!'),
-              onFailure: _onFailure(),
-            ),
+      await _controller.setVideoSettings(
+        VideoSettings(
+          shouldMirror: device.lensDirection == LensDirection.front,
+          videoFormat: bestVideoFormat,
+          orientation: VideoOrientation.portraitUp,
+          delegate: TextureSettings(
+            onTextureReady: (Texture texture) {
+              print("Got texture!");
+
+              setState(() {
+                _cameraWidget = _buildCameraWidget(
+                  texture,
+                  bestVideoFormat.dimensions.height /
+                      bestVideoFormat.dimensions.width,
+                );
+              });
+            },
           ),
-        );
+        ),
+      );
 
-        _controller.setVideoSettings(
-          VideoSettings(
-            shouldMirror: device.lensDirection == LensDirection.front,
-            videoFormat: bestVideoFormat,
-            orientation: VideoOrientation.portraitUp,
-            delegateSettings: TextureSettings(
-              onTextureReady: (Texture texture) {
-                print("Got texture!");
-
-                setState(() {
-                  _cameraWidget = _buildCameraWidget(
-                    texture,
-                    bestVideoFormat.dimensions.height /
-                        bestVideoFormat.dimensions.width,
-                  );
-                });
-
-                _controller.startRunning();
-                completer.complete();
-              },
-              onFailure: _onFailure(completer),
-            ),
+      await _controller.setPhotoSettings(
+        PhotoSettings(
+          delegate: DataSettings(
+            onImageDataAvailable: (_) => print('Picture Taken!'),
           ),
-        );
-      },
-      onFailure: _onFailure(completer),
-    );
+        ),
+      );
 
-    return completer.future;
-  }
-
-  Function(CameraException) _onFailure([Completer completer]) {
-    return (CameraException exception) {
+      await _controller.startRunning();
+    } on CameraException catch (exception) {
       print(exception);
-      completer?.complete();
-    };
+      await _controller.close();
+    }
   }
 
   Future<bool> _getCameraPermission() async {
@@ -183,7 +168,9 @@ class _MyAppState extends State<MyApp> {
 
   Widget _buildPictureButton() {
     return InkResponse(
-      onTap: () => _controller.takePhoto(_onFailure()),
+      onTap: () {
+        _controller.takePhoto().catchError((_) => print(_));
+      },
       child: Container(
         width: 65,
         height: 65,

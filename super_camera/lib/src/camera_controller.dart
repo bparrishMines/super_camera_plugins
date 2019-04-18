@@ -3,9 +3,8 @@ part of super_camera;
 class CameraController {
   CameraController._(this.device, this.channel);
 
-  factory CameraController(CameraDevice device, {bool useCamera1 = false}) {
+  factory CameraController(CameraDevice device) {
     assert(device != null);
-    assert(useCamera1 != null);
 
     final String channelName = '${Camera.channel.name}/${_nextHandle++}';
     final MethodChannel channel = MethodChannel(channelName);
@@ -15,7 +14,6 @@ class CameraController {
       <String, dynamic>{
         'channelName': channelName,
         'cameraId': device.cameraId,
-        'useCamera1': useCamera1,
       },
     );
 
@@ -28,98 +26,63 @@ class CameraController {
   final MethodChannel channel;
   final CameraDevice device;
 
-  void open({
-    VoidCallback onSuccess,
-    CameraFailureCallback onFailure,
-  }) {
-    _invokeMethod(
-      method: '$CameraController#open',
-      settings: null,
-      onSuccess: onSuccess,
-      onSuccessHasResult: false,
-      onFailure: onFailure,
-    );
+  Future<void> open() {
+    return _invokeMethod(method: '$CameraController#open');
   }
 
-  void startRunning({
-    VoidCallback onSuccess,
-    CameraFailureCallback onFailure,
-  }) {
-    _invokeMethod(
-      method: '$CameraController#startRunning',
-      settings: null,
-      onSuccess: onSuccess,
-      onSuccessHasResult: false,
-      onFailure: onFailure,
-    );
+  Future<void> startRunning() {
+    return _invokeMethod(method: '$CameraController#startRunning');
   }
 
-  void takePhoto([Function(CameraException exception) onFailure]) {
-    _invokeMethod(
-      method: '$CameraController#takePhoto',
-      settings: null,
-      onSuccess: null,
-      onSuccessHasResult: false,
-      onFailure: onFailure,
-    );
-  }
-
-  void setVideoSettings(VideoSettings settings) {
+  Future<void> setVideoSettings(VideoSettings settings) {
     assert(settings != null);
 
-    _invokeMethod(
+    return _invokeMethod(
       method: '$CameraController#setVideoSettings',
-      settings: settings._serialize(),
-      onSuccess: settings.delegateSettings.onSuccess,
-      onSuccessHasResult: true,
-      onFailure: settings.delegateSettings.onFailure,
+      arguments: settings._serialize(),
+      onSuccess: settings.delegate.onConfigured,
     );
   }
 
-  void setPhotoSettings(PhotoSettings settings) {
+  Future<void> setPhotoSettings(PhotoSettings settings) {
     assert(settings != null);
 
-    _invokeMethod(
+    return _invokeMethod(
       method: '$CameraController#setPhotoSettings',
-      settings: settings._serialize(),
-      onSuccess: settings.delegateSettings.onSuccess,
-      onSuccessHasResult: true,
-      onFailure: settings.delegateSettings.onFailure,
+      arguments: settings._serialize(),
+      onSuccess: settings.delegate.onConfigured,
     );
+  }
+
+  Future<void> takePhoto() {
+    return _invokeMethod(method: '$CameraController#takePhoto');
   }
 
   Future<void> stopRunning() {
-    return channel.invokeMethod('$CameraController#stopRunning');
+    return _invokeMethod(method: '$CameraController#stopRunning');
   }
 
   Future<void> close() {
-    return channel.invokeMethod('$CameraController#close');
+    return _invokeMethod(method: '$CameraController#close');
   }
 
-  void _invokeMethod({
+  // Invokes method normally, but also catches all PlatformExceptions.
+  Future<void> _invokeMethod({
     @required String method,
-    @required Map<String, dynamic> settings,
-    @required Function onSuccess,
-    @required bool onSuccessHasResult,
-    @required CameraFailureCallback onFailure,
+    Map<String, dynamic> arguments,
+    Function(dynamic result) onSuccess,
   }) async {
     try {
-      final dynamic result = await channel.invokeMethod(method, settings);
+      final dynamic result = await channel.invokeMethod(method, arguments);
 
       if (onSuccess != null) {
-        if (onSuccessHasResult) {
-          onSuccess(result);
-        } else {
-          onSuccess();
-        }
+        onSuccess(result);
       }
     } on PlatformException catch (exception) {
-      if (onFailure != null) {
-        onFailure(CameraException(
-          code: exception.code,
-          description: exception.message,
-        ));
-      }
+      throw CameraException(
+        code: exception.code,
+        description: exception.message,
+      );
     }
   }
 }

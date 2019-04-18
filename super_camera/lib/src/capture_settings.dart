@@ -8,32 +8,32 @@ enum VideoOrientation {
 }
 
 class PhotoSettings {
-  const PhotoSettings({@required this.delegateSettings})
-      : assert(delegateSettings != null);
+  const PhotoSettings({@required this.delegate}) : assert(delegate != null);
 
-  final CaptureDelegateSettings delegateSettings;
+  final CaptureDelegate delegate;
 
   Map<String, dynamic> _serialize() {
     return <String, dynamic>{
-      'androidDelegateName': delegateSettings.androidDelegateName,
-      'iOSDelegateName': delegateSettings.iOSDelegateName,
-      'delegateSettings': delegateSettings.settings,
+      'androidDelegateName': delegate.androidClassName,
+      'androidClassNameCamera2': delegate.androidClassNameCamera2,
+      'iOSDelegateName': delegate.iOSClassName,
+      'delegateSettings': delegate.settings,
     };
   }
 }
 
 class VideoSettings {
   const VideoSettings({
-    @required this.delegateSettings,
+    @required this.delegate,
     @required this.videoFormat,
     bool shouldMirror,
     VideoOrientation orientation,
   })  : shouldMirror = shouldMirror ?? false,
         orientation = orientation ?? VideoOrientation.portraitUp,
-        assert(delegateSettings != null),
+        assert(delegate != null),
         assert(videoFormat != null);
 
-  final CaptureDelegateSettings delegateSettings;
+  final CaptureDelegate delegate;
   final VideoFormat videoFormat;
 
   /// Indicates whether the video should be mirrored about its vertical axis for iOS.
@@ -54,9 +54,10 @@ class VideoSettings {
 
   Map<String, dynamic> _serialize() {
     return <String, dynamic>{
-      'androidDelegateName': delegateSettings.androidDelegateName,
-      'iOSDelegateName': delegateSettings.iOSDelegateName,
-      'delegateSettings': delegateSettings.settings,
+      'androidClassName': delegate.androidClassName,
+      'androidClassNameCamera2': delegate.androidClassNameCamera2,
+      'iOSClassName': delegate.iOSClassName,
+      'delegateSettings': delegate.settings,
       'shouldMirror': shouldMirror,
       'videoFormat': videoFormat._serialize(),
       'orientation': orientation.toString(),
@@ -64,18 +65,20 @@ class VideoSettings {
   }
 }
 
-abstract class CaptureDelegateSettings {
-  const CaptureDelegateSettings({
-    @required this.androidDelegateName,
-    @required this.iOSDelegateName,
-    @required this.onSuccess,
-    this.onFailure,
+abstract class CaptureDelegate {
+  const CaptureDelegate({
+    @required this.androidClassName,
+    @required this.androidClassNameCamera2,
+    @required this.iOSClassName,
+    @required this.onConfigured,
     this.settings,
-  }) : assert(androidDelegateName != null || iOSDelegateName != null);
+  }) : assert(androidClassName != null ||
+            iOSClassName != null ||
+            androidClassNameCamera2 != null);
 
-  final Function(dynamic result) onSuccess;
-  final CameraFailureCallback onFailure;
-  final String androidDelegateName;
-  final String iOSDelegateName;
+  final String androidClassName;
+  final String androidClassNameCamera2;
+  final String iOSClassName;
+  final Function(dynamic result) onConfigured;
   final Map<String, dynamic> settings;
 }

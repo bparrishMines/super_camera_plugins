@@ -1,37 +1,39 @@
 part of super_camera;
 
-class TextureSettings extends CaptureDelegateSettings {
+class TextureSettings extends CaptureDelegate {
   TextureSettings({
     @required Function(Texture texture) onTextureReady,
-    Function(CameraException exception) onFailure,
   }) : super(
-          androidDelegateName: _androidName,
-          iOSDelegateName: _iOSName,
-          onSuccess: (dynamic result) {
+          androidClassName: _androidName,
+          androidClassNameCamera2: _androidNameCamera2,
+          iOSClassName: _iOSName,
+          onConfigured: (dynamic result) {
             onTextureReady(Texture(textureId: result));
           },
-          onFailure: onFailure,
         );
 
   static const String _androidName =
+      'com.example.supercamera.camera.video_delegates.TextureDelegate';
+  static const String _androidNameCamera2 =
       'com.example.supercamera.camera2.video_delegates.TextureDelegate';
   static const String _iOSName = 'TextureDelegate';
 }
 
-class DataSettings extends CaptureDelegateSettings {
+class DataSettings extends CaptureDelegate {
   DataSettings({
     @required Function(Uint8List bytes) onImageDataAvailable,
-    Function(CameraException exception) onFailure,
   }) : super(
-          androidDelegateName: _androidName,
-          iOSDelegateName: _iOSName,
-          onSuccess: (dynamic result) {
+          androidClassName: _androidName,
+          androidClassNameCamera2: _androidNameCamera2,
+          iOSClassName: _iOSName,
+          onConfigured: (dynamic result) {
             onImageDataAvailable(result);
           },
-          onFailure: onFailure,
         );
 
   static const String _androidName =
+      'com.example.supercamera.camera.photo_delegates.DataDelegate';
+  static const String _androidNameCamera2 =
       'com.example.supercamera.camera2.photo_delegates.DataDelegate';
   static const String _iOSName = 'DataDelegate';
 }
