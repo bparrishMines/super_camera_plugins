@@ -10,7 +10,7 @@ enum VideoOrientation {
 class PhotoSettings {
   const PhotoSettings({@required this.delegate}) : assert(delegate != null);
 
-  final CaptureDelegate delegate;
+  final PhotoDelegate delegate;
 
   Map<String, dynamic> _serialize() {
     return <String, dynamic>{
@@ -20,6 +20,22 @@ class PhotoSettings {
       'delegateSettings': delegate.settings,
     };
   }
+}
+
+class PhotoDelegate extends _CaptureDelegate {
+  const PhotoDelegate({
+    String androidClassName,
+    String androidClassNameCamera2,
+    String iOSClassName,
+    Function(dynamic result) onConfigured,
+    Map<String, dynamic> settings,
+  }) : super(
+    androidClassName: androidClassName,
+    androidClassNameCamera2: androidClassNameCamera2,
+    iOSClassName: iOSClassName,
+    onConfigured: onConfigured,
+    settings: settings,
+  );
 }
 
 class VideoSettings {
@@ -33,7 +49,7 @@ class VideoSettings {
         assert(delegate != null),
         assert(videoFormat != null);
 
-  final CaptureDelegate delegate;
+  final VideoDelegate delegate;
   final VideoFormat videoFormat;
 
   /// Indicates whether the video should be mirrored about its vertical axis for iOS.
@@ -65,13 +81,29 @@ class VideoSettings {
   }
 }
 
-abstract class CaptureDelegate {
-  const CaptureDelegate({
+class VideoDelegate extends _CaptureDelegate {
+  const VideoDelegate({
+    String androidClassName,
+    String androidClassNameCamera2,
+    String iOSClassName,
+    Function(dynamic result) onConfigured,
+    Map<String, dynamic> settings,
+  }) : super(
+          androidClassName: androidClassName,
+          androidClassNameCamera2: androidClassNameCamera2,
+          iOSClassName: iOSClassName,
+          onConfigured: onConfigured,
+          settings: settings,
+        );
+}
+
+abstract class _CaptureDelegate {
+  const _CaptureDelegate({
     @required this.androidClassName,
     @required this.androidClassNameCamera2,
     @required this.iOSClassName,
     @required this.onConfigured,
-    this.settings,
+    @required this.settings,
   }) : assert(androidClassName != null ||
             iOSClassName != null ||
             androidClassNameCamera2 != null);

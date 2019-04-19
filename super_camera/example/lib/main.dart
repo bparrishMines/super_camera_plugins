@@ -98,7 +98,7 @@ class _MyAppState extends State<MyApp> {
           shouldMirror: device.lensDirection == LensDirection.front,
           videoFormat: bestVideoFormat,
           orientation: VideoOrientation.portraitUp,
-          delegate: TextureSettings(
+          delegate: TextureDelegate(
             onTextureReady: (Texture texture) {
               print("Got texture!");
 
@@ -116,7 +116,7 @@ class _MyAppState extends State<MyApp> {
 
       await _controller.setPhotoSettings(
         PhotoSettings(
-          delegate: DataSettings(
+          delegate: DataDelegate(
             onImageDataAvailable: (bytes) => print(bytes.length),
           ),
         ),

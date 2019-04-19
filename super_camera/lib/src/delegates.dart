@@ -1,7 +1,7 @@
 part of super_camera;
 
-class TextureSettings extends CaptureDelegate {
-  TextureSettings({
+class TextureDelegate extends VideoDelegate {
+  TextureDelegate({
     @required Function(Texture texture) onTextureReady,
   }) : super(
           androidClassName: _androidName,
@@ -19,8 +19,8 @@ class TextureSettings extends CaptureDelegate {
   static const String _iOSName = 'TextureDelegate';
 }
 
-class DataSettings extends CaptureDelegate {
-  DataSettings._({
+class DataDelegate extends PhotoDelegate {
+  DataDelegate._({
     Map<String, dynamic> settings,
     Function(dynamic result) onConfigured,
   }) : super(
@@ -31,12 +31,12 @@ class DataSettings extends CaptureDelegate {
           settings: settings,
         );
 
-  factory DataSettings({
+  factory DataDelegate({
     @required Function(Uint8List bytes) onImageDataAvailable,
   }) {
-    final String channelName = '$DataSettings/${_nextHandle++}';
+    final String channelName = '$DataDelegate/${_nextHandle++}';
 
-    return DataSettings._(
+    return DataDelegate._(
       settings: <String, dynamic>{
         'channelName': channelName,
       },
