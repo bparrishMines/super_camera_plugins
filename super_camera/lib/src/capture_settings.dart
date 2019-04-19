@@ -16,7 +16,7 @@ class PhotoSettings {
     return <String, dynamic>{
       'androidClassName': delegate.androidClassName,
       'androidClassNameCamera2': delegate.androidClassNameCamera2,
-      'iOSDelegateName': delegate.iOSClassName,
+      'iOSClassName': delegate.iOSClassName,
       'delegateSettings': delegate.settings,
     };
   }

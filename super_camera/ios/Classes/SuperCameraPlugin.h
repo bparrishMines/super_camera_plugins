@@ -16,7 +16,8 @@ static CameraControllerErrorCode const _Nonnull kUnknown = @"Unknown";
 + (NSArray<NSDictionary *> *_Nonnull)availableCameras;
 
 - (instancetype _Nonnull)initWithCameraId:(NSString *_Nonnull)cameraId
-                          textureRegistry:(NSObject<FlutterTextureRegistry> *_Nonnull)textureRegistry;
+                          textureRegistry:(NSObject<FlutterTextureRegistry> *_Nonnull)textureRegistry
+                                messenger:(NSObject<FlutterBinaryMessenger> *_Nonnull)messenger;
 - (void) close;
 @end
 
@@ -32,13 +33,15 @@ static CameraControllerErrorCode const _Nonnull kUnknown = @"Unknown";
 @required
 - (void)initialize:(NSDictionary *_Nullable)settings
    textureRegistry:(NSObject<FlutterTextureRegistry> *_Nonnull)textureRegistry
-            result:(FlutterResult _Nonnull)result;
+         messenger:(NSObject<FlutterBinaryMessenger> *_Nonnull)messenger;
 - (void)onImageTaken:(CMSampleBufferRef _Nullable)imageDataSampleBuffer
                error:(NSError *_Nullable)error;
+- (void)onFinishSetup:(FlutterResult _Nonnull)result;
+- (void)close;
 @end
 
 @interface TextureDelegate : NSObject<VideoDelegate, FlutterTexture>
 @end
 
-@interface DataDelegate : NSObject<PhotoDelegate>
+@interface DataDelegate : NSObject<PhotoDelegate, FlutterStreamHandler>
 @end

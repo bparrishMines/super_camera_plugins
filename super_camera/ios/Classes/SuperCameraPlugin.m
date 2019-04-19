@@ -55,7 +55,9 @@ static NSString *const kPluginChannelName = @"bmparr2450.plugins/super_camera";
                                       binaryMessenger:[_registrar messenger]];
 
   NSString *cameraId = call.arguments[@"cameraId"];
-  CameraController *controller = [[CameraController alloc] initWithCameraId:cameraId textureRegistry:[_registrar textures]];
+  CameraController *controller = [[CameraController alloc] initWithCameraId:cameraId
+                                                            textureRegistry:[_registrar textures]
+                                                                  messenger:[_registrar messenger]];
 
   [_registrar addMethodCallDelegate:controller channel:channel];
 

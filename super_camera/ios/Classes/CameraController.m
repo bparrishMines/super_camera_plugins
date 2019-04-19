@@ -2,6 +2,7 @@
 
 @interface CameraController ()
 @property id<FlutterTextureRegistry> textureRegistry;
+@property id<FlutterBinaryMessenger> binaryMessenger;
 @property id<VideoDelegate> videoDelegate;
 @property id<PhotoDelegate> photoDelegate;
 @property AVCaptureSession *session;
@@ -77,11 +78,13 @@
 }
 
 - (instancetype)initWithCameraId:(NSString *)cameraId
-                 textureRegistry:(NSObject<FlutterTextureRegistry> *)textureRegistry {
+                 textureRegistry:(NSObject<FlutterTextureRegistry> *)textureRegistry
+                       messenger:(NSObject<FlutterBinaryMessenger> * _Nonnull)messenger {
   self = [super init];
   if (self) {
     _cameraId = cameraId;
     _textureRegistry = textureRegistry;
+    _binaryMessenger = messenger;
   }
   return self;
 }
@@ -91,8 +94,10 @@
     [self open:result];
   } else if ([@"CameraController#startRunning" isEqualToString:call.method]) {
     [self startRunning:result];
+  } else if ([@"CameraController#setPhotoSettings" isEqualToString:call.method]) {
+    [self setPhotoSettings:call.arguments result:result];
   } else if ([@"CameraController#takePhoto" isEqualToString:call.method]) {
-    [self takePhoto:call.arguments result:result];
+    [self takePhoto:result];
   } else if ([@"CameraController#setVideoSettings" isEqualToString:call.method]) {
     [self setVideoSettings:call.arguments result:result];
   } else if ([@"CameraController#stopRunning" isEqualToString:call.method]) {
@@ -117,16 +122,14 @@
   _session = [AVCaptureSession new];
   _device = [AVCaptureDevice deviceWithUniqueID:_cameraId];
 
-  _videoInput = [AVCaptureDeviceInput deviceInputWithDevice:_device
-                                                      error:nil];
+  _videoInput = [AVCaptureDeviceInput deviceInputWithDevice:_device error:nil];
   [_session addInputWithNoConnections:_videoInput];
 
   _videoOutput = [AVCaptureVideoDataOutput new];
   [_session addOutputWithNoConnections:_videoOutput];
 
-  _videoConnection = [AVCaptureConnection
-                      connectionWithInputPorts:_videoInput.ports
-                                        output:_videoOutput];
+  _videoConnection = [AVCaptureConnection connectionWithInputPorts:_videoInput.ports
+                                                            output:_videoOutput];
   [_session addConnection:_videoConnection];
 
   _stillImageOutput = [AVCaptureStillImageOutput new];
@@ -152,7 +155,9 @@
   result(nil);
 }
 
-- (void)takePhoto:(NSDictionary *)settings result:(FlutterResult _Nonnull)result {
+- (void)setPhotoSettings:(NSDictionary *)settings result:(FlutterResult _Nonnull)result {
+  [self closePhotoDelegate];
+
   if (![self cameraIsOpen]) {
     result([FlutterError errorWithCode:kCameraControllerNotOpen
                                message:@"CameraController is not open."
@@ -160,24 +165,34 @@
     return;
   }
 
-  NSString *iOSDelegateName = settings[@"iOSDelegateName"];
-  if ([iOSDelegateName isEqual:[NSNull null]]) {
+  NSString *delegateName = settings[@"iOSClassName"];
+  if ([delegateName isEqual:[NSNull null]]) {
     result([FlutterError errorWithCode:kInvalidDelegateName
                                message:@"CameraController delegate name is null."
                                details:nil]);
     return;
   }
 
-  _photoDelegate = [NSClassFromString(iOSDelegateName) new];
+  _photoDelegate = [NSClassFromString(delegateName) new];
 
   [_photoDelegate initialize:settings[@"delegateSettings"]
              textureRegistry:_textureRegistry
-                      result:result];
+                   messenger:_binaryMessenger];
+
+  [_photoDelegate onFinishSetup:result];
+}
+
+- (void)takePhoto:(FlutterResult _Nonnull)result {
+  if (![self cameraIsOpen]) {
+    result([FlutterError errorWithCode:kCameraControllerNotOpen
+                               message:@"CameraController is not open."
+                               details:nil]);
+    return;
+  }
 
   [_stillImageOutput captureStillImageAsynchronouslyFromConnection:_stillImageConnection completionHandler:^(CMSampleBufferRef _Nullable imageDataSampleBuffer, NSError *_Nullable error) {
+    if (!self->_photoDelegate) return;
     [self->_photoDelegate onImageTaken:imageDataSampleBuffer error:error];
-
-    self->_photoDelegate = nil;
   }];
 }
 
@@ -189,7 +204,7 @@
     return;
   }
 
-  NSString *iOSDelegateName = settings[@"iOSDelegateName"];
+  NSString *iOSDelegateName = settings[@"iOSClassName"];
   if ([iOSDelegateName isEqual:[NSNull null]]) {
     result([FlutterError errorWithCode:kInvalidDelegateName
                                message:@"CameraController delegate name is null."
@@ -232,7 +247,9 @@
   if ([_session isRunning]) {
     [_session stopRunning];
   }
+
   [self closeVideoDelegate];
+  [self closePhotoDelegate];
 
   _session = nil;
   _device = nil;
@@ -299,6 +316,13 @@
 
   [_videoDelegate close];
   _videoDelegate = nil;
+}
+
+- (void)closePhotoDelegate {
+  if (!_photoDelegate) return;
+
+  [_photoDelegate close];
+  _photoDelegate = nil;
 }
 
 - (BOOL)cameraIsOpen {
