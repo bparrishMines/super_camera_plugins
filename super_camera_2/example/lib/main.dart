@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -24,9 +23,6 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   CameraController _controller;
-  LensDirection _lensDirection = LensDirection.back;
-  Widget _cameraWidget;
-  bool _isToggling = false;
   double _deviceRotation = 0;
   StreamSubscription<AccelerometerEvent> _accelerometerSubscription;
 
@@ -34,7 +30,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _setupAccelerometer();
-    _toggleCamera();
+    _getCameraPermission();
   }
 
   void _setupAccelerometer() {
@@ -63,72 +59,6 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<void> _openCamera() async {
-    final bool hasCameraAccess = await _getCameraPermission();
-
-    if (!hasCameraAccess) {
-      print('No camera access!');
-      return;
-    }
-
-    final CameraDevice device = await CameraUtils.cameraDeviceForDirection(
-      _lensDirection,
-    );
-
-    final List<VideoFormat> videoFormats = device.videoFormats
-        .where(
-          (VideoFormat format) => format.pixelFormat == PixelFormat.bgra8888,
-        )
-        .toList();
-
-    final VideoFormat bestVideoFormat =
-        CameraUtils.bestVideoFormatForAspectRatio(
-      videoFormats: defaultTargetPlatform == TargetPlatform.iOS
-          ? videoFormats
-          : device.videoFormats,
-      aspectRatio: 16 / 9,
-    );
-
-    _controller = CameraController(device);
-    try {
-      await _controller.open();
-
-      await _controller.setVideoSettings(
-        VideoSettings(
-          shouldMirror: device.lensDirection == LensDirection.front,
-          videoFormat: bestVideoFormat,
-          orientation: VideoOrientation.portraitUp,
-          delegate: TextureDelegate(
-            onTextureReady: (Texture texture) {
-              print("Got texture!");
-
-              setState(() {
-                _cameraWidget = _buildCameraWidget(
-                  texture,
-                  bestVideoFormat.dimensions.height /
-                      bestVideoFormat.dimensions.width,
-                );
-              });
-            },
-          ),
-        ),
-      );
-
-      await _controller.setPhotoSettings(
-        PhotoSettings(
-          delegate: DataDelegate(
-            onImageDataAvailable: (bytes) => print(bytes.length),
-          ),
-        ),
-      );
-
-      await _controller.startRunning();
-    } on CameraException catch (exception) {
-      print(exception);
-      await _controller.close();
-    }
-  }
-
   Future<bool> _getCameraPermission() async {
     final PermissionStatus permission =
         await PermissionHandler().checkPermissionStatus(
@@ -145,32 +75,9 @@ class _MyAppState extends State<MyApp> {
     return permissions[PermissionGroup.camera] == PermissionStatus.granted;
   }
 
-  // Switches camera if another exists.
-  Future<void> _toggleCamera() async {
-    _lensDirection = _lensDirection == LensDirection.back
-        ? LensDirection.front
-        : LensDirection.back;
-
-    setState(() {
-      _cameraWidget = null;
-    });
-
-    await Camera.releaseAllResources();
-    await _openCamera();
-  }
-
-  Widget _buildCameraWidget(Texture texture, double aspectRatio) {
-    return AspectRatio(
-      aspectRatio: aspectRatio,
-      child: texture,
-    );
-  }
-
   Widget _buildPictureButton() {
     return InkResponse(
-      onTap: () {
-        _controller.takePhoto().catchError((_) => print(_));
-      },
+      onTap: () {},
       child: Container(
         width: 65,
         height: 65,
@@ -195,7 +102,7 @@ class _MyAppState extends State<MyApp> {
           Expanded(
             child: Container(
               child: Center(
-                child: _cameraWidget ?? Container(),
+                child: Container(),
               ),
               decoration: BoxDecoration(
                 color: Colors.black,
@@ -217,12 +124,7 @@ class _MyAppState extends State<MyApp> {
                         color: Colors.white,
                         size: 32,
                       ),
-                      onPressed: () {
-                        if (!_isToggling) {
-                          _isToggling = true;
-                          _toggleCamera().then((_) => _isToggling = false);
-                        }
-                      },
+                      onPressed: () {},
                     ),
                   ),
                 ),
@@ -242,7 +144,6 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     _accelerometerSubscription.cancel();
-    Camera.releaseAllResources();
     super.dispose();
   }
 }
