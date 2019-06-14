@@ -1,0 +1,18 @@
+name: super_camera_example
+description: Demonstrates how to use the super_camera plugin.
+publish_to: 'none'
+
+environment:
+  sdk: ">=2.1.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  permission_handler: ^3.0.0
+  sensors: ^0.4.0+1
+
+  super_camera:
+    path: ../
+
+flutter:
+  uses-material-design: true
