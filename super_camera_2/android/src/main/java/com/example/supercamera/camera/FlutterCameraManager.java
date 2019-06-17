@@ -2,12 +2,21 @@ package com.example.supercamera.camera;
 
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.os.Build;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+
+import com.example.supercamera.SuperCameraPlugin;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 
@@ -74,7 +83,68 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
     }
   }
 
-  private void openCamera(MethodCall call, MethodChannel.Result result) {
+  private void openCamera(final MethodCall call, final MethodChannel.Result result) {
+    final BinaryMessenger messenger = SuperCameraPlugin.getMessenger();
+    final String channelName = call.argument("stateCallbackChannelName");
 
+    final EventChannel eventChannel = new EventChannel(messenger, channelName);
+
+    eventChannel.setStreamHandler(
+        new EventChannel.StreamHandler() {
+          @Override
+          public void onListen(Object arguments, final EventChannel.EventSink sink) {
+            final String cameraId = call.argument("cameraId");
+
+            try {
+              manager.openCamera(cameraId, new CameraDevice.StateCallback() {
+                String CLASS_NAME = "CameraDeviceState";
+
+                @Override
+                public void onOpened(@NonNull CameraDevice camera) {
+                  final Integer handle = call.argument("handle");
+                  SuperCameraPlugin.addHandler(handle, new FlutterCameraDevice(camera));
+
+                  final Map<String, Object> stateData = new HashMap<>();
+                  stateData.put(CLASS_NAME, CLASS_NAME + ".opened");
+
+                  sink.success(stateData);
+                }
+
+                @Override
+                public void onDisconnected(@NonNull CameraDevice camera) {
+                  final Map<String, Object> stateData = new HashMap<>();
+                  stateData.put(CLASS_NAME, CLASS_NAME + ".disconnected");
+
+                  sink.success(stateData);
+                }
+
+                @Override
+                public void onError(@NonNull CameraDevice camera, int error) {
+                  final Map<String, Object> stateData = new HashMap<>();
+                  stateData.put(CLASS_NAME, CLASS_NAME + ".error");
+
+                  sink.success(stateData);
+                }
+
+                @Override
+                public void onClosed(@NonNull CameraDevice camera) {
+                  final Map<String, Object> stateData = new HashMap<>();
+                  stateData.put(CLASS_NAME, CLASS_NAME + ".closed");
+
+                  sink.success(stateData);
+                }
+              }, null);
+
+              result.success(null);
+            } catch (CameraAccessException e) {
+              result.error(e.getClass().getSimpleName(), e.getLocalizedMessage(), null);
+            }
+          }
+
+          @Override
+          public void onCancel(Object arguments) {
+
+          }
+        });
   }
 }

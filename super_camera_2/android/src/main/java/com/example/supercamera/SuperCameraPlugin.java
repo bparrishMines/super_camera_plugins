@@ -6,6 +6,8 @@ import android.os.Build;
 import android.util.SparseArray;
 import com.example.supercamera.camera.FlutterCameraManager;
 import com.example.supercamera.support_camera.SupportAndroidCamera;
+
+import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -61,7 +63,7 @@ public class SuperCameraPlugin implements MethodCallHandler {
     }
   }
 
-  private static void addHandler(final int handle, final MethodChannel.MethodCallHandler handler) {
+  public static void addHandler(final int handle, final MethodChannel.MethodCallHandler handler) {
     if (handlers.get(handle) != null) {
       final String message = String.format("Object for handle already exists: %s", handle);
       throw new IllegalArgumentException(message);
@@ -83,5 +85,9 @@ public class SuperCameraPlugin implements MethodCallHandler {
 
   public static TextureRegistry.SurfaceTextureEntry createSurfaceTexture() {
     return registrar.textures().createSurfaceTexture();
+  }
+
+  public static BinaryMessenger getMessenger() {
+    return registrar.messenger();
   }
 }

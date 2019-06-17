@@ -4,8 +4,6 @@ enum CameraApi { android, iOS, supportAndroid }
 enum LensDirection { front, back, external }
 
 abstract class CameraDescription {
-  const CameraDescription._();
-
   LensDirection get direction;
   dynamic get id;
 }
@@ -56,12 +54,31 @@ class CameraController {
   Future<void> dispose() => config.dispose();
 
   static CameraConfigurator _createDefaultConfig(
-      CameraDescription description) {
+    CameraDescription description,
+  ) {
     final CameraApi api = _getCameraApi(description);
     switch (api) {
       case CameraApi.android:
-        // TODO: Handle this case.
-        return null;
+        return CameraManager.openCamera(
+          description.id,
+          (CameraDeviceState state, CameraDevice device) {
+            switch (state) {
+              case CameraDeviceState.closed:
+                print('Camera closed.');
+                break;
+              case CameraDeviceState.disconnected:
+                print('Camera disconnected.');
+                break;
+              case CameraDeviceState.error:
+                print('Camera error.');
+                break;
+              case CameraDeviceState.opened:
+                print('Camera opened.');
+                break;
+            }
+          },
+        );
+        break;
       case CameraApi.iOS:
         // TODO: Handle this case.
         return null;
@@ -75,6 +92,8 @@ class CameraController {
   static CameraApi _getCameraApi(CameraDescription description) {
     if (description is CameraInfo) {
       return CameraApi.supportAndroid;
+    } else if (description is CameraCharacteristics) {
+      return CameraApi.android;
     }
 
     throw ArgumentError.value(

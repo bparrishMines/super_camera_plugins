@@ -28,7 +28,29 @@ class CameraManager {
     );
   }
 
-  static void openCamera(String cameraId, CameraDeviceStateCallback callback) {
+  static CameraDevice openCamera(
+    String cameraId,
+    CameraDeviceStateCallback callback,
+  ) {
+    final CameraDevice device = CameraDevice._(cameraId);
 
+    final String stateCallbackChannelName =
+        '${Camera.channel}/$CameraDeviceStateCallback/${device._handle}';
+
+    Camera.channel.invokeMethod<void>(
+      'CameraManager#openCamera',
+      <String, dynamic>{
+        'cameraId': cameraId,
+        'handle': device._handle,
+        'stateCallbackChannelName': stateCallbackChannelName,
+      },
+    ).then((_) {
+      device._setUpStateCallbackSubscription(
+        stateCallbackChannelName: stateCallbackChannelName,
+        stateCallback: callback,
+      );
+    });
+
+    return device;
   }
 }
