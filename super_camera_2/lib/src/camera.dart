@@ -8,6 +8,9 @@ class Camera {
     'dev.plugins/super_camera',
   );
 
+  @visibleForTesting
+  static int _nextHandle = 0;
+
   static Future<List<CameraDescription>> availableCameras() async {
     final List<CameraDescription> devices = <CameraDescription>[];
 

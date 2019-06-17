@@ -3,6 +3,7 @@ part of super_camera;
 class SupportAndroidCamera extends CameraConfigurator {
   SupportAndroidCamera._();
 
+  final int _handle = Camera._nextHandle++;
   int _previewTextureId;
 
   static Future<int> getNumberOfCameras() {

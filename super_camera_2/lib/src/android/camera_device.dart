@@ -1,40 +1,34 @@
 part of super_camera;
 
-class CameraDevice extends CameraConfigurator {
+enum Template { preview }
+
+class CameraDevice {
   CameraDevice._(this.id) : assert(id != null);
 
+  final int _handle = Camera._nextHandle++;
   StreamSubscription<dynamic> _subscription;
 
   final String id;
 
+  Future<CaptureRequest> createCaptureRequest(Template template) async {
+    final Map<String, dynamic> data =
+        await Camera.channel.invokeMapMethod<dynamic, dynamic>(
+      '$CameraDevice#createCaptureRequest',
+      <String, dynamic>{'$Template': template.toString(), 'handle': _handle},
+    );
+
+    return CaptureRequest._fromMap(
+      template: template,
+      map: data,
+    );
+  }
+
   Future<void> close() {
     _subscription?.cancel();
-    return null;
-  }
-
-  @override
-  Future<void> createPreviewTexture() {
-    // TODO: implement createPreviewTexture
-    return null;
-  }
-
-  @override
-  Future<void> dispose() => close();
-
-  @override
-  // TODO: implement previewTextureId
-  int get previewTextureId => null;
-
-  @override
-  Future<void> start() {
-    // TODO: implement start
-    return null;
-  }
-
-  @override
-  Future<void> stop() {
-    // TODO: implement stop
-    return null;
+    return Camera.channel.invokeMethod<void>(
+      '$CameraDevice#close',
+      <String, dynamic>{'handle': _handle},
+    );
   }
 
   void _setUpStateCallbackSubscription({

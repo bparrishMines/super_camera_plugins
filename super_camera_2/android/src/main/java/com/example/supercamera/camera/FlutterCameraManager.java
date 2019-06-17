@@ -102,7 +102,7 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
                 @Override
                 public void onOpened(@NonNull CameraDevice camera) {
                   final Integer handle = call.argument("handle");
-                  SuperCameraPlugin.addHandler(handle, new FlutterCameraDevice(camera));
+                  SuperCameraPlugin.addHandler(handle, new FlutterCameraDevice(camera, handle));
 
                   final Map<String, Object> stateData = new HashMap<>();
                   stateData.put(CLASS_NAME, CLASS_NAME + ".opened");

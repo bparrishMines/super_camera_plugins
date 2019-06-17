@@ -28,7 +28,7 @@ class CameraManager {
     );
   }
 
-  static CameraDevice openCamera(
+  static void openCamera(
     String cameraId,
     CameraDeviceStateCallback callback,
   ) {
@@ -50,7 +50,5 @@ class CameraManager {
         stateCallback: callback,
       );
     });
-
-    return device;
   }
 }

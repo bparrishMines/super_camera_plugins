@@ -9,8 +9,6 @@ abstract class CameraDescription {
 }
 
 abstract class CameraConfigurator {
-  static int _nextHandle = 0;
-  final int _handle = _nextHandle++;
   int get previewTextureId;
   Future<void> start();
   Future<void> stop();
@@ -59,29 +57,9 @@ class CameraController {
     final CameraApi api = _getCameraApi(description);
     switch (api) {
       case CameraApi.android:
-        return CameraManager.openCamera(
-          description.id,
-          (CameraDeviceState state, CameraDevice device) {
-            switch (state) {
-              case CameraDeviceState.closed:
-                print('Camera closed.');
-                break;
-              case CameraDeviceState.disconnected:
-                print('Camera disconnected.');
-                break;
-              case CameraDeviceState.error:
-                print('Camera error.');
-                break;
-              case CameraDeviceState.opened:
-                print('Camera opened.');
-                break;
-            }
-          },
-        );
-        break;
+        return AndroidCameraConfigurator();
       case CameraApi.iOS:
-        // TODO: Handle this case.
-        return null;
+        throw UnimplementedError();
       case CameraApi.supportAndroid:
         return SupportAndroidCamera.open(description.id);
     }
