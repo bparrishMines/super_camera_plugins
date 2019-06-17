@@ -9,6 +9,9 @@ import 'package:meta/meta.dart';
 
 import 'package:device_info/device_info.dart';
 
+part 'src/android/camera_characteristics.dart';
+part 'src/android/camera_device.dart';
+part 'src/android/camera_manager.dart';
 part 'src/camera.dart';
 part 'src/camera_controller.dart';
 part 'src/camera_preview.dart';

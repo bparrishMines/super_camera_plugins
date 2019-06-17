@@ -5,7 +5,8 @@ enum Facing { back, front }
 class CameraInfo implements CameraDescription {
   const CameraInfo._({this.id, this.facing, this.orientation})
       : assert(id != null),
-        assert(facing != null);
+        assert(facing != null),
+        assert(orientation != null);
 
   factory CameraInfo._fromMap(Map<String, dynamic> map) {
     return CameraInfo._(
@@ -30,6 +31,6 @@ class CameraInfo implements CameraDescription {
         return LensDirection.back;
     }
 
-    throw StateError('Unsupported $Facing');
+    return null;
   }
 }

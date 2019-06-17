@@ -4,6 +4,7 @@ import android.content.Context;
 import android.hardware.camera2.CameraManager;
 import android.os.Build;
 import android.util.SparseArray;
+import com.example.supercamera.camera.FlutterCameraManager;
 import com.example.supercamera.support_camera.SupportAndroidCamera;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -19,11 +20,6 @@ public class SuperCameraPlugin implements MethodCallHandler {
   private static final SparseArray<MethodChannel.MethodCallHandler> handlers = new SparseArray<>();
 
   private static Registrar registrar;
-  private final CameraManager cameraManager;
-
-  private SuperCameraPlugin(CameraManager manager) {
-    this.cameraManager = manager;
-  }
 
   /** Plugin registration. */
   public static void registerWith(Registrar registrar) {
@@ -33,10 +29,10 @@ public class SuperCameraPlugin implements MethodCallHandler {
     if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
       final CameraManager manager =
           (CameraManager) registrar.activity().getSystemService(Context.CAMERA_SERVICE);
-      channel.setMethodCallHandler(new SuperCameraPlugin(manager));
-    } else {
-      channel.setMethodCallHandler(new SuperCameraPlugin(null));
+      addHandler(-1, new FlutterCameraManager(manager));
     }
+
+    channel.setMethodCallHandler(new SuperCameraPlugin());
   }
 
   @Override
@@ -56,13 +52,13 @@ public class SuperCameraPlugin implements MethodCallHandler {
       default:
         final MethodChannel.MethodCallHandler handler = getHandler(call);
 
-        if (handler != null) {
-          handler.onMethodCall(call, result);
+        if (handler == null) {
+          result.notImplemented();
           return;
         }
-    }
 
-    result.notImplemented();
+        handler.onMethodCall(call, result);
+    }
   }
 
   private static void addHandler(final int handle, final MethodChannel.MethodCallHandler handler) {
