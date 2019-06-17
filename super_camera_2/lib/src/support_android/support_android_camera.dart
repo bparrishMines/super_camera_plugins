@@ -26,6 +26,7 @@ class SupportAndroidCamera extends CameraConfigurator {
     final Map<String, dynamic> infoMap =
         await Camera.channel.invokeMapMethod<String, dynamic>(
       '$SupportAndroidCamera#getCameraInfo',
+      <String, dynamic>{'cameraId': cameraId},
     );
 
     return CameraInfo._fromMap(infoMap);
@@ -65,11 +66,14 @@ class SupportAndroidCamera extends CameraConfigurator {
   Future<void> stop() => stopPreview();
 
   @override
-  Future<void> createPreviewTexture() {
-    if (previewTextureId != null) return Future.value();
+  Future<void> createPreviewTexture() async {
+    if (previewTextureId != null) return Future<void>.value();
 
-    return Camera.channel
-        .invokeMethod<int>('$SupportAndroidCamera#createPreviewTexture')
-        .then((int textureId) => _previewTextureId = textureId);
+    final int textureId = await Camera.channel.invokeMethod<int>(
+      '$SupportAndroidCamera#createPreviewTexture',
+      <String, dynamic>{'handle': _handle},
+    );
+
+    _previewTextureId = textureId;
   }
 }

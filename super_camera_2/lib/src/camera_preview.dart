@@ -10,8 +10,20 @@ class CameraPreview extends StatefulWidget {
 }
 
 class _CameraPreviewState extends State<CameraPreview> {
-  Texture _buildPreviewWidget(int textureId) {
-    return Texture(textureId: textureId);
+  RotatedBox _buildPreviewWidget(int textureId) {
+    final CameraController controller = widget.controller;
+    int rotation = 0;
+    if (controller.api == CameraApi.supportAndroid) {
+      rotation = (controller.description as CameraInfo).orientation;
+      if (widget.controller.description.direction == LensDirection.front) {
+        rotation = (rotation + 180) % 360;
+      }
+    }
+
+    return RotatedBox(
+      quarterTurns: (rotation / 90).floor(),
+      child: Texture(textureId: textureId),
+    );
   }
 
   @override
@@ -19,9 +31,10 @@ class _CameraPreviewState extends State<CameraPreview> {
     final CameraConfigurator config = widget.controller.config;
 
     if (config.previewTextureId != null) {
-      _buildPreviewWidget(config.previewTextureId);
+      return _buildPreviewWidget(config.previewTextureId);
     }
 
+    widget.controller.stop();
     return FutureBuilder<void>(
       future: config.createPreviewTexture(),
       builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
@@ -31,6 +44,7 @@ class _CameraPreviewState extends State<CameraPreview> {
           case ConnectionState.waiting:
             return Container();
           case ConnectionState.done:
+            widget.controller.start();
             return _buildPreviewWidget(config.previewTextureId);
         }
         return null; // unreachable

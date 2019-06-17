@@ -11,7 +11,7 @@ abstract class CameraDescription {
 }
 
 abstract class CameraConfigurator {
-  static int _nextHandle;
+  static int _nextHandle = 0;
   final int _handle = _nextHandle++;
   int get previewTextureId;
   Future<void> start();

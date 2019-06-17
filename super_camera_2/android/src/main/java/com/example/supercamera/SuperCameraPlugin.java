@@ -3,95 +3,89 @@ package com.example.supercamera;
 import android.content.Context;
 import android.hardware.camera2.CameraManager;
 import android.os.Build;
-import android.util.Pair;
-import com.example.supercamera.base.BaseCameraController;
-import com.example.supercamera.camera1.CameraController;
-import com.example.supercamera.camera2.CameraController2;
-import java.util.ArrayList;
-import java.util.List;
+import android.util.SparseArray;
+import com.example.supercamera.support_camera.SupportAndroidCamera;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
+import io.flutter.view.TextureRegistry;
 
 /** SuperCameraPlugin */
 public class SuperCameraPlugin implements MethodCallHandler {
-  private static final String PLUGIN_CHANNEL_NAME = "bmparr2450.plugins/super_camera";
+  private static final String PLUGIN_CHANNEL_NAME = "dev.plugins/super_camera";
 
-  private final Registrar registrar;
+  private static final SparseArray<MethodChannel.MethodCallHandler> handlers = new SparseArray<>();
+
+  private static Registrar registrar;
   private final CameraManager cameraManager;
-  private final List<Pair<MethodChannel, BaseCameraController>> controllers = new ArrayList<>();
 
-  private SuperCameraPlugin(Registrar registrar, CameraManager manager) {
-    this.registrar = registrar;
+  private SuperCameraPlugin(CameraManager manager) {
     this.cameraManager = manager;
   }
 
   /** Plugin registration. */
   public static void registerWith(Registrar registrar) {
+    SuperCameraPlugin.registrar = registrar;
     final MethodChannel channel = new MethodChannel(registrar.messenger(), PLUGIN_CHANNEL_NAME);
 
     if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
       final CameraManager manager =
           (CameraManager) registrar.activity().getSystemService(Context.CAMERA_SERVICE);
-      channel.setMethodCallHandler(new SuperCameraPlugin(registrar, manager));
+      channel.setMethodCallHandler(new SuperCameraPlugin(manager));
     } else {
-      channel.setMethodCallHandler(new SuperCameraPlugin(registrar, null));
+      channel.setMethodCallHandler(new SuperCameraPlugin(null));
     }
   }
 
   @Override
   public void onMethodCall(MethodCall call, Result result) {
     switch(call.method) {
-      case "Camera#availableCameras":
-        availableCameras(result);
-        break;
-      case "Camera#createCameraController":
-        createCameraController(call);
+      case "SupportAndroidCamera#getNumberOfCameras":
+        result.success(SupportAndroidCamera.getNumberOfCameras());
+        return;
+      case "SupportAndroidCamera#getCameraInfo":
+        result.success(SupportAndroidCamera.getCameraInfo(call));
+        return;
+      case "SupportAndroidCamera#open":
+        final Integer handle = call.argument("handle");
+        addHandler(handle, SupportAndroidCamera.open(call));
         result.success(null);
-        break;
-      case "Camera#releaseAllResources":
-        releaseAllResources();
-        result.success(null);
-        break;
+        return;
       default:
-        result.notImplemented();
+        final MethodChannel.MethodCallHandler handler = getHandler(call);
+
+        if (handler != null) {
+          handler.onMethodCall(call, result);
+          return;
+        }
     }
+
+    result.notImplemented();
   }
 
-  private void availableCameras(Result result) {
-    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-      CameraController2.returnAvailableCameras(cameraManager, result);
-    } else {
-      result.success(CameraController.availableCameras());
+  private static void addHandler(final int handle, final MethodChannel.MethodCallHandler handler) {
+    if (handlers.get(handle) != null) {
+      final String message = String.format("Object for handle already exists: %s", handle);
+      throw new IllegalArgumentException(message);
     }
+
+    handlers.put(handle, handler);
   }
 
-  private void createCameraController(MethodCall call) {
-    final String channelName = call.argument("channelName");
-    final MethodChannel channel = new MethodChannel(registrar.messenger(), channelName);
-
-    final String cameraId = call.argument("cameraId");
-
-    final BaseCameraController controller;
-    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-      controller = new CameraController2(
-          cameraId, registrar.textures(), registrar.messenger(), cameraManager);
-    } else {
-      controller = new CameraController(cameraId, registrar.textures(), registrar.messenger());
-    }
-
-    channel.setMethodCallHandler(controller);
-    controllers.add(new Pair<>(channel, controller));
+  public static void removeHandler(final int handle) {
+    handlers.remove(handle);
   }
 
-  private void releaseAllResources() {
-    for (Pair<MethodChannel, BaseCameraController> controllerPair : controllers) {
-      controllerPair.second.close();
-      controllerPair.first.setMethodCallHandler(null);
-    }
+  private static MethodChannel.MethodCallHandler getHandler(final MethodCall call) {
+    final Integer handle = call.argument("handle");
 
-    controllers.clear();
+    if (handle == null) return null;
+    return handlers.get(handle);
+  }
+
+  public static TextureRegistry.SurfaceTextureEntry createSurfaceTexture() {
+    return registrar.textures().createSurfaceTexture();
   }
 }

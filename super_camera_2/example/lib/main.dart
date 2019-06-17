@@ -25,12 +25,15 @@ class _MyAppState extends State<MyApp> {
   CameraController _controller;
   double _deviceRotation = 0;
   StreamSubscription<AccelerometerEvent> _accelerometerSubscription;
+  LensDirection _lensDirection = LensDirection.front;
 
   @override
   void initState() {
     super.initState();
     _setupAccelerometer();
-    _getCameraPermission();
+    _getCameraPermission().then((bool success) {
+      if (success) _setupCamera();
+    });
   }
 
   void _setupAccelerometer() {
@@ -75,6 +78,39 @@ class _MyAppState extends State<MyApp> {
     return permissions[PermissionGroup.camera] == PermissionStatus.granted;
   }
 
+  Future<void> _setupCamera() async {
+    final List<CameraDescription> cameras = await Camera.availableCameras();
+    final CameraDescription camera = cameras.firstWhere(
+      (CameraDescription desc) => desc.direction == _lensDirection,
+    );
+
+    setState(() {
+      _controller = CameraController(description: camera);
+    });
+  }
+
+  Future<void> _toggleLensDirection() {
+    _controller.dispose();
+
+    setState(() {
+      _controller = null;
+    });
+
+    switch (_lensDirection) {
+      case LensDirection.front:
+        _lensDirection = LensDirection.back;
+        break;
+      case LensDirection.back:
+        _lensDirection = LensDirection.front;
+        break;
+      case LensDirection.external:
+        _lensDirection = LensDirection.front;
+        break;
+    }
+
+    return _setupCamera();
+  }
+
   Widget _buildPictureButton() {
     return InkResponse(
       onTap: () {},
@@ -101,9 +137,9 @@ class _MyAppState extends State<MyApp> {
         children: <Widget>[
           Expanded(
             child: Container(
-              child: Center(
-                child: Container(),
-              ),
+              child: _controller != null
+                  ? CameraPreview(_controller)
+                  : Container(),
               decoration: BoxDecoration(
                 color: Colors.black,
               ),
@@ -124,7 +160,7 @@ class _MyAppState extends State<MyApp> {
                         color: Colors.white,
                         size: 32,
                       ),
-                      onPressed: () {},
+                      onPressed: _toggleLensDirection,
                     ),
                   ),
                 ),
@@ -144,6 +180,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     _accelerometerSubscription.cancel();
+    _controller.dispose();
     super.dispose();
   }
 }
