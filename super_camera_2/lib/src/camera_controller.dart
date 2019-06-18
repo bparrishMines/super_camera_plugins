@@ -8,60 +8,44 @@ abstract class CameraDescription {
   dynamic get id;
 }
 
-abstract class CameraConfigurator {
-  int get previewTextureId;
-  Future<void> start();
-  Future<void> stop();
-  Future<void> dispose();
-  Future<void> createPreviewTexture();
-}
-
 class CameraController {
-  CameraController._({this.description, this.config, this.api})
-      : assert(description != null),
-        assert(config != null),
+  CameraController._({
+    @required this.description,
+    @required this.controller,
+    @required this.api,
+  })  : assert(description != null),
+        assert(controller != null),
         assert(api != null);
 
   factory CameraController({CameraDescription description}) {
     return CameraController._(
       description: description,
-      config: _createDefaultConfig(description),
-      api: _getCameraApi(description),
-    );
-  }
-
-  factory CameraController.customConfigurator({
-    CameraDescription description,
-    CameraConfigurator config,
-  }) {
-    return CameraController._(
-      description: description,
-      config: config,
+      controller: _createDefaultConfig(description),
       api: _getCameraApi(description),
     );
   }
 
   final CameraDescription description;
-  final CameraConfigurator config;
+  final CameraController controller;
   final CameraApi api;
 
-  Future<void> start() => config.start();
+  int get previewTextureId => controller.previewTextureId;
+  Future<void> start() => controller.start();
+  Future<void> stop() => controller.stop();
+  Future<void> dispose() => controller.dispose();
+  Future<void> addPreviewTexture() => controller.addPreviewTexture();
 
-  Future<void> stop() => config.stop();
-
-  Future<void> dispose() => config.dispose();
-
-  static CameraConfigurator _createDefaultConfig(
+  static CameraController _createDefaultConfig(
     CameraDescription description,
   ) {
     final CameraApi api = _getCameraApi(description);
     switch (api) {
       case CameraApi.android:
-        return AndroidCameraConfigurator();
+        return AndroidCameraController(description);
       case CameraApi.iOS:
         throw UnimplementedError();
       case CameraApi.supportAndroid:
-        return SupportAndroidCamera.open(description.id);
+        return SupportAndroidCameraController(description);
     }
 
     return null; // Unreachable
@@ -70,7 +54,7 @@ class CameraController {
   static CameraApi _getCameraApi(CameraDescription description) {
     if (description is CameraInfo) {
       return CameraApi.supportAndroid;
-    } else if (description is CameraCharacteristics) {
+    } else if (description is AndroidCameraController) {
       return CameraApi.android;
     }
 

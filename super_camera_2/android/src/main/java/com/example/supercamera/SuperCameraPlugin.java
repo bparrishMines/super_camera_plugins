@@ -5,8 +5,8 @@ import android.hardware.camera2.CameraManager;
 import android.os.Build;
 import android.util.SparseArray;
 import com.example.supercamera.camera.FlutterCameraManager;
+import com.example.supercamera.common.PlatformTexture;
 import com.example.supercamera.support_camera.SupportAndroidCamera;
-
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -40,27 +40,38 @@ public class SuperCameraPlugin implements MethodCallHandler {
   @Override
   public void onMethodCall(MethodCall call, Result result) {
     switch(call.method) {
+      case "Camera#createPlatformTexture":
+        createPlatformTexture(call, result);
+        break;
       case "SupportAndroidCamera#getNumberOfCameras":
         result.success(SupportAndroidCamera.getNumberOfCameras());
-        return;
+        break;
       case "SupportAndroidCamera#getCameraInfo":
         result.success(SupportAndroidCamera.getCameraInfo(call));
-        return;
+        break;
       case "SupportAndroidCamera#open":
         final Integer handle = call.argument("handle");
         addHandler(handle, SupportAndroidCamera.open(call));
         result.success(null);
-        return;
+        break;
       default:
         final MethodChannel.MethodCallHandler handler = getHandler(call);
 
         if (handler == null) {
           result.notImplemented();
-          return;
+          break;
         }
 
         handler.onMethodCall(call, result);
     }
+  }
+
+  private void createPlatformTexture(MethodCall call, Result result) {
+    final TextureRegistry.SurfaceTextureEntry entry = registrar.textures().createSurfaceTexture();
+    final Integer textureHandle = call.argument("handle");
+    addHandler(textureHandle, new PlatformTexture(entry, textureHandle));
+
+    result.success(entry.id());
   }
 
   public static void addHandler(final int handle, final MethodChannel.MethodCallHandler handler) {
@@ -83,8 +94,8 @@ public class SuperCameraPlugin implements MethodCallHandler {
     return handlers.get(handle);
   }
 
-  public static TextureRegistry.SurfaceTextureEntry createSurfaceTexture() {
-    return registrar.textures().createSurfaceTexture();
+  public static MethodChannel.MethodCallHandler getHandler(final int handle) {
+    return handlers.get(handle);
   }
 
   public static BinaryMessenger getMessenger() {

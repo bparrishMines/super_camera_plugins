@@ -89,6 +89,7 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
 
     final EventChannel eventChannel = new EventChannel(messenger, channelName);
 
+    final String CLASS_NAME = "CameraDeviceState";
     eventChannel.setStreamHandler(
         new EventChannel.StreamHandler() {
           @Override
@@ -97,11 +98,10 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
 
             try {
               manager.openCamera(cameraId, new CameraDevice.StateCallback() {
-                String CLASS_NAME = "CameraDeviceState";
 
                 @Override
                 public void onOpened(@NonNull CameraDevice camera) {
-                  final Integer handle = call.argument("handle");
+                  final Integer handle = call.argument("cameraHandle");
                   SuperCameraPlugin.addHandler(handle, new FlutterCameraDevice(camera, handle));
 
                   final Map<String, Object> stateData = new HashMap<>();
@@ -135,9 +135,11 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
                 }
               }, null);
 
-              result.success(null);
             } catch (CameraAccessException e) {
-              result.error(e.getClass().getSimpleName(), e.getLocalizedMessage(), null);
+              final Map<String, Object> stateData = new HashMap<>();
+              stateData.put(CLASS_NAME, CLASS_NAME + ".error");
+
+              sink.success(stateData);
             }
           }
 
@@ -146,5 +148,7 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
 
           }
         });
+
+    result.success(null);
   }
 }

@@ -10,13 +10,15 @@ enum CameraDeviceState { closed, disconnected, error, opened }
 class CameraManager {
   CameraManager._();
 
+  static const int _handle = -1;
+
   static Future<CameraCharacteristics> getCameraCharacteristics(
     String cameraId,
   ) async {
     final Map<String, dynamic> data =
         await Camera.channel.invokeMapMethod<String, dynamic>(
       '$CameraManager#getCameraCharacteristics',
-      <String, dynamic>{'cameraId': cameraId},
+      <String, dynamic>{'cameraId': cameraId, 'handle': _handle},
     );
 
     return CameraCharacteristics._fromMap(data);
@@ -25,6 +27,7 @@ class CameraManager {
   static Future<List<String>> getCameraIdList() {
     return Camera.channel.invokeListMethod<String>(
       '$CameraManager#getCameraIdList',
+      <String, dynamic>{'handle': _handle},
     );
   }
 
@@ -38,10 +41,11 @@ class CameraManager {
         '${Camera.channel}/$CameraDeviceStateCallback/${device._handle}';
 
     Camera.channel.invokeMethod<void>(
-      'CameraManager#openCamera',
+      '$CameraManager#openCamera',
       <String, dynamic>{
+        'handle': _handle,
         'cameraId': cameraId,
-        'handle': device._handle,
+        'cameraHandle': device._handle,
         'stateCallbackChannelName': stateCallbackChannelName,
       },
     ).then((_) {

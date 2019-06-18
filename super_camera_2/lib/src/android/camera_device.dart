@@ -5,7 +5,7 @@ enum Template { preview }
 class CameraDevice {
   CameraDevice._(this.id) : assert(id != null);
 
-  final int _handle = Camera._nextHandle++;
+  final int _handle = Camera.nextHandle++;
   StreamSubscription<dynamic> _subscription;
 
   final String id;
@@ -23,8 +23,39 @@ class CameraDevice {
     );
   }
 
+  void createCaptureSession(
+    List<Surface> outputs,
+    CameraCaptureSessionStateCallback callback,
+  ) {
+    final CameraCaptureSession session = CameraCaptureSession._();
+
+    final String stateCallbackChannelName =
+        '${Camera.channel}/$CameraCaptureSessionStateCallback/${session._handle}';
+
+    final List<Map<String, dynamic>> outputData =
+        outputs.map<Map<String, dynamic>>(
+      (Surface surface) => surface.asMap(),
+    ).toList();
+
+    Camera.channel.invokeMethod<void>(
+      '$CameraDevice#createCaptureSession',
+      <String, dynamic>{
+        'handle': _handle,
+        'sessionHandle': session._handle,
+        'stateCallbackChannelName': stateCallbackChannelName,
+        'ouputs': outputData,
+      },
+    ).then((dynamic textureId) {
+      session._previewTextureId = textureId;
+      session._setUpStateCallbackSubscription(
+        stateCallbackChannelName: stateCallbackChannelName,
+        stateCallback: callback,
+      );
+    });
+  }
+
   Future<void> close() {
-    _subscription?.cancel();
+    _subscription.cancel();
     return Camera.channel.invokeMethod<void>(
       '$CameraDevice#close',
       <String, dynamic>{'handle': _handle},

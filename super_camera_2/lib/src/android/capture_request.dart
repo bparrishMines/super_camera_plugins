@@ -1,6 +1,8 @@
 part of super_camera;
 
-abstract class Surface {}
+abstract class Surface {
+  Map<String, dynamic> asMap();
+}
 
 class PreviewTexture implements Surface {
   const PreviewTexture(this.surfaceTexture);
@@ -58,5 +60,17 @@ class CaptureRequest {
       jpegQuality: jpegQuality ?? this.jpegQuality,
       targets: List.unmodifiable(targets ?? this.targets),
     );
+  }
+
+  Map<String, dynamic> asMap() {
+    final List<Map<String, dynamic>> outputData = targets
+        .map<Map<String, dynamic>>((Surface surface) => surface.asMap())
+        .toList();
+
+    return Map.unmodifiable(<String, dynamic>{
+      '$Template': template.toString(),
+      'jpegQuality': jpegQuality,
+      'targets': outputData,
+    });
   }
 }

@@ -2,16 +2,15 @@ package com.example.supercamera.support_camera;
 
 import android.hardware.Camera;
 import com.example.supercamera.SuperCameraPlugin;
+import com.example.supercamera.common.PlatformTexture;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
-import io.flutter.view.TextureRegistry;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class SupportAndroidCamera implements MethodChannel.MethodCallHandler {
   private final Camera camera;
-  private TextureRegistry.SurfaceTextureEntry textureEntry;
   private final Integer handle;
 
   private SupportAndroidCamera(Camera camera, Integer handle) {
@@ -54,8 +53,8 @@ public class SupportAndroidCamera implements MethodChannel.MethodCallHandler {
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
     switch(call.method) {
-      case "SupportAndroidCamera#createPreviewTexture":
-        createPreviewTexture(result);
+      case "SupportAndroidCamera#previewTexture":
+        previewTexture(call, result);
         break;
       case "SupportAndroidCamera#startPreview":
         startPreview(result);
@@ -71,17 +70,22 @@ public class SupportAndroidCamera implements MethodChannel.MethodCallHandler {
     }
   }
 
-  private void createPreviewTexture(MethodChannel.Result result) {
-    textureEntry = SuperCameraPlugin.createSurfaceTexture();
+  private void previewTexture(MethodCall call, MethodChannel.Result result) {
+    final Integer textureHandle = call.argument("textureHandle");
 
     try {
-      camera.setPreviewTexture(textureEntry.surfaceTexture());
+      if (textureHandle == null) {
+        camera.setPreviewTexture(null);
+      } else {
+        final PlatformTexture texture = (PlatformTexture) SuperCameraPlugin.getHandler(textureHandle);
+        camera.setPreviewTexture(texture.textureEntry.surfaceTexture());
+      }
     } catch (IOException e) {
       result.error(e.getClass().getSimpleName(), e.getLocalizedMessage(), null);
       return;
     }
 
-    result.success(textureEntry.id());
+    result.success(null);
   }
 
   private void startPreview(MethodChannel.Result result) {
@@ -96,10 +100,7 @@ public class SupportAndroidCamera implements MethodChannel.MethodCallHandler {
 
   private void release(MethodChannel.Result result) {
     camera.release();
-    if (textureEntry != null) textureEntry.release();
-
     SuperCameraPlugin.removeHandler(handle);
-
     result.success(null);
   }
 }

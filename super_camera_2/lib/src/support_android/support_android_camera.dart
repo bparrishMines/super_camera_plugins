@@ -1,10 +1,9 @@
 part of super_camera;
 
-class SupportAndroidCamera extends CameraConfigurator {
+class SupportAndroidCamera {
   SupportAndroidCamera._();
 
-  final int _handle = Camera._nextHandle++;
-  int _previewTextureId;
+  final int _handle = Camera.nextHandle++;
 
   static Future<int> getNumberOfCameras() {
     return Camera.channel.invokeMethod<int>(
@@ -33,6 +32,13 @@ class SupportAndroidCamera extends CameraConfigurator {
     return CameraInfo._fromMap(infoMap);
   }
 
+  set previewTexture(PlatformTexture texture) {
+    Camera.channel.invokeMethod<void>(
+      '$SupportAndroidCamera#previewTexture',
+      <String, dynamic>{'handle': _handle, 'textureHandle': texture?._handle},
+    );
+  }
+
   Future<void> startPreview() {
     return Camera.channel.invokeMethod<void>(
       '$SupportAndroidCamera#startPreview',
@@ -52,29 +58,5 @@ class SupportAndroidCamera extends CameraConfigurator {
       '$SupportAndroidCamera#release',
       <String, dynamic>{'handle': _handle},
     );
-  }
-
-  @override
-  int get previewTextureId => _previewTextureId;
-
-  @override
-  Future<void> dispose() => release();
-
-  @override
-  Future<void> start() => startPreview();
-
-  @override
-  Future<void> stop() => stopPreview();
-
-  @override
-  Future<void> createPreviewTexture() async {
-    if (previewTextureId != null) return Future<void>.value();
-
-    final int textureId = await Camera.channel.invokeMethod<int>(
-      '$SupportAndroidCamera#createPreviewTexture',
-      <String, dynamic>{'handle': _handle},
-    );
-
-    _previewTextureId = textureId;
   }
 }

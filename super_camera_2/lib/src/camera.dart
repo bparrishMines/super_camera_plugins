@@ -9,14 +9,14 @@ class Camera {
   );
 
   @visibleForTesting
-  static int _nextHandle = 0;
+  static int nextHandle = 0;
 
   static Future<List<CameraDescription>> availableCameras() async {
     final List<CameraDescription> devices = <CameraDescription>[];
 
     if (defaultTargetPlatform == TargetPlatform.android) {
       final AndroidDeviceInfo info = await DeviceInfoPlugin().androidInfo;
-      if (info.version.sdkInt < 21) {
+      if (info.version.sdkInt < 21 || true) {
         final int numCameras = await SupportAndroidCamera.getNumberOfCameras();
         for (int i = 0; i < numCameras; i++) {
           devices.add(await SupportAndroidCamera.getCameraInfo(i));
@@ -30,5 +30,16 @@ class Camera {
     }
 
     return devices;
+  }
+
+  static Future<PlatformTexture> createPlatformTexture() async {
+    final int handle = nextHandle++;
+
+    final int textureId = await channel.invokeMethod<int>(
+      '$Camera#createPlatformTexture',
+      <String, dynamic>{'handle': handle},
+    );
+
+    return PlatformTexture._(handle: handle, textureId: textureId);
   }
 }

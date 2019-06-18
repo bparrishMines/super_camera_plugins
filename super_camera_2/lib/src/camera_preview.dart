@@ -1,7 +1,7 @@
 part of super_camera;
 
 class CameraPreview extends StatefulWidget {
-  CameraPreview(this.controller);
+  CameraPreview(this.controller) : assert(controller != null);
 
   final CameraController controller;
 
@@ -28,15 +28,15 @@ class _CameraPreviewState extends State<CameraPreview> {
 
   @override
   Widget build(BuildContext context) {
-    final CameraConfigurator config = widget.controller.config;
+    final CameraController controller = widget.controller;
 
-    if (config.previewTextureId != null) {
-      return _buildPreviewWidget(config.previewTextureId);
+    if (controller.previewTextureId != null) {
+      return _buildPreviewWidget(controller.previewTextureId);
     }
 
     widget.controller.stop();
     return FutureBuilder<void>(
-      future: config.createPreviewTexture(),
+      future: controller.addPreviewTexture(),
       builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
         switch (snapshot.connectionState) {
           case ConnectionState.none:
@@ -45,7 +45,7 @@ class _CameraPreviewState extends State<CameraPreview> {
             return Container();
           case ConnectionState.done:
             widget.controller.start();
-            return _buildPreviewWidget(config.previewTextureId);
+            return _buildPreviewWidget(controller.previewTextureId);
         }
         return null; // unreachable
       },
