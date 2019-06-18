@@ -8,18 +8,28 @@ typedef CameraCaptureSessionStateCallback = Function(
 enum CameraCaptureSessionState { configured }
 
 class CameraCaptureSession {
-  CameraCaptureSession._();
+  CameraCaptureSession._(this._cameraDeviceHandle)
+      : assert(_cameraDeviceHandle != null);
 
   final int _handle = Camera.nextHandle++;
   StreamSubscription<dynamic> _subscription;
-  int _previewTextureId;
+  final int _cameraDeviceHandle;
 
-  int get previewTextureId => _previewTextureId;
+  Future<void> setRepeatingRequest({@required CaptureRequest request}) {
+    return Camera.channel.invokeMethod<void>(
+      '$CameraCaptureSession#setRepeatingRequest',
+      <String, dynamic>{
+        'handle': _handle,
+        'cameraDeviceHandle': _cameraDeviceHandle,
+        '$CaptureRequest': request.asMap(),
+      },
+    );
+  }
 
   Future<void> close() {
     _subscription.cancel();
     return Camera.channel.invokeMethod<void>(
-      '$CameraDevice#close',
+      '$CameraCaptureSession#close',
       <String, dynamic>{'handle': _handle},
     );
   }

@@ -5,20 +5,26 @@ abstract class Surface {
 }
 
 class PreviewTexture implements Surface {
-  const PreviewTexture(this.surfaceTexture);
+  const PreviewTexture({
+    @required this.platformTexture,
+    @required this.surfaceTexture,
+  })  : assert(platformTexture != null),
+        assert(surfaceTexture != null);
 
+  final PlatformTexture platformTexture;
   final SurfaceTexture surfaceTexture;
 
   Map<String, dynamic> asMap() {
     return Map.unmodifiable(<String, dynamic>{
-      'surfaceType': '$PreviewTexture',
+      'surfaceClass': '$PreviewTexture',
+      'textureHandle': platformTexture._handle,
       '$SurfaceTexture': surfaceTexture.asMap(),
     });
   }
 }
 
 class SurfaceTexture {
-  const SurfaceTexture._({this.defaultBufferSize});
+  const SurfaceTexture({this.defaultBufferSize});
 
   final Size defaultBufferSize;
 
@@ -33,11 +39,11 @@ class SurfaceTexture {
 class CaptureRequest {
   const CaptureRequest._({
     @required this.template,
-    @required this.jpegQuality,
     @required this.targets,
+    this.jpegQuality,
   })  : assert(template != null),
-        assert(jpegQuality >= 1 && jpegQuality <= 100),
-        assert(targets != null);
+        assert(targets != null),
+        assert(jpegQuality == null || (jpegQuality >= 1 && jpegQuality <= 100));
 
   factory CaptureRequest._fromMap({
     @required Template template,
@@ -51,8 +57,8 @@ class CaptureRequest {
   }
 
   final Template template;
-  final int jpegQuality;
   final List<Surface> targets;
+  final int jpegQuality;
 
   CaptureRequest copyWith({List<Surface> targets, int jpegQuality}) {
     return CaptureRequest._(

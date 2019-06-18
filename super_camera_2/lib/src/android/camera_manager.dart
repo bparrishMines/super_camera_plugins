@@ -1,12 +1,5 @@
 part of super_camera;
 
-typedef CameraDeviceStateCallback = Function(
-  CameraDeviceState state,
-  CameraDevice device,
-);
-
-enum CameraDeviceState { closed, disconnected, error, opened }
-
 class CameraManager {
   CameraManager._();
 

@@ -89,7 +89,7 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
 
     final EventChannel eventChannel = new EventChannel(messenger, channelName);
 
-    final String CLASS_NAME = "CameraDeviceState";
+    final String stateClassName = "CameraDeviceState";
     eventChannel.setStreamHandler(
         new EventChannel.StreamHandler() {
           @Override
@@ -105,7 +105,7 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
                   SuperCameraPlugin.addHandler(handle, new FlutterCameraDevice(camera, handle));
 
                   final Map<String, Object> stateData = new HashMap<>();
-                  stateData.put(CLASS_NAME, CLASS_NAME + ".opened");
+                  stateData.put(stateClassName, stateClassName + ".opened");
 
                   sink.success(stateData);
                 }
@@ -113,7 +113,7 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
                 @Override
                 public void onDisconnected(@NonNull CameraDevice camera) {
                   final Map<String, Object> stateData = new HashMap<>();
-                  stateData.put(CLASS_NAME, CLASS_NAME + ".disconnected");
+                  stateData.put(stateClassName, stateClassName + ".disconnected");
 
                   sink.success(stateData);
                 }
@@ -121,7 +121,7 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
                 @Override
                 public void onError(@NonNull CameraDevice camera, int error) {
                   final Map<String, Object> stateData = new HashMap<>();
-                  stateData.put(CLASS_NAME, CLASS_NAME + ".error");
+                  stateData.put(stateClassName, stateClassName + ".error");
 
                   sink.success(stateData);
                 }
@@ -129,7 +129,7 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
                 @Override
                 public void onClosed(@NonNull CameraDevice camera) {
                   final Map<String, Object> stateData = new HashMap<>();
-                  stateData.put(CLASS_NAME, CLASS_NAME + ".closed");
+                  stateData.put(stateClassName, stateClassName + ".closed");
 
                   sink.success(stateData);
                 }
@@ -137,7 +137,7 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
 
             } catch (CameraAccessException e) {
               final Map<String, Object> stateData = new HashMap<>();
-              stateData.put(CLASS_NAME, CLASS_NAME + ".error");
+              stateData.put(stateClassName, stateClassName + ".error");
 
               sink.success(stateData);
             }

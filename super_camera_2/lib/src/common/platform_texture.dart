@@ -1,7 +1,7 @@
 part of super_camera;
 
 class PlatformTexture {
-  PlatformTexture._({@required int handle, @required this.textureId})
+  const PlatformTexture._({@required int handle, @required this.textureId})
       : _handle = handle,
         assert(handle != null),
         assert(textureId != null);

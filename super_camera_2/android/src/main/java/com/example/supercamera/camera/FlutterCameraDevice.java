@@ -5,10 +5,12 @@ import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CaptureRequest;
 import android.os.Build;
+import android.util.Log;
 import android.view.Surface;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import com.example.supercamera.SuperCameraPlugin;
+import com.example.supercamera.common.PlatformTexture;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,11 +19,10 @@ import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
-import io.flutter.view.TextureRegistry;
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class FlutterCameraDevice implements MethodChannel.MethodCallHandler {
-  private final CameraDevice device;
+  public final CameraDevice device;
   private final Integer handle;
 
   FlutterCameraDevice(CameraDevice device, Integer handle) {
@@ -40,13 +41,14 @@ public class FlutterCameraDevice implements MethodChannel.MethodCallHandler {
         break;
       case "CameraDevice#createCaptureSession":
         createCaptureSession(call, result);
+        break;
       default:
         result.notImplemented();
     }
   }
 
   private void createCaptureRequest(MethodCall call, MethodChannel.Result result) {
-    final String template = call.argument("template");
+    final String template = call.argument("Template");
 
     final int requestTemplate;
     if (template.equals("Template.preview")) {
@@ -73,20 +75,7 @@ public class FlutterCameraDevice implements MethodChannel.MethodCallHandler {
 
   private void createCaptureSession(final MethodCall call, final MethodChannel.Result result) {
     final List<Map<String, Object>> outputData = call.argument("outputs");
-    final List<Surface> outputs = new ArrayList<>();
-
-    TextureRegistry.SurfaceTextureEntry textureEntry = null;
-
-    for (Map<String, Object> surfaceData : outputData) {
-      final String surfaceType = (String) surfaceData.get("surfaceType");
-
-      if (surfaceType.equals("PreviewTexture")) {
-        //textureEntry = SuperCameraPlugin.createSurfaceTexture();
-        outputs.add(new Surface(textureEntry.surfaceTexture()));
-      }
-    }
-
-    final TextureRegistry.SurfaceTextureEntry sessionTexture = textureEntry;
+    final List<Surface> outputs = parseOutputs(outputData);
 
     final BinaryMessenger messenger = SuperCameraPlugin.getMessenger();
     final String channelName = call.argument("stateCallbackChannelName");
@@ -105,7 +94,7 @@ public class FlutterCameraDevice implements MethodChannel.MethodCallHandler {
                 public void onConfigured(@NonNull CameraCaptureSession session) {
                   final Integer handle = call.argument("sessionHandle");
                   SuperCameraPlugin.addHandler(
-                      handle, new FlutterCameraCaptureSession(session, sessionTexture, handle));
+                      handle, new FlutterCameraCaptureSession(session, handle));
 
                   final Map<String, Object> stateData = new HashMap<>();
                   stateData.put(CLASS_NAME, CLASS_NAME + ".configured");
@@ -129,16 +118,29 @@ public class FlutterCameraDevice implements MethodChannel.MethodCallHandler {
           }
         });
 
-    if (sessionTexture == null) {
-      result.success(null);
-    } else {
-      result.success(sessionTexture.id());
-    }
+    result.success(null);
   }
 
   private void close(MethodChannel.Result result) {
     device.close();
     SuperCameraPlugin.removeHandler(handle);
     result.success(null);
+  }
+
+  private List<Surface> parseOutputs(List<Map<String, Object>> allOutputData) {
+    final List<Surface> outputs = new ArrayList<>();
+
+    for (Map<String, Object> outputData : allOutputData) {
+      final String surfaceClass = (String) outputData.get("surfaceClass");
+
+      if (surfaceClass.equals("PreviewTexture")) {
+        final Integer textureHandle = (Integer) outputData.get("textureHandle");
+        final PlatformTexture texture = (PlatformTexture) SuperCameraPlugin.getHandler(textureHandle);
+
+        outputs.add(new Surface(texture.textureEntry.surfaceTexture()));
+      }
+    }
+
+    return outputs;
   }
 }

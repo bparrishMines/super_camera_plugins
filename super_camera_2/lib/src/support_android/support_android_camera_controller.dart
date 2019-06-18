@@ -14,7 +14,7 @@ class SupportAndroidCameraController implements CameraController {
 
   @override
   Future<void> addPreviewTexture() async {
-    _texture = await Camera.createPlatformTexture();
+    if (_texture == null) _texture = await Camera.createPlatformTexture();
     _camera.previewTexture = _texture;
   }
 

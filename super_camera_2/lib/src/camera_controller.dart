@@ -54,7 +54,7 @@ class CameraController {
   static CameraApi _getCameraApi(CameraDescription description) {
     if (description is CameraInfo) {
       return CameraApi.supportAndroid;
-    } else if (description is AndroidCameraController) {
+    } else if (description is CameraCharacteristics) {
       return CameraApi.android;
     }
 
