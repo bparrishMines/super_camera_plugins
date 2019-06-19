@@ -6,16 +6,12 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CaptureRequest;
 import android.os.Build;
 import android.view.Surface;
-
 import androidx.annotation.RequiresApi;
-
 import com.example.supercamera.SuperCameraPlugin;
 import com.example.supercamera.common.PlatformTexture;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 

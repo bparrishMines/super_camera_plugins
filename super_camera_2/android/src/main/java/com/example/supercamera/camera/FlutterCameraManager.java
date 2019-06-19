@@ -5,16 +5,12 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.os.Build;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-
 import com.example.supercamera.SuperCameraPlugin;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodCall;

@@ -1,7 +1,6 @@
 package com.example.supercamera.common;
 
 import com.example.supercamera.SuperCameraPlugin;
-
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.view.TextureRegistry;
