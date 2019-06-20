@@ -1,9 +1,7 @@
 part of super_camera;
 
-class SupportAndroidCamera {
+class SupportAndroidCamera with NativeMethodCallHandler {
   SupportAndroidCamera._();
-
-  final int _handle = Camera.nextHandle++;
 
   static Future<int> getNumberOfCameras() {
     return Camera.channel.invokeMethod<int>(

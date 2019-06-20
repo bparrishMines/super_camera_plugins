@@ -1,5 +1,9 @@
 part of super_camera;
 
+mixin NativeMethodCallHandler {
+  final int _handle = Camera.nextHandle++;
+}
+
 class Camera {
   Camera._();
 
@@ -16,7 +20,7 @@ class Camera {
 
     if (defaultTargetPlatform == TargetPlatform.android) {
       final AndroidDeviceInfo info = await DeviceInfoPlugin().androidInfo;
-      if (info.version.sdkInt < 21) {
+      if (info.version.sdkInt < 21 || true) {
         final int numCameras = await SupportAndroidCamera.getNumberOfCameras();
         for (int i = 0; i < numCameras; i++) {
           devices.add(await SupportAndroidCamera.getCameraInfo(i));
