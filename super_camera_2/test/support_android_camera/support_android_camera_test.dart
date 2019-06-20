@@ -41,7 +41,7 @@ void main() {
     });
 
     test('getNumberOfCameras', () async {
-      int result = await SupportAndroidCamera.getNumberOfCameras();
+      final int result = await SupportAndroidCamera.getNumberOfCameras();
 
       expect(result, 3);
       expect(log, <Matcher>[
