@@ -3,7 +3,7 @@ part of super_camera;
 class AndroidCameraConfigurator implements CameraConfigurator {
   AndroidCameraConfigurator(this.characteristics)
       : assert(characteristics != null) {
-    CameraManager.openCamera(
+    CameraManager.instance.openCamera(
       characteristics.id,
       (CameraDeviceState state, CameraDevice device) {
         _device = device;

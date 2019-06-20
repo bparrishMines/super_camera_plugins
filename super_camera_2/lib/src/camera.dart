@@ -26,9 +26,11 @@ class Camera {
           devices.add(await SupportAndroidCamera.getCameraInfo(i));
         }
       } else {
-        final List<String> cameraIds = await CameraManager.getCameraIdList();
+        final List<String> cameraIds =
+            await CameraManager.instance.getCameraIdList();
         for (String id in cameraIds) {
-          devices.add(await CameraManager.getCameraCharacteristics(id));
+          devices
+              .add(await CameraManager.instance.getCameraCharacteristics(id));
         }
       }
     }
@@ -41,7 +43,7 @@ class Camera {
 
     final int textureId = await channel.invokeMethod<int>(
       '$Camera#createPlatformTexture',
-      <String, dynamic>{'handle': handle},
+      <String, dynamic>{'textureHandle': handle},
     );
 
     return PlatformTexture._(handle: handle, textureId: textureId);

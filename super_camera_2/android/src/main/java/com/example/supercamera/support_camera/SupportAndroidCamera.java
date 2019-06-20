@@ -24,8 +24,8 @@ public class SupportAndroidCamera implements MethodChannel.MethodCallHandler {
 
   public static SupportAndroidCamera open(MethodCall call) {
     final Integer cameraId = call.argument("cameraId");
-    final Integer handle = call.argument("handle");
-    return new SupportAndroidCamera(Camera.open(cameraId), handle);
+    final Integer cameraHandle = call.argument("cameraHandle");
+    return new SupportAndroidCamera(Camera.open(cameraId), cameraHandle);
   }
 
   public static Map<String, Object> getCameraInfo(MethodCall call) {

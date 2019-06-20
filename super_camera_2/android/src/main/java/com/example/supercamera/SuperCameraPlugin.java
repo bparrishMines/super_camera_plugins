@@ -14,11 +14,11 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 import io.flutter.view.TextureRegistry;
+import java.util.Locale;
 
 /** SuperCameraPlugin */
 public class SuperCameraPlugin implements MethodCallHandler {
   private static final String PLUGIN_CHANNEL_NAME = "dev.plugins/super_camera";
-
   private static final SparseArray<MethodChannel.MethodCallHandler> handlers = new SparseArray<>();
 
   private static Registrar registrar;
@@ -27,13 +27,6 @@ public class SuperCameraPlugin implements MethodCallHandler {
   public static void registerWith(Registrar registrar) {
     SuperCameraPlugin.registrar = registrar;
     final MethodChannel channel = new MethodChannel(registrar.messenger(), PLUGIN_CHANNEL_NAME);
-
-    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-      final CameraManager manager =
-          (CameraManager) registrar.activity().getSystemService(Context.CAMERA_SERVICE);
-      addHandler(-1, new FlutterCameraManager(manager));
-    }
-
     channel.setMethodCallHandler(new SuperCameraPlugin());
   }
 
@@ -50,9 +43,12 @@ public class SuperCameraPlugin implements MethodCallHandler {
         result.success(SupportAndroidCamera.getCameraInfo(call));
         break;
       case "SupportAndroidCamera#open":
-        final Integer handle = call.argument("handle");
-        addHandler(handle, SupportAndroidCamera.open(call));
+        final Integer cameraHandle = call.argument("cameraHandle");
+        addHandler(cameraHandle, SupportAndroidCamera.open(call));
         result.success(null);
+        break;
+      case "CameraManager()":
+        createCameraManager(call, result);
         break;
       default:
         final MethodChannel.MethodCallHandler handler = getHandler(call);
@@ -66,9 +62,26 @@ public class SuperCameraPlugin implements MethodCallHandler {
     }
   }
 
+  private void createCameraManager(MethodCall call, Result result) {
+    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+      final Integer managerHandle = call.argument("managerHandle");
+      final CameraManager manager =
+          (CameraManager) registrar.activity().getSystemService(Context.CAMERA_SERVICE);
+
+      addHandler(managerHandle, new FlutterCameraManager(manager));
+      result.success(null);
+    } else {
+      final String message = String.format(
+          Locale.getDefault(),
+          "Can't use CameraManager for android version: %d",
+          Build.VERSION.SDK_INT);
+      throw new IllegalAccessError(message);
+    }
+  }
+
   private void createPlatformTexture(MethodCall call, Result result) {
     final TextureRegistry.SurfaceTextureEntry entry = registrar.textures().createSurfaceTexture();
-    final Integer textureHandle = call.argument("handle");
+    final Integer textureHandle = call.argument("textureHandle");
     addHandler(textureHandle, new PlatformTexture(entry, textureHandle));
 
     result.success(entry.id());

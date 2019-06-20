@@ -33,7 +33,7 @@ void main() {
       expect(log, <Matcher>[
         isMethodCall(
           '$Camera#createPlatformTexture',
-          arguments: <String, dynamic>{'handle': 0},
+          arguments: <String, dynamic>{'textureHandle': 0},
         )
       ]);
     });

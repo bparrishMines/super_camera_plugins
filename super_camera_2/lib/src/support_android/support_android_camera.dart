@@ -14,7 +14,7 @@ class SupportAndroidCamera with NativeMethodCallHandler {
 
     Camera.channel.invokeMethod<int>(
       '$SupportAndroidCamera#open',
-      <String, dynamic>{'cameraId': cameraId, 'handle': camera._handle},
+      <String, dynamic>{'cameraId': cameraId, 'cameraHandle': camera._handle},
     );
 
     return camera;

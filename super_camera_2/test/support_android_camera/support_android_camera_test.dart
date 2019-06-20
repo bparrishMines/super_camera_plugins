@@ -58,7 +58,7 @@ void main() {
       expect(log, <Matcher>[
         isMethodCall(
           '$SupportAndroidCamera#open',
-          arguments: <String, dynamic>{'cameraId': 14, 'handle': 0},
+          arguments: <String, dynamic>{'cameraId': 14, 'cameraHandle': 0},
         )
       ]);
     });

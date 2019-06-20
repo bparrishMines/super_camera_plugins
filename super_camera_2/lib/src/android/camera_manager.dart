@@ -1,11 +1,16 @@
 part of super_camera;
 
-class CameraManager {
-  CameraManager._();
+class CameraManager with NativeMethodCallHandler {
+  CameraManager._() {
+    Camera.channel.invokeMethod<void>(
+      '$CameraManager()',
+      <String, dynamic>{'managerHandle': _handle},
+    );
+  }
 
-  static const int _handle = -1;
+  static final CameraManager instance = CameraManager._();
 
-  static Future<CameraCharacteristics> getCameraCharacteristics(
+  Future<CameraCharacteristics> getCameraCharacteristics(
     String cameraId,
   ) async {
     final Map<String, dynamic> data =
@@ -17,14 +22,14 @@ class CameraManager {
     return CameraCharacteristics._fromMap(data);
   }
 
-  static Future<List<String>> getCameraIdList() {
+  Future<List<String>> getCameraIdList() {
     return Camera.channel.invokeListMethod<String>(
       '$CameraManager#getCameraIdList',
       <String, dynamic>{'handle': _handle},
     );
   }
 
-  static void openCamera(
+  void openCamera(
     String cameraId,
     CameraDeviceStateCallback callback,
   ) {
