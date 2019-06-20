@@ -1,7 +1,7 @@
 part of super_camera;
 
-class SupportAndroidCameraController implements CameraController {
-  SupportAndroidCameraController(this.info) : assert(info != null) {
+class SupportAndroidCameraConfigurator implements CameraConfigurator {
+  SupportAndroidCameraConfigurator(this.info) : assert(info != null) {
     _camera = SupportAndroidCamera.open(info.id);
   }
 
@@ -35,13 +35,4 @@ class SupportAndroidCameraController implements CameraController {
   Future<void> stop() {
     return _camera.stopPreview();
   }
-
-  @override
-  CameraApi get api => CameraApi.supportAndroid;
-
-  @override
-  CameraController get controller => this;
-
-  @override
-  CameraDescription get description => info;
 }

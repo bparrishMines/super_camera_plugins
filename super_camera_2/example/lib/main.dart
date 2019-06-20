@@ -180,7 +180,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     _accelerometerSubscription.cancel();
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 }

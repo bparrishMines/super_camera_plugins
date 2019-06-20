@@ -8,47 +8,54 @@ abstract class CameraDescription {
   dynamic get id;
 }
 
+abstract class CameraConfigurator {
+  int get previewTextureId;
+  Future<void> start();
+  Future<void> stop();
+  Future<void> dispose();
+  Future<void> addPreviewTexture();
+}
+
 class CameraController {
   CameraController._({
     @required this.description,
-    @required this.controller,
+    @required this.configurator,
     @required this.api,
   })  : assert(description != null),
-        assert(controller != null),
+        assert(configurator != null),
         assert(api != null);
 
   factory CameraController({CameraDescription description}) {
     return CameraController._(
       description: description,
-      controller: _createDefaultConfig(description),
+      configurator: _createDefaultConfigurator(description),
       api: _getCameraApi(description),
     );
   }
 
   final CameraDescription description;
-  final CameraController controller;
+  final CameraConfigurator configurator;
   final CameraApi api;
 
-  int get previewTextureId => controller.previewTextureId;
-  Future<void> start() => controller.start();
-  Future<void> stop() => controller.stop();
-  Future<void> dispose() => controller.dispose();
-  Future<void> addPreviewTexture() => controller.addPreviewTexture();
+  Future<void> start() => configurator.start();
+  Future<void> stop() => configurator.stop();
+  Future<void> dispose() => configurator.dispose();
+  Future<void> addPreviewTexture() => configurator.addPreviewTexture();
 
-  static CameraController _createDefaultConfig(
+  static CameraConfigurator _createDefaultConfigurator(
     CameraDescription description,
   ) {
     final CameraApi api = _getCameraApi(description);
     switch (api) {
       case CameraApi.android:
-        return AndroidCameraController(description);
+        return AndroidCameraConfigurator(description);
       case CameraApi.iOS:
         throw UnimplementedError();
       case CameraApi.supportAndroid:
-        return SupportAndroidCameraController(description);
+        return SupportAndroidCameraConfigurator(description);
     }
 
-    return null; // Unreachable
+    return null;
   }
 
   static CameraApi _getCameraApi(CameraDescription description) {

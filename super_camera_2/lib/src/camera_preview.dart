@@ -28,15 +28,15 @@ class _CameraPreviewState extends State<CameraPreview> {
 
   @override
   Widget build(BuildContext context) {
-    final CameraController controller = widget.controller;
+    final CameraConfigurator configurator = widget.controller.configurator;
 
-    if (controller.previewTextureId != null) {
-      return _buildPreviewWidget(controller.previewTextureId);
+    if (configurator.previewTextureId != null) {
+      return _buildPreviewWidget(configurator.previewTextureId);
     }
 
     widget.controller.stop();
     return FutureBuilder<void>(
-      future: controller.addPreviewTexture(),
+      future: configurator.addPreviewTexture(),
       builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
         switch (snapshot.connectionState) {
           case ConnectionState.none:
@@ -45,7 +45,7 @@ class _CameraPreviewState extends State<CameraPreview> {
             return Container();
           case ConnectionState.done:
             widget.controller.start();
-            return _buildPreviewWidget(controller.previewTextureId);
+            return _buildPreviewWidget(configurator.previewTextureId);
         }
         return null; // unreachable
       },

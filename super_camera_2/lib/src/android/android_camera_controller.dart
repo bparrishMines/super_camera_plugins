@@ -1,7 +1,7 @@
 part of super_camera;
 
-class AndroidCameraController implements CameraController {
-  AndroidCameraController(this.characteristics)
+class AndroidCameraConfigurator implements CameraConfigurator {
+  AndroidCameraConfigurator(this.characteristics)
       : assert(characteristics != null) {
     CameraManager.openCamera(
       characteristics.id,
@@ -72,13 +72,4 @@ class AndroidCameraController implements CameraController {
     if (_session == null) return Future<void>.value();
     return _session.close().then((_) => _session = null);
   }
-
-  @override
-  CameraApi get api => CameraApi.android;
-
-  @override
-  CameraController get controller => this;
-
-  @override
-  CameraDescription get description => characteristics;
 }
