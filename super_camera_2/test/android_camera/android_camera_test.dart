@@ -127,13 +127,6 @@ void main() {
           },
         );
 
-        CameraManager.instance.openCamera(
-          '',
-          (CameraDeviceState state, CameraDevice device) {
-            cameraDevice = device;
-          },
-        );
-
         for (CameraDeviceState state in CameraDeviceState.values) {
           isCalled[state] = true;
           await _makeCallback(<dynamic, dynamic>{
