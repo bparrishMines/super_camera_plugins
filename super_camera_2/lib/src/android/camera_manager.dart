@@ -13,6 +13,8 @@ class CameraManager with NativeMethodCallHandler {
   Future<CameraCharacteristics> getCameraCharacteristics(
     String cameraId,
   ) async {
+    assert(cameraId != null);
+
     final Map<String, dynamic> data =
         await Camera.channel.invokeMapMethod<String, dynamic>(
       '$CameraManager#getCameraCharacteristics',
@@ -29,28 +31,53 @@ class CameraManager with NativeMethodCallHandler {
     );
   }
 
-  void openCamera(
-    String cameraId,
-    CameraDeviceStateCallback callback,
-  ) {
-    final CameraDevice device = CameraDevice._(cameraId);
+  void openCamera(String cameraId, CameraDeviceStateCallback stateCallback) {
+    assert(cameraId != null);
+    assert(stateCallback != null);
 
-    final String stateCallbackChannelName =
-        '${Camera.channel}/$CameraDeviceStateCallback/${device._handle}';
+    final int deviceHandle = Camera.nextHandle++;
+
+    final String callbackChannelName =
+        '${Camera.channel}/$CameraDeviceStateCallback/$deviceHandle';
 
     Camera.channel.invokeMethod<void>(
       '$CameraManager#openCamera',
       <String, dynamic>{
         'handle': _handle,
         'cameraId': cameraId,
-        'cameraHandle': device._handle,
-        'stateCallbackChannelName': stateCallbackChannelName,
+        'cameraHandle': deviceHandle,
+        'stateCallbackChannelName': callbackChannelName,
       },
     ).then((_) {
-      device._setUpStateCallbackSubscription(
-        stateCallbackChannelName: stateCallbackChannelName,
-        stateCallback: callback,
+      final EventChannel callbackChannel = EventChannel(callbackChannelName);
+      final CameraDevice device = CameraDevice._(
+        id: cameraId,
+        handle: deviceHandle,
+      );
+
+      device._subscription = _setUpStateCallbackSubscription(
+        callbackChannel: callbackChannel,
+        stateCallback: stateCallback,
+        device: device,
       );
     });
+  }
+
+  static StreamSubscription<dynamic> _setUpStateCallbackSubscription({
+    @required EventChannel callbackChannel,
+    @required CameraDeviceStateCallback stateCallback,
+    @required CameraDevice device,
+  }) {
+    return callbackChannel.receiveBroadcastStream().listen(
+      (dynamic event) {
+        final String deviceState = event['$CameraDeviceState'];
+
+        final CameraDeviceState state = CameraDeviceState.values.firstWhere(
+          (CameraDeviceState state) => state.toString() == deviceState,
+        );
+
+        stateCallback(state, device);
+      },
+    );
   }
 }

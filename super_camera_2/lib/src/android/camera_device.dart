@@ -9,9 +9,31 @@ typedef CameraDeviceStateCallback = Function(
 );
 
 class CameraDevice {
-  CameraDevice._(this.id) : assert(id != null);
+  CameraDevice._({
+    @required this.id,
+    @required int handle,
+  })  : _handle = handle,
+        assert(id != null),
+        assert(handle != null);
 
-  final int _handle = Camera.nextHandle++;
+  @visibleForTesting
+  factory CameraDevice.testMock({
+    @required String id,
+    @required int handle,
+    @required CameraDeviceStateCallback stateCallback,
+    @required EventChannel callbackChannel,
+  }) {
+    final CameraDevice device = CameraDevice._(id: id, handle: handle);
+    device._subscription = CameraManager._setUpStateCallbackSubscription(
+      callbackChannel: callbackChannel,
+      stateCallback: stateCallback,
+      device: device,
+    );
+
+    return device;
+  }
+
+  final int _handle;
   StreamSubscription<dynamic> _subscription;
 
   final String id;
@@ -69,38 +91,10 @@ class CameraDevice {
   }
 
   Future<void> close() {
-    _subscription.cancel();
+    _subscription?.cancel();
     return Camera.channel.invokeMethod<void>(
       '$CameraDevice#close',
       <String, dynamic>{'handle': _handle},
-    );
-  }
-
-  void _setUpStateCallbackSubscription({
-    String stateCallbackChannelName,
-    CameraDeviceStateCallback stateCallback,
-  }) {
-    _subscription =
-        EventChannel(stateCallbackChannelName).receiveBroadcastStream().listen(
-      (dynamic event) {
-        final String deviceState = event['$CameraDeviceState'];
-
-        CameraDeviceState state;
-        if (deviceState == CameraDeviceState.closed.toString()) {
-          state = CameraDeviceState.closed;
-        } else if (deviceState == CameraDeviceState.disconnected.toString()) {
-          state = CameraDeviceState.disconnected;
-        } else if (deviceState == CameraDeviceState.error.toString()) {
-          state = CameraDeviceState.error;
-        } else if (deviceState == CameraDeviceState.opened.toString()) {
-          state = CameraDeviceState.opened;
-        }
-
-        if (state == null) {
-          throw StateError('Failed parsing of $CameraDeviceState');
-        }
-        stateCallback(state, this);
-      },
     );
   }
 }
