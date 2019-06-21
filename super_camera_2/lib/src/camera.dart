@@ -4,13 +4,24 @@ mixin NativeMethodCallHandler {
   final int _handle = Camera.nextHandle++;
 }
 
+typedef _CameraCallback = void Function(dynamic result);
+
 class Camera {
   Camera._();
 
+  static final Map<int, dynamic> _callbacks = <int, _CameraCallback>{};
+
   @visibleForTesting
-  static const MethodChannel channel = MethodChannel(
+  static final MethodChannel channel = MethodChannel(
     'dev.plugins/super_camera',
-  );
+  )..setMethodCallHandler(
+      (MethodCall call) async {
+        assert(call.method == 'handleCallback');
+
+        final int handle = call.arguments['handle'];
+        if (_callbacks[handle] != null) _callbacks[handle](call.arguments);
+      },
+    );
 
   @visibleForTesting
   static int nextHandle = 0;
@@ -29,8 +40,9 @@ class Camera {
         final List<String> cameraIds =
             await CameraManager.instance.getCameraIdList();
         for (String id in cameraIds) {
-          devices
-              .add(await CameraManager.instance.getCameraCharacteristics(id));
+          devices.add(
+            await CameraManager.instance.getCameraCharacteristics(id),
+          );
         }
       }
     }
@@ -48,4 +60,11 @@ class Camera {
 
     return PlatformTexture._(handle: handle, textureId: textureId);
   }
+
+  static void _registerCallback(int handle, _CameraCallback callback) {
+    assert(!_callbacks.containsKey(handle));
+    _callbacks[handle] = callback;
+  }
+
+  static void _unregisterCallback(int handle) => _callbacks.remove(handle);
 }

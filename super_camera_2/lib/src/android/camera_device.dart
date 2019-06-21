@@ -8,33 +8,23 @@ typedef CameraDeviceStateCallback = Function(
   CameraDevice device,
 );
 
-class CameraDevice {
-  CameraDevice._({
-    @required this.id,
-    @required int handle,
-  })  : _handle = handle,
-        assert(id != null),
-        assert(handle != null);
+class CameraDevice with NativeMethodCallHandler {
+  CameraDevice._(this.id, CameraDeviceStateCallback stateCallback)
+      : assert(id != null),
+        assert(stateCallback != null) {
+    Camera._registerCallback(
+      _handle,
+      (dynamic event) {
+        final String deviceState = event['$CameraDeviceState'];
 
-  @visibleForTesting
-  factory CameraDevice.testMock({
-    @required String id,
-    @required int handle,
-    @required CameraDeviceStateCallback stateCallback,
-    @required EventChannel callbackChannel,
-  }) {
-    final CameraDevice device = CameraDevice._(id: id, handle: handle);
-    device._subscription = CameraManager._setUpStateCallbackSubscription(
-      callbackChannel: callbackChannel,
-      stateCallback: stateCallback,
-      device: device,
+        final CameraDeviceState state = CameraDeviceState.values.firstWhere(
+          (CameraDeviceState state) => state.toString() == deviceState,
+        );
+
+        stateCallback(state, this);
+      },
     );
-
-    return device;
   }
-
-  final int _handle;
-  StreamSubscription<dynamic> _subscription;
 
   final String id;
 
@@ -91,10 +81,9 @@ class CameraDevice {
   }
 
   Future<void> close() {
-    _subscription?.cancel();
     return Camera.channel.invokeMethod<void>(
       '$CameraDevice#close',
       <String, dynamic>{'handle': _handle},
-    );
+    ).then((_) => Camera._unregisterCallback(_handle));
   }
 }

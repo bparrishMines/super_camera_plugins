@@ -11,8 +11,6 @@ import com.example.supercamera.SuperCameraPlugin;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import io.flutter.plugin.common.BinaryMessenger;
-import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 
@@ -80,70 +78,59 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
   }
 
   private void openCamera(final MethodCall call, final MethodChannel.Result result) {
-    final BinaryMessenger messenger = SuperCameraPlugin.getMessenger();
-    final String channelName = call.argument("stateCallbackChannelName");
-
-    final EventChannel eventChannel = new EventChannel(messenger, channelName);
+    final String cameraId = call.argument("cameraId");
+    final Integer cameraHandle = call.argument("cameraHandle");
 
     final String stateClassName = "CameraDeviceState";
-    eventChannel.setStreamHandler(
-        new EventChannel.StreamHandler() {
-          @Override
-          public void onListen(Object arguments, final EventChannel.EventSink sink) {
-            final String cameraId = call.argument("cameraId");
+    try {
+      manager.openCamera(cameraId, new CameraDevice.StateCallback() {
 
-            try {
-              manager.openCamera(cameraId, new CameraDevice.StateCallback() {
+        @Override
+        public void onOpened(@NonNull CameraDevice camera) {
+          SuperCameraPlugin.addHandler(cameraHandle, new FlutterCameraDevice(camera, cameraHandle));
 
-                @Override
-                public void onOpened(@NonNull CameraDevice camera) {
-                  final Integer handle = call.argument("cameraHandle");
-                  SuperCameraPlugin.addHandler(handle, new FlutterCameraDevice(camera, handle));
+          final Map<String, Object> stateData = new HashMap<>();
+          stateData.put("handle", cameraHandle);
+          stateData.put(stateClassName, stateClassName + ".opened");
 
-                  final Map<String, Object> stateData = new HashMap<>();
-                  stateData.put(stateClassName, stateClassName + ".opened");
+          SuperCameraPlugin.sendCallback(stateData);
+        }
 
-                  sink.success(stateData);
-                }
+        @Override
+        public void onDisconnected(@NonNull CameraDevice camera) {
+          final Map<String, Object> stateData = new HashMap<>();
+          stateData.put("handle", cameraHandle);
+          stateData.put(stateClassName, stateClassName + ".disconnected");
 
-                @Override
-                public void onDisconnected(@NonNull CameraDevice camera) {
-                  final Map<String, Object> stateData = new HashMap<>();
-                  stateData.put(stateClassName, stateClassName + ".disconnected");
+          SuperCameraPlugin.sendCallback(stateData);
+        }
 
-                  sink.success(stateData);
-                }
+        @Override
+        public void onError(@NonNull CameraDevice camera, int error) {
+          final Map<String, Object> stateData = new HashMap<>();
+          stateData.put("handle", cameraHandle);
+          stateData.put(stateClassName, stateClassName + ".error");
 
-                @Override
-                public void onError(@NonNull CameraDevice camera, int error) {
-                  final Map<String, Object> stateData = new HashMap<>();
-                  stateData.put(stateClassName, stateClassName + ".error");
+          SuperCameraPlugin.sendCallback(stateData);
+        }
 
-                  sink.success(stateData);
-                }
+        @Override
+        public void onClosed(@NonNull CameraDevice camera) {
+          final Map<String, Object> stateData = new HashMap<>();
+          stateData.put("handle", cameraHandle);
+          stateData.put(stateClassName, stateClassName + ".closed");
 
-                @Override
-                public void onClosed(@NonNull CameraDevice camera) {
-                  final Map<String, Object> stateData = new HashMap<>();
-                  stateData.put(stateClassName, stateClassName + ".closed");
+          SuperCameraPlugin.sendCallback(stateData);
+        }
+      }, null);
 
-                  sink.success(stateData);
-                }
-              }, null);
+    } catch (CameraAccessException e) {
+      final Map<String, Object> stateData = new HashMap<>();
+      stateData.put("handle", cameraHandle);
+      stateData.put(stateClassName, stateClassName + ".error");
 
-            } catch (CameraAccessException e) {
-              final Map<String, Object> stateData = new HashMap<>();
-              stateData.put(stateClassName, stateClassName + ".error");
-
-              sink.success(stateData);
-            }
-          }
-
-          @Override
-          public void onCancel(Object arguments) {
-
-          }
-        });
+      SuperCameraPlugin.sendCallback(stateData);
+    }
 
     result.success(null);
   }

@@ -35,48 +35,13 @@ class CameraManager with NativeMethodCallHandler {
     assert(cameraId != null);
     assert(stateCallback != null);
 
-    final int deviceHandle = Camera.nextHandle++;
-
-    final String callbackChannelName =
-        '${Camera.channel}/$CameraDeviceStateCallback/$deviceHandle';
-
+    final CameraDevice device = CameraDevice._(cameraId, stateCallback);
     Camera.channel.invokeMethod<void>(
       '$CameraManager#openCamera',
       <String, dynamic>{
         'handle': _handle,
         'cameraId': cameraId,
-        'cameraHandle': deviceHandle,
-        'stateCallbackChannelName': callbackChannelName,
-      },
-    ).then((_) {
-      final EventChannel callbackChannel = EventChannel(callbackChannelName);
-      final CameraDevice device = CameraDevice._(
-        id: cameraId,
-        handle: deviceHandle,
-      );
-
-      device._subscription = _setUpStateCallbackSubscription(
-        callbackChannel: callbackChannel,
-        stateCallback: stateCallback,
-        device: device,
-      );
-    });
-  }
-
-  static StreamSubscription<dynamic> _setUpStateCallbackSubscription({
-    @required EventChannel callbackChannel,
-    @required CameraDeviceStateCallback stateCallback,
-    @required CameraDevice device,
-  }) {
-    return callbackChannel.receiveBroadcastStream().listen(
-      (dynamic event) {
-        final String deviceState = event['$CameraDeviceState'];
-
-        final CameraDeviceState state = CameraDeviceState.values.firstWhere(
-          (CameraDeviceState state) => state.toString() == deviceState,
-        );
-
-        stateCallback(state, device);
+        'cameraHandle': device._handle,
       },
     );
   }

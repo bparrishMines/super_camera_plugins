@@ -15,18 +15,20 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 import io.flutter.view.TextureRegistry;
 import java.util.Locale;
+import java.util.Map;
 
 /** SuperCameraPlugin */
 public class SuperCameraPlugin implements MethodCallHandler {
-  private static final String PLUGIN_CHANNEL_NAME = "dev.plugins/super_camera";
+  private static final String CHANNEL_NAME = "dev.plugins/super_camera";
   private static final SparseArray<MethodChannel.MethodCallHandler> handlers = new SparseArray<>();
 
   private static Registrar registrar;
+  private static MethodChannel channel;
 
   /** Plugin registration. */
   public static void registerWith(Registrar registrar) {
     SuperCameraPlugin.registrar = registrar;
-    final MethodChannel channel = new MethodChannel(registrar.messenger(), PLUGIN_CHANNEL_NAME);
+    channel = new MethodChannel(registrar.messenger(), CHANNEL_NAME);
     channel.setMethodCallHandler(new SuperCameraPlugin());
   }
 
@@ -113,5 +115,9 @@ public class SuperCameraPlugin implements MethodCallHandler {
 
   public static BinaryMessenger getMessenger() {
     return registrar.messenger();
+  }
+
+  public static void sendCallback(Map<String, Object> callbackData) {
+    channel.invokeMethod("handleCallback", callbackData);
   }
 }

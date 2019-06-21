@@ -21,7 +21,7 @@ import io.flutter.plugin.common.MethodChannel;
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class FlutterCameraDevice implements MethodChannel.MethodCallHandler {
-  public final CameraDevice device;
+  private final CameraDevice device;
   private final Integer handle;
 
   FlutterCameraDevice(CameraDevice device, Integer handle) {
