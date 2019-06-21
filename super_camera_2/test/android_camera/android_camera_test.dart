@@ -3,7 +3,7 @@ import 'package:super_camera/super_camera.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('AndroidCamera', () {
+  group('Android Camera', () {
     final List<MethodCall> log = <MethodCall>[];
 
     setUpAll(() {
