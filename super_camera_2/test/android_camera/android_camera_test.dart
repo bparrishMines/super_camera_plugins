@@ -19,6 +19,8 @@ void main() {
             };
           case 'CameraManager#getCameraIdList':
             return <dynamic>['1', '2', '3'];
+          case 'CameraManager#openCamera':
+            return null;
         }
 
         throw ArgumentError.value(
@@ -54,7 +56,7 @@ void main() {
       expect(characteristics.lensFacing, LensFacing.back);
       expect(log, <Matcher>[
         isMethodCall(
-          'CameraManager#getCameraCharacteristics',
+          '$CameraManager#getCameraCharacteristics',
           arguments: <String, dynamic>{'cameraId': 'hello', 'handle': 0},
         )
       ]);
@@ -66,10 +68,44 @@ void main() {
       expect(ids, <String>['1', '2', '3']);
       expect(log, <Matcher>[
         isMethodCall(
-          'CameraManager#getCameraIdList',
+          '$CameraManager#getCameraIdList',
           arguments: <String, dynamic>{'handle': 0},
         )
       ]);
+    });
+
+    test('openCamera', () async {
+      CameraManager.instance.openCamera(
+        'hello',
+        (CameraDeviceState state, CameraDevice device) {
+          print(state);
+        },
+      );
+
+      expect(log, <Matcher>[
+        isMethodCall(
+          '$CameraManager#openCamera',
+          arguments: <String, dynamic>{
+            'handle': 0,
+            'cameraId': 'hello',
+            'cameraHandle': 0,
+          },
+        )
+      ]);
+
+      await defaultBinaryMessenger.handlePlatformMessage(
+        Camera.channel.name,
+        Camera.channel.codec.encodeMethodCall(
+          MethodCall(
+            'handleCallback',
+            <dynamic, dynamic>{
+              'handle': 0,
+              '$CameraDeviceState': CameraDeviceState.opened.toString()
+            },
+          ),
+        ),
+        (ByteData reply) {},
+      );
     });
   });
 }

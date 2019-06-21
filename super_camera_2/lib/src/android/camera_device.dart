@@ -3,7 +3,7 @@ part of super_camera;
 enum CameraDeviceState { closed, disconnected, error, opened }
 enum Template { preview }
 
-typedef CameraDeviceStateCallback = Function(
+typedef CameraDeviceStateCallback = void Function(
   CameraDeviceState state,
   CameraDevice device,
 );
