@@ -24,12 +24,18 @@ void main() {
             return null;
           case 'CameraDevice#close':
             return null;
+          case 'CameraDevice#createCaptureSession':
+            return null;
+          case 'Camera#createPlatformTexture':
+            return 15;
+          case 'CameraCaptureSession#close':
+            return null;
         }
 
         throw ArgumentError.value(
           methodCall.method,
           'methodCall.method',
-          'No method found for',
+          'Method not found in test mock method call handler',
         );
       });
     });
@@ -83,6 +89,7 @@ void main() {
         CameraManager.instance.openCamera(
           'hello',
           (CameraDeviceState state, CameraDevice device) {
+            expect(state, CameraDeviceState.opened);
             cameraDevice = device;
           },
         );
@@ -107,36 +114,6 @@ void main() {
 
         expect(cameraDevice.id, 'hello');
         cameraDevice.close();
-      });
-    });
-
-    group('$CameraDeviceState', () {
-      test('all states are handled', () async {
-        final Map<CameraDeviceState, bool> isCalled =
-            Map<CameraDeviceState, bool>.fromIterables(
-          CameraDeviceState.values,
-          List<bool>.filled(CameraDeviceState.values.length, false),
-        );
-
-        CameraDevice cameraDevice;
-
-        CameraManager.instance.openCamera(
-          '',
-          (CameraDeviceState state, CameraDevice device) {
-            cameraDevice = device;
-          },
-        );
-
-        for (CameraDeviceState state in CameraDeviceState.values) {
-          isCalled[state] = true;
-          await _makeCallback(<dynamic, dynamic>{
-            'handle': 0,
-            '$CameraDeviceState': state.toString()
-          });
-        }
-
-        cameraDevice.close();
-        expect(isCalled.values, everyElement(isTrue));
       });
     });
 
@@ -174,6 +151,47 @@ void main() {
         expect(request.jpegQuality, isNull);
       });
 
+      test('createCaptureSession', () async {
+        final PlatformTexture platformTexture =
+            await Camera.createPlatformTexture();
+        final SurfaceTexture surfaceTexture = SurfaceTexture();
+        final PreviewTexture previewTexture = PreviewTexture(
+          platformTexture: platformTexture,
+          surfaceTexture: surfaceTexture,
+        );
+
+        log.clear();
+        Camera.nextHandle = 1;
+
+        CameraCaptureSession captureSession;
+        cameraDevice.createCaptureSession(
+          <Surface>[previewTexture],
+          (CameraCaptureSessionState state, CameraCaptureSession session) {
+            expect(state, CameraCaptureSessionState.configured);
+            captureSession = session;
+          },
+        );
+
+        await _makeCallback(<dynamic, dynamic>{
+          'handle': 1,
+          '$CameraCaptureSessionState':
+              CameraCaptureSessionState.configured.toString(),
+        });
+
+        expect(log, <Matcher>[
+          isMethodCall(
+            '$CameraDevice#createCaptureSession',
+            arguments: <String, dynamic>{
+              'handle': 0,
+              'sessionHandle': 1,
+              'outputs': <Map<dynamic, dynamic>>[previewTexture.asMap()],
+            },
+          )
+        ]);
+
+        captureSession.close();
+      });
+
       test('close', () {
         cameraDevice.close();
 
@@ -185,9 +203,59 @@ void main() {
         ]);
       });
     });
+
+    group('$CameraCaptureSession', () {
+      CameraCaptureSession captureSession;
+
+      setUpAll(() async {
+        Camera.nextHandle = 15;
+
+        CameraDevice cameraDevice;
+        CameraManager.instance.openCamera(
+          '',
+          (CameraDeviceState state, CameraDevice device) {
+            cameraDevice = device;
+          },
+        );
+
+        await _makeCallback(<dynamic, dynamic>{
+          'handle': 15,
+          '$CameraDeviceState': CameraDeviceState.opened.toString(),
+        });
+
+        final PlatformTexture platformTexture =
+            await Camera.createPlatformTexture();
+        final SurfaceTexture surfaceTexture = SurfaceTexture();
+        final PreviewTexture previewTexture = PreviewTexture(
+          platformTexture: platformTexture,
+          surfaceTexture: surfaceTexture,
+        );
+
+        Camera.nextHandle = 0;
+        cameraDevice.createCaptureSession(
+          <Surface>[previewTexture],
+          (CameraCaptureSessionState state, CameraCaptureSession session) {
+            captureSession = session;
+          },
+        );
+
+        await _makeCallback(<dynamic, dynamic>{
+          'handle': 0,
+          '$CameraCaptureSessionState':
+              CameraCaptureSessionState.configured.toString(),
+        });
+
+        assert(captureSession != null);
+      });
+
+      tearDownAll(() {
+        captureSession.close();
+      });
+    });
   });
 }
 
+// Simulates passing back a callback to Camera
 Future<void> _makeCallback(dynamic arguments) {
   return defaultBinaryMessenger.handlePlatformMessage(
     Camera.channel.name,
