@@ -3,25 +3,20 @@ package com.example.supercamera.camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraDevice;
-import android.hardware.camera2.CaptureRequest;
 import android.os.Build;
 import android.view.Surface;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import com.example.supercamera.SuperCameraPlugin;
-import com.example.supercamera.common.PlatformTexture;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import io.flutter.plugin.common.BinaryMessenger;
-import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class FlutterCameraDevice implements MethodChannel.MethodCallHandler {
-  private final CameraDevice device;
+  final CameraDevice device;
   private final Integer handle;
 
   FlutterCameraDevice(CameraDevice device, Integer handle) {
@@ -47,6 +42,7 @@ public class FlutterCameraDevice implements MethodChannel.MethodCallHandler {
   }
 
   private void createCaptureRequest(MethodCall call, MethodChannel.Result result) {
+    /*
     final String template = call.argument("Template");
 
     final int requestTemplate;
@@ -70,52 +66,37 @@ public class FlutterCameraDevice implements MethodChannel.MethodCallHandler {
     data.put("jpegQuality", jpegQuality.intValue());
 
     result.success(data);
+    */
   }
 
   private void createCaptureSession(final MethodCall call, final MethodChannel.Result result) {
+    final Integer sessionHandle = call.argument("sessionHandle");
     final List<Map<String, Object>> outputData = call.argument("outputs");
-    final List<Surface> outputs = parseOutputs(outputData);
+    final List<Surface> outputs = Parsers.parseSurfaces(outputData);
 
-    final BinaryMessenger messenger = SuperCameraPlugin.getMessenger();
-    final String channelName = call.argument("stateCallbackChannelName");
+    final String stateClassName = "CameraCaptureSessionState";
+    try {
+      device.createCaptureSession(outputs, new CameraCaptureSession.StateCallback() {
+        @Override
+        public void onConfigured(@NonNull CameraCaptureSession session) {
+          SuperCameraPlugin.addHandler(
+              sessionHandle, new FlutterCameraCaptureSession(session, sessionHandle));
 
-    final EventChannel eventChannel = new EventChannel(messenger, channelName);
-    eventChannel.setStreamHandler(
-        new EventChannel.StreamHandler() {
-          String CLASS_NAME = "CameraCaptureSessionState";
+          final Map<String, Object> stateData = new HashMap<>();
+          stateData.put("handle", sessionHandle);
+          stateData.put(stateClassName, stateClassName + ".configured");
 
-          @Override
-          public void onListen(Object arguments, final EventChannel.EventSink sink) {
+          SuperCameraPlugin.sendCallback(stateData);
+        }
 
-            try {
-              device.createCaptureSession(outputs, new CameraCaptureSession.StateCallback() {
-                @Override
-                public void onConfigured(@NonNull CameraCaptureSession session) {
-                  final Integer handle = call.argument("sessionHandle");
-                  SuperCameraPlugin.addHandler(
-                      handle, new FlutterCameraCaptureSession(session, handle));
+        @Override
+        public void onConfigureFailed(@NonNull CameraCaptureSession session) {
 
-                  final Map<String, Object> stateData = new HashMap<>();
-                  stateData.put(CLASS_NAME, CLASS_NAME + ".configured");
-
-                  sink.success(stateData);
-                }
-
-                @Override
-                public void onConfigureFailed(@NonNull CameraCaptureSession session) {
-
-                }
-              }, null);
-            } catch (CameraAccessException e) {
-              // Do Nothing
-            }
-          }
-
-          @Override
-          public void onCancel(Object arguments) {
-
-          }
-        });
+        }
+      }, null);
+    } catch (CameraAccessException e) {
+      // Do Nothing
+    }
 
     result.success(null);
   }
@@ -124,22 +105,5 @@ public class FlutterCameraDevice implements MethodChannel.MethodCallHandler {
     device.close();
     SuperCameraPlugin.removeHandler(handle);
     result.success(null);
-  }
-
-  private List<Surface> parseOutputs(List<Map<String, Object>> allOutputData) {
-    final List<Surface> outputs = new ArrayList<>();
-
-    for (Map<String, Object> outputData : allOutputData) {
-      final String surfaceClass = (String) outputData.get("surfaceClass");
-
-      if (surfaceClass.equals("PreviewTexture")) {
-        final Integer textureHandle = (Integer) outputData.get("textureHandle");
-        final PlatformTexture texture = (PlatformTexture) SuperCameraPlugin.getHandler(textureHandle);
-
-        outputs.add(new Surface(texture.textureEntry.surfaceTexture()));
-      }
-    }
-
-    return outputs;
   }
 }

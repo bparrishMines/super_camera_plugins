@@ -65,7 +65,9 @@ public class SuperCameraPlugin implements MethodCallHandler {
   }
 
   private void createCameraManager(MethodCall call, Result result) {
-    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+    final int buildVersion = android.os.Build.VERSION.SDK_INT;
+
+    if (buildVersion >= Build.VERSION_CODES.LOLLIPOP) {
       final Integer managerHandle = call.argument("managerHandle");
       final CameraManager manager =
           (CameraManager) registrar.activity().getSystemService(Context.CAMERA_SERVICE);
@@ -76,7 +78,7 @@ public class SuperCameraPlugin implements MethodCallHandler {
       final String message = String.format(
           Locale.getDefault(),
           "Can't use CameraManager for android version: %d",
-          Build.VERSION.SDK_INT);
+          buildVersion);
       throw new IllegalAccessError(message);
     }
   }
