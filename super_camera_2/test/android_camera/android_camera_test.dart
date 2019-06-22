@@ -30,6 +30,8 @@ void main() {
             return 15;
           case 'CameraCaptureSession#close':
             return null;
+          case 'CameraCaptureSession#setRepeatingRequest':
+            return null;
         }
 
         throw ArgumentError.value(
@@ -205,12 +207,12 @@ void main() {
     });
 
     group('$CameraCaptureSession', () {
+      CameraDevice cameraDevice;
       CameraCaptureSession captureSession;
 
       setUpAll(() async {
-        Camera.nextHandle = 15;
+        Camera.nextHandle = 1;
 
-        CameraDevice cameraDevice;
         CameraManager.instance.openCamera(
           '',
           (CameraDeviceState state, CameraDevice device) {
@@ -219,7 +221,7 @@ void main() {
         );
 
         await _makeCallback(<dynamic, dynamic>{
-          'handle': 15,
+          'handle': 1,
           '$CameraDeviceState': CameraDeviceState.opened.toString(),
         });
 
@@ -249,7 +251,38 @@ void main() {
       });
 
       tearDownAll(() {
+        cameraDevice.close();
         captureSession.close();
+      });
+
+      test('setRepeatingRequest', () async {
+        final CaptureRequest request = await cameraDevice.createCaptureRequest(
+          Template.preview,
+        );
+
+        captureSession.setRepeatingRequest(request: request);
+
+        expect(log, <Matcher>[
+          isMethodCall(
+            '$CameraCaptureSession#setRepeatingRequest',
+            arguments: <String, dynamic>{
+              'handle': 0,
+              'cameraDeviceHandle': 1,
+              '$CaptureRequest': request.asMap(),
+            },
+          ),
+        ]);
+      });
+
+      test('close', () {
+        captureSession.close();
+
+        expect(log, <Matcher>[
+          isMethodCall(
+            '$CameraCaptureSession#close',
+            arguments: <String, dynamic>{'handle': 0},
+          ),
+        ]);
       });
     });
   });
