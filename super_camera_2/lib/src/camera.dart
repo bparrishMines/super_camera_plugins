@@ -31,7 +31,7 @@ class Camera {
 
     if (defaultTargetPlatform == TargetPlatform.android) {
       final AndroidDeviceInfo info = await DeviceInfoPlugin().androidInfo;
-      if (info.version.sdkInt < 21 || true) {
+      if (info.version.sdkInt < 21) {
         final int numCameras = await SupportAndroidCamera.getNumberOfCameras();
         for (int i = 0; i < numCameras; i++) {
           devices.add(await SupportAndroidCamera.getCameraInfo(i));

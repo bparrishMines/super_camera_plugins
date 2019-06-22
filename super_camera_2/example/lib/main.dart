@@ -25,7 +25,7 @@ class _MyAppState extends State<MyApp> {
   CameraController _controller;
   double _deviceRotation = 0;
   StreamSubscription<AccelerometerEvent> _accelerometerSubscription;
-  LensDirection _lensDirection = LensDirection.front;
+  LensDirection _lensDirection = LensDirection.back;
 
   @override
   void initState() {
@@ -89,8 +89,8 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<void> _toggleLensDirection() {
-    _controller.dispose();
+  Future<void> _toggleLensDirection() async {
+    await _controller.dispose();
 
     setState(() {
       _controller = null;

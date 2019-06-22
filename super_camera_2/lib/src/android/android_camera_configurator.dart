@@ -23,10 +23,9 @@ class AndroidCameraConfigurator implements CameraConfigurator {
   Future<void> addPreviewTexture() async {
     while (_device == null) {}
 
-    if (_outputs.any((Surface surface) => surface is PreviewTexture)) return;
+    if (_texture != null) return;
 
-    if (_texture == null) _texture = await Camera.createPlatformTexture();
-
+    _texture = await Camera.createPlatformTexture();
     final CaptureRequest request =
         await _device.createCaptureRequest(Template.preview);
 
@@ -44,9 +43,7 @@ class AndroidCameraConfigurator implements CameraConfigurator {
 
   @override
   Future<void> dispose() {
-    return Future.wait(
-      <Future<void>>[_session?.close(), _device?.close(), _texture?.release()],
-    );
+    return stop().then((_) => _device.close()).then((_) => _texture?.release());
   }
 
   @override
@@ -70,6 +67,6 @@ class AndroidCameraConfigurator implements CameraConfigurator {
   @override
   Future<void> stop() {
     if (_session == null) return Future<void>.value();
-    return _session.close().then((_) => _session = null);
+    return _session?.close()?.then((_) => _session = null);
   }
 }
