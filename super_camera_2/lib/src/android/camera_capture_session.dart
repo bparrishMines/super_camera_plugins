@@ -7,12 +7,27 @@ typedef CameraCaptureSessionStateCallback = Function(
 
 enum CameraCaptureSessionState { configured }
 
-class CameraCaptureSession {
-  CameraCaptureSession._(this._cameraDeviceHandle)
-      : assert(_cameraDeviceHandle != null);
+class CameraCaptureSession with NativeMethodCallHandler {
+  CameraCaptureSession._(
+    this._cameraDeviceHandle,
+    CameraCaptureSessionStateCallback stateCallback,
+  )   : assert(_cameraDeviceHandle != null),
+        assert(stateCallback != null) {
+    Camera._registerCallback(
+      _handle,
+      (dynamic event) {
+        final String deviceState = event['$CameraCaptureSessionState'];
 
-  final int _handle = Camera.nextHandle++;
-  StreamSubscription<dynamic> _subscription;
+        final CameraCaptureSessionState state =
+            CameraCaptureSessionState.values.firstWhere(
+          (CameraCaptureSessionState state) => state.toString() == deviceState,
+        );
+
+        stateCallback(state, this);
+      },
+    );
+  }
+
   final int _cameraDeviceHandle;
 
   Future<void> setRepeatingRequest({@required CaptureRequest request}) {
@@ -27,32 +42,9 @@ class CameraCaptureSession {
   }
 
   Future<void> close() {
-    _subscription.cancel();
     return Camera.channel.invokeMethod<void>(
       '$CameraCaptureSession#close',
       <String, dynamic>{'handle': _handle},
-    );
-  }
-
-  void _setUpStateCallbackSubscription({
-    String stateCallbackChannelName,
-    CameraCaptureSessionStateCallback stateCallback,
-  }) {
-    _subscription =
-        EventChannel(stateCallbackChannelName).receiveBroadcastStream().listen(
-      (dynamic event) {
-        final String deviceState = event['$CameraCaptureSessionState'];
-
-        CameraCaptureSessionState state;
-        if (deviceState == CameraCaptureSessionState.configured.toString()) {
-          state = CameraCaptureSessionState.configured;
-        }
-
-        if (state == null) {
-          throw StateError('Failed parsing of $CameraCaptureSessionState');
-        }
-        stateCallback(state, this);
-      },
-    );
+    ).then((_) => Camera._unregisterCallback(_handle));
   }
 }

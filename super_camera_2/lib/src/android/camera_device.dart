@@ -21,6 +21,7 @@ class CameraDevice with NativeMethodCallHandler {
           (CameraDeviceState state) => state.toString() == deviceState,
         );
 
+        if (state == CameraDeviceState.closed) close();
         stateCallback(state, this);
       },
     );
@@ -29,6 +30,7 @@ class CameraDevice with NativeMethodCallHandler {
   final String id;
 
   Future<CaptureRequest> createCaptureRequest(Template template) async {
+    assert(template != null);
     /*
     final Map<String, dynamic> data =
         await Camera.channel.invokeMapMethod<dynamic, dynamic>(
@@ -44,7 +46,7 @@ class CameraDevice with NativeMethodCallHandler {
     );
     */
     return Future<CaptureRequest>.value(CaptureRequest._(
-      template: Template.preview,
+      template: template,
       targets: <Surface>[],
     ));
   }
@@ -53,10 +55,14 @@ class CameraDevice with NativeMethodCallHandler {
     List<Surface> outputs,
     CameraCaptureSessionStateCallback callback,
   ) {
-    final CameraCaptureSession session = CameraCaptureSession._(_handle);
+    assert(outputs != null);
+    assert(outputs.isNotEmpty);
+    assert(callback != null);
 
-    final String stateCallbackChannelName =
-        '${Camera.channel}/$CameraCaptureSessionStateCallback/${session._handle}';
+    final CameraCaptureSession session = CameraCaptureSession._(
+      _handle,
+      callback,
+    );
 
     final List<Map<String, dynamic>> outputData = outputs
         .map<Map<String, dynamic>>(
@@ -69,15 +75,9 @@ class CameraDevice with NativeMethodCallHandler {
       <String, dynamic>{
         'handle': _handle,
         'sessionHandle': session._handle,
-        'stateCallbackChannelName': stateCallbackChannelName,
         'outputs': outputData,
       },
-    ).then((_) {
-      session._setUpStateCallbackSubscription(
-        stateCallbackChannelName: stateCallbackChannelName,
-        stateCallback: callback,
-      );
-    });
+    );
   }
 
   Future<void> close() {
