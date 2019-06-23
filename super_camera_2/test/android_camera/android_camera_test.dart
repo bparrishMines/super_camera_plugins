@@ -144,7 +144,7 @@ void main() {
       });
 
       test('createCaptureRequest', () async {
-        final CaptureRequest request = await cameraDevice.createCaptureRequest(
+        final CaptureRequest request = cameraDevice.createCaptureRequest(
           Template.preview,
         );
 
@@ -209,6 +209,7 @@ void main() {
     group('$CameraCaptureSession', () {
       CameraDevice cameraDevice;
       CameraCaptureSession captureSession;
+      List<Surface> surfaces;
 
       setUpAll(() async {
         Camera.nextHandle = 1;
@@ -233,9 +234,11 @@ void main() {
           surfaceTexture: surfaceTexture,
         );
 
+        surfaces = <Surface>[previewTexture];
+
         Camera.nextHandle = 0;
         cameraDevice.createCaptureSession(
-          <Surface>[previewTexture],
+          surfaces,
           (CameraCaptureSessionState state, CameraCaptureSession session) {
             captureSession = session;
           },
@@ -256,10 +259,11 @@ void main() {
       });
 
       test('setRepeatingRequest', () async {
-        final CaptureRequest request = await cameraDevice.createCaptureRequest(
+        CaptureRequest request = cameraDevice.createCaptureRequest(
           Template.preview,
         );
 
+        request = request.copyWith(targets: surfaces);
         captureSession.setRepeatingRequest(request: request);
 
         expect(log, <Matcher>[

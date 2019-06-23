@@ -34,13 +34,10 @@ class CameraDevice with _NativeMethodCallHandler {
 
   final String id;
 
-  Future<CaptureRequest> createCaptureRequest(Template template) async {
+  CaptureRequest createCaptureRequest(Template template) {
     assert(!_isClosed);
 
-    return Future<CaptureRequest>.value(CaptureRequest._(
-      template: template,
-      targets: <Surface>[],
-    ));
+    return CaptureRequest._(template: template, targets: <Surface>[]);
   }
 
   void createCaptureSession(
@@ -54,6 +51,7 @@ class CameraDevice with _NativeMethodCallHandler {
 
     final CameraCaptureSession session = CameraCaptureSession._(
       _handle,
+      outputs,
       callback,
     );
 
@@ -76,12 +74,10 @@ class CameraDevice with _NativeMethodCallHandler {
   Future<void> close() {
     if (_isClosed) return Future<void>.value();
 
+    _isClosed = true;
     return Camera.channel.invokeMethod<void>(
       '$CameraDevice#close',
       <String, dynamic>{'handle': _handle},
-    ).then((_) {
-      Camera._unregisterCallback(_handle);
-      _isClosed = true;
-    });
+    ).then((_) => Camera._unregisterCallback(_handle));
   }
 }

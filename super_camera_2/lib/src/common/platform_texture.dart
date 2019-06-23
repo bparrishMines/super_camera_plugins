@@ -6,7 +6,7 @@ mixin _NativeMethodCallHandler {
 }
 
 class PlatformTexture {
-  const PlatformTexture._({@required int handle, @required this.textureId})
+  PlatformTexture._({@required int handle, @required this.textureId})
       : _handle = handle,
         assert(handle != null),
         assert(textureId != null);
@@ -14,7 +14,12 @@ class PlatformTexture {
   final int _handle;
   final int textureId;
 
+  bool _isClosed = false;
+
   Future<void> release() {
+    if (_isClosed) return Future<void>.value();
+
+    _isClosed = true;
     return Camera.channel.invokeMethod<void>(
       '$PlatformTexture#release',
       <String, dynamic>{'handle': _handle},

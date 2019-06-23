@@ -228,7 +228,7 @@ void main() {
           });
 
           test('setRepeatingRequest', () async {
-            CaptureRequest request = await device.createCaptureRequest(
+            CaptureRequest request = device.createCaptureRequest(
               Template.preview,
             );
 
