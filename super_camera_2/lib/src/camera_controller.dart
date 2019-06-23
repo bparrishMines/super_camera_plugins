@@ -40,7 +40,6 @@ class CameraController {
   Future<void> start() => configurator.start();
   Future<void> stop() => configurator.stop();
   Future<void> dispose() => configurator.dispose();
-  Future<void> addPreviewTexture() => configurator.addPreviewTexture();
 
   static CameraConfigurator _createDefaultConfigurator(
     CameraDescription description,

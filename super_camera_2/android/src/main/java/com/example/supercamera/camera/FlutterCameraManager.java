@@ -1,6 +1,7 @@
 package com.example.supercamera.camera;
 
 import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
@@ -87,7 +88,7 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
 
         @Override
         public void onOpened(@NonNull CameraDevice camera) {
-          SuperCameraPlugin.addHandler(cameraHandle, new FlutterCameraDevice(camera, cameraHandle));
+          addHandler(camera);
 
           final Map<String, Object> stateData = new HashMap<>();
           stateData.put("handle", cameraHandle);
@@ -98,6 +99,8 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
 
         @Override
         public void onDisconnected(@NonNull CameraDevice camera) {
+          addHandler(camera);
+
           final Map<String, Object> stateData = new HashMap<>();
           stateData.put("handle", cameraHandle);
           stateData.put(stateClassName, stateClassName + ".disconnected");
@@ -107,6 +110,8 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
 
         @Override
         public void onError(@NonNull CameraDevice camera, int error) {
+          addHandler(camera);
+
           final Map<String, Object> stateData = new HashMap<>();
           stateData.put("handle", cameraHandle);
           stateData.put(stateClassName, stateClassName + ".error");
@@ -116,22 +121,26 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
 
         @Override
         public void onClosed(@NonNull CameraDevice camera) {
+          addHandler(camera);
+
           final Map<String, Object> stateData = new HashMap<>();
           stateData.put("handle", cameraHandle);
           stateData.put(stateClassName, stateClassName + ".closed");
 
           SuperCameraPlugin.sendCallback(stateData);
         }
+
+        private void addHandler(@NonNull CameraDevice camera) {
+          if (SuperCameraPlugin.getHandler(cameraHandle) == null) {
+            SuperCameraPlugin.addHandler(
+                cameraHandle, new FlutterCameraDevice(camera, cameraHandle));
+          }
+        }
       }, null);
 
+      result.success(null);
     } catch (CameraAccessException e) {
-      final Map<String, Object> stateData = new HashMap<>();
-      stateData.put("handle", cameraHandle);
-      stateData.put(stateClassName, stateClassName + ".error");
-
-      SuperCameraPlugin.sendCallback(stateData);
+      result.error(e.getClass().getSimpleName(), e.getLocalizedMessage(), null);
     }
-
-    result.success(null);
   }
 }

@@ -5,7 +5,7 @@ typedef CameraCaptureSessionStateCallback = Function(
   CameraCaptureSession session,
 );
 
-enum CameraCaptureSessionState { configured }
+enum CameraCaptureSessionState { configured, configureFailed, closed }
 
 class CameraCaptureSession with _NativeMethodCallHandler {
   CameraCaptureSession._(
@@ -23,6 +23,10 @@ class CameraCaptureSession with _NativeMethodCallHandler {
           (CameraCaptureSessionState state) => state.toString() == deviceState,
         );
 
+        if (state == CameraCaptureSessionState.configureFailed ||
+            state == CameraCaptureSessionState.closed) {
+          close();
+        }
         stateCallback(state, this);
       },
     );
