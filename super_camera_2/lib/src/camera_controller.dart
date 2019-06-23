@@ -25,7 +25,8 @@ class CameraController {
         assert(configurator != null),
         assert(api != null);
 
-  factory CameraController({CameraDescription description}) {
+  factory CameraController({@required CameraDescription description}) {
+    assert(description != null);
     return CameraController._(
       description: description,
       configurator: _createDefaultConfigurator(description),
@@ -37,10 +38,26 @@ class CameraController {
     @required CameraDescription description,
     @required CameraConfigurator configurator,
   }) {
+    assert(description != null);
+    assert(configurator != null);
+
+    final CameraApi api = _getCameraApi(description);
+    switch (api) {
+      case CameraApi.android:
+        assert(configurator is AndroidCameraConfigurator);
+        break;
+      case CameraApi.iOS:
+        throw UnimplementedError();
+        break;
+      case CameraApi.supportAndroid:
+        assert(configurator is SupportAndroidCameraConfigurator);
+        break;
+    }
+
     return CameraController._(
       description: description,
       configurator: configurator,
-      api: _getCameraApi(description),
+      api: api,
     );
   }
 

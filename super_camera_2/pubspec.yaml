@@ -12,13 +12,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  device_info: ^0.4.0+2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   permission_handler: ^3.0.0
   sensors: ^0.4.0+1
-  device_info: ^0.4.0+2
 
 flutter:
   plugin:

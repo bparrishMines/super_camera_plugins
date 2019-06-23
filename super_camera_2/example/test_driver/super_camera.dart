@@ -4,6 +4,7 @@
 
 import 'dart:async';
 
+import 'package:device_info/device_info.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_driver/driver_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,18 +16,6 @@ void main() {
   tearDownAll(() => completer.complete(null));
 
   group('super_camera', () {
-    group('$Camera', () {
-      test('availableCameras', () async {
-        final List<CameraDescription> descriptions = await Camera.availableCameras();
-        expect(descriptions, isNotEmpty);
-      });
-
-      test('createPlatformTexture', () async {
-        final PlatformTexture texture = await Camera.createPlatformTexture();
-        expect(texture.textureId, isNotNull);
-      });
-    });
-
     group(
       'Support Android Camera',
       () {
@@ -239,5 +228,38 @@ void main() {
       },
       skip: defaultTargetPlatform != TargetPlatform.android,
     );
+
+    group('$Camera', () {
+      test('availableCameras', () async {
+        final List<CameraDescription> descriptions =
+            await Camera.availableCameras();
+        expect(descriptions, isNotEmpty);
+      });
+
+      test('createPlatformTexture', () async {
+        final PlatformTexture texture = await Camera.createPlatformTexture();
+        expect(texture.textureId, isNotNull);
+      });
+    });
+
+    group('$CameraController', () {
+      test('works', () async {
+        final List<CameraDescription> descriptions =
+            await Camera.availableCameras();
+
+        final CameraController controller = CameraController(
+          description: descriptions[0],
+        );
+
+        await expectLater(controller.api, isNotNull);
+        await expectLater(
+          controller.configurator.addPreviewTexture(),
+          completes,
+        );
+        await expectLater(controller.start(), completes);
+        await expectLater(controller.stop(), completes);
+        await expectLater(controller.dispose(), completes);
+      });
+    });
   });
 }
