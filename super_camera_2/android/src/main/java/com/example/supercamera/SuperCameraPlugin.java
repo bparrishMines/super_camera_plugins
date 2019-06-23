@@ -7,7 +7,6 @@ import android.util.SparseArray;
 import com.example.supercamera.camera.FlutterCameraManager;
 import com.example.supercamera.common.PlatformTexture;
 import com.example.supercamera.support_camera.SupportAndroidCamera;
-import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
