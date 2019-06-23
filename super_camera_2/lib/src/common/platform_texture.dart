@@ -1,5 +1,10 @@
 part of super_camera;
 
+mixin _NativeMethodCallHandler {
+  final int _handle = Camera.nextHandle++;
+  bool _isClosed = false;
+}
+
 class PlatformTexture {
   const PlatformTexture._({@required int handle, @required this.textureId})
       : _handle = handle,

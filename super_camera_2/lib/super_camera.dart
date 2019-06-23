@@ -15,6 +15,7 @@ part 'src/android/camera_device.dart';
 part 'src/android/camera_manager.dart';
 part 'src/android/capture_request.dart';
 part 'src/android/camera_capture_session.dart';
+part 'src/android/surface.dart';
 part 'src/camera.dart';
 part 'src/camera_controller.dart';
 part 'src/camera_preview.dart';
