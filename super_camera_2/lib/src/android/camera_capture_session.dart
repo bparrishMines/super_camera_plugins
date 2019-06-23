@@ -7,7 +7,7 @@ typedef CameraCaptureSessionStateCallback = Function(
 
 enum CameraCaptureSessionState { configured }
 
-class CameraCaptureSession with NativeMethodCallHandler {
+class CameraCaptureSession with _NativeMethodCallHandler {
   CameraCaptureSession._(
     this._cameraDeviceHandle,
     CameraCaptureSessionStateCallback stateCallback,
@@ -31,6 +31,9 @@ class CameraCaptureSession with NativeMethodCallHandler {
   final int _cameraDeviceHandle;
 
   Future<void> setRepeatingRequest({@required CaptureRequest request}) {
+    assert(!_isClosed);
+    assert(request != null);
+
     return Camera.channel.invokeMethod<void>(
       '$CameraCaptureSession#setRepeatingRequest',
       <String, dynamic>{
@@ -42,9 +45,14 @@ class CameraCaptureSession with NativeMethodCallHandler {
   }
 
   Future<void> close() {
+    if (_isClosed) return Future<void>.value();
+
     return Camera.channel.invokeMethod<void>(
       '$CameraCaptureSession#close',
       <String, dynamic>{'handle': _handle},
-    ).then((_) => Camera._unregisterCallback(_handle));
+    ).then((_) {
+      Camera._unregisterCallback(_handle);
+      _isClosed = true;
+    });
   }
 }

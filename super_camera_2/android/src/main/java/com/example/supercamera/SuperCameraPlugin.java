@@ -25,11 +25,39 @@ public class SuperCameraPlugin implements MethodCallHandler {
   private static Registrar registrar;
   private static MethodChannel channel;
 
+  private static MethodChannel.MethodCallHandler getHandler(final MethodCall call) {
+    final Integer handle = call.argument("handle");
+
+    if (handle == null) return null;
+    return handlers.get(handle);
+  }
+
   /** Plugin registration. */
   public static void registerWith(Registrar registrar) {
     SuperCameraPlugin.registrar = registrar;
     channel = new MethodChannel(registrar.messenger(), CHANNEL_NAME);
     channel.setMethodCallHandler(new SuperCameraPlugin());
+  }
+
+  public static void addHandler(final int handle, final MethodChannel.MethodCallHandler handler) {
+    if (handlers.get(handle) != null) {
+      final String message = String.format("Object for handle already exists: %s", handle);
+      throw new IllegalArgumentException(message);
+    }
+
+    handlers.put(handle, handler);
+  }
+
+  public static void removeHandler(final int handle) {
+    handlers.remove(handle);
+  }
+
+  public static MethodChannel.MethodCallHandler getHandler(final int handle) {
+    return handlers.get(handle);
+  }
+
+  public static void sendCallback(Map<String, Object> callbackData) {
+    channel.invokeMethod("handleCallback", callbackData);
   }
 
   @Override
@@ -89,33 +117,5 @@ public class SuperCameraPlugin implements MethodCallHandler {
     addHandler(textureHandle, new PlatformTexture(entry, textureHandle));
 
     result.success(entry.id());
-  }
-
-  public static void addHandler(final int handle, final MethodChannel.MethodCallHandler handler) {
-    if (handlers.get(handle) != null) {
-      final String message = String.format("Object for handle already exists: %s", handle);
-      throw new IllegalArgumentException(message);
-    }
-
-    handlers.put(handle, handler);
-  }
-
-  public static void removeHandler(final int handle) {
-    handlers.remove(handle);
-  }
-
-  private static MethodChannel.MethodCallHandler getHandler(final MethodCall call) {
-    final Integer handle = call.argument("handle");
-
-    if (handle == null) return null;
-    return handlers.get(handle);
-  }
-
-  public static MethodChannel.MethodCallHandler getHandler(final int handle) {
-    return handlers.get(handle);
-  }
-
-  public static void sendCallback(Map<String, Object> callbackData) {
-    channel.invokeMethod("handleCallback", callbackData);
   }
 }

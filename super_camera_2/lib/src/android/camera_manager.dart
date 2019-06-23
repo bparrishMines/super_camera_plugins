@@ -1,6 +1,6 @@
 part of super_camera;
 
-class CameraManager with NativeMethodCallHandler {
+class CameraManager with _NativeMethodCallHandler {
   CameraManager._() {
     Camera.channel.invokeMethod<void>(
       '$CameraManager()',

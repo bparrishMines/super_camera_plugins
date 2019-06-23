@@ -1,7 +1,8 @@
 part of super_camera;
 
-mixin NativeMethodCallHandler {
+mixin _NativeMethodCallHandler {
   final int _handle = Camera.nextHandle++;
+  bool _isClosed = false;
 }
 
 typedef _CameraCallback = void Function(dynamic result);

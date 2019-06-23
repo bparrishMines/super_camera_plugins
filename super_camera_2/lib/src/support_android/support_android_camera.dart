@@ -1,6 +1,6 @@
 part of super_camera;
 
-class SupportAndroidCamera with NativeMethodCallHandler {
+class SupportAndroidCamera with _NativeMethodCallHandler {
   SupportAndroidCamera._();
 
   static Future<int> getNumberOfCameras() {
@@ -31,6 +31,8 @@ class SupportAndroidCamera with NativeMethodCallHandler {
   }
 
   set previewTexture(PlatformTexture texture) {
+    assert(!_isClosed);
+
     Camera.channel.invokeMethod<void>(
       '$SupportAndroidCamera#previewTexture',
       <String, dynamic>{'handle': _handle, 'textureHandle': texture?._handle},
@@ -38,6 +40,8 @@ class SupportAndroidCamera with NativeMethodCallHandler {
   }
 
   Future<void> startPreview() {
+    assert(!_isClosed);
+
     return Camera.channel.invokeMethod<void>(
       '$SupportAndroidCamera#startPreview',
       <String, dynamic>{'handle': _handle},
@@ -45,6 +49,8 @@ class SupportAndroidCamera with NativeMethodCallHandler {
   }
 
   Future<void> stopPreview() {
+    if (_isClosed) return Future<void>.value();
+
     return Camera.channel.invokeMethod<void>(
       '$SupportAndroidCamera#stopPreview',
       <String, dynamic>{'handle': _handle},
@@ -52,6 +58,9 @@ class SupportAndroidCamera with NativeMethodCallHandler {
   }
 
   Future<void> release() {
+    if (_isClosed) return Future<void>.value();
+
+    _isClosed = true;
     return Camera.channel.invokeMethod<void>(
       '$SupportAndroidCamera#release',
       <String, dynamic>{'handle': _handle},

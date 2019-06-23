@@ -8,7 +8,7 @@ typedef CameraDeviceStateCallback = void Function(
   CameraDevice device,
 );
 
-class CameraDevice with NativeMethodCallHandler {
+class CameraDevice with _NativeMethodCallHandler {
   CameraDevice._(this.id, CameraDeviceStateCallback stateCallback)
       : assert(id != null),
         assert(stateCallback != null) {
@@ -30,21 +30,8 @@ class CameraDevice with NativeMethodCallHandler {
   final String id;
 
   Future<CaptureRequest> createCaptureRequest(Template template) async {
-    assert(template != null);
-    /*
-    final Map<String, dynamic> data =
-        await Camera.channel.invokeMapMethod<dynamic, dynamic>(
-      '$CameraDevice#createCaptureRequest',
-      <String, dynamic>{'$Template': template.toString(), 'handle': _handle},
-    );
-    */
+    assert(!_isClosed);
 
-    /*
-    return CaptureRequest._fromMap(
-      template: template,
-      map: data,
-    );
-    */
     return Future<CaptureRequest>.value(CaptureRequest._(
       template: template,
       targets: <Surface>[],
@@ -55,6 +42,7 @@ class CameraDevice with NativeMethodCallHandler {
     List<Surface> outputs,
     CameraCaptureSessionStateCallback callback,
   ) {
+    assert(!_isClosed);
     assert(outputs != null);
     assert(outputs.isNotEmpty);
     assert(callback != null);
@@ -81,9 +69,14 @@ class CameraDevice with NativeMethodCallHandler {
   }
 
   Future<void> close() {
+    if (_isClosed) return Future<void>.value();
+
     return Camera.channel.invokeMethod<void>(
       '$CameraDevice#close',
       <String, dynamic>{'handle': _handle},
-    ).then((_) => Camera._unregisterCallback(_handle));
+    ).then((_) {
+      Camera._unregisterCallback(_handle);
+      _isClosed = true;
+    });
   }
 }
