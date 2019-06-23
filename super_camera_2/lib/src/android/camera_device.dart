@@ -21,7 +21,12 @@ class CameraDevice with _NativeMethodCallHandler {
           (CameraDeviceState state) => state.toString() == deviceState,
         );
 
-        if (state == CameraDeviceState.closed) close();
+        if (state == CameraDeviceState.closed ||
+            state == CameraDeviceState.disconnected ||
+            state == CameraDeviceState.error) {
+          close();
+        }
+
         stateCallback(state, this);
       },
     );

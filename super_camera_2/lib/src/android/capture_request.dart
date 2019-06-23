@@ -64,7 +64,7 @@ class CaptureRequest {
     return CaptureRequest._(
       template: template,
       jpegQuality: jpegQuality ?? this.jpegQuality,
-      targets: List.unmodifiable(targets ?? this.targets),
+      targets: List<Surface>.unmodifiable(targets ?? this.targets),
     );
   }
 
