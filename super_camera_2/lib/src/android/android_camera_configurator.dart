@@ -1,15 +1,25 @@
 part of super_camera;
 
+typedef _AsyncVoidCallback = Future<void> Function();
+
 class AndroidCameraConfigurator implements CameraConfigurator {
   AndroidCameraConfigurator(this.characteristics)
       : assert(characteristics != null) {
     CameraManager.instance.openCamera(
       characteristics.id,
-      (CameraDeviceState state, CameraDevice device) {
+      (CameraDeviceState state, CameraDevice device) async {
         _device = device;
+
+        for (_AsyncVoidCallback waitingMethod in _waitingMethods) {
+          await waitingMethod();
+        }
+        _deviceCallbackCompleter.complete();
       },
     );
   }
+
+  final Completer<void> _deviceCallbackCompleter = Completer<void>();
+  final List<_AsyncVoidCallback> _waitingMethods = <_AsyncVoidCallback>[];
 
   PlatformTexture _texture;
   CameraDevice _device;
@@ -21,9 +31,12 @@ class AndroidCameraConfigurator implements CameraConfigurator {
 
   @override
   Future<void> addPreviewTexture() async {
-    while (_device == null) {}
+    if (_device == null) {
+      _waitingMethods.add(() => addPreviewTexture());
+      return _deviceCallbackCompleter.future;
+    }
 
-    if (_texture != null) return;
+    if (_texture != null) return Future<void>.value();
 
     _texture = await Camera.createPlatformTexture();
     final CaptureRequest request =
@@ -43,6 +56,11 @@ class AndroidCameraConfigurator implements CameraConfigurator {
 
   @override
   Future<void> dispose() {
+    if (_device == null) {
+      _waitingMethods.add(() => dispose());
+      return _deviceCallbackCompleter.future;
+    }
+
     return stop().then((_) => _device.close()).then((_) => _texture?.release());
   }
 
@@ -51,7 +69,12 @@ class AndroidCameraConfigurator implements CameraConfigurator {
 
   @override
   Future<void> start() async {
-    while (_device == null) {}
+    if (_device == null) {
+      _waitingMethods.add(() => start());
+      return _deviceCallbackCompleter.future;
+    }
+
+    final Completer<void> completer = Completer<void>();
 
     _device.createCaptureSession(
       _outputs,
@@ -60,12 +83,20 @@ class AndroidCameraConfigurator implements CameraConfigurator {
         if (state == CameraCaptureSessionState.configured) {
           session.setRepeatingRequest(request: _previewCaptureRequest);
         }
+        completer.complete();
       },
     );
+
+    return completer.future;
   }
 
   @override
   Future<void> stop() {
+    if (_device == null) {
+      _waitingMethods.add(() => stop());
+      return _deviceCallbackCompleter.future;
+    }
+
     if (_session == null) return Future<void>.value();
     return _session?.close()?.then((_) => _session = null);
   }

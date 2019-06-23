@@ -115,10 +115,6 @@ public class SuperCameraPlugin implements MethodCallHandler {
     return handlers.get(handle);
   }
 
-  public static BinaryMessenger getMessenger() {
-    return registrar.messenger();
-  }
-
   public static void sendCallback(Map<String, Object> callbackData) {
     channel.invokeMethod("handleCallback", callbackData);
   }

@@ -9,13 +9,19 @@ typedef _CameraCallback = void Function(dynamic result);
 class Camera {
   Camera._();
 
-  static bool _methodHandlerSet = false;
   static final Map<int, dynamic> _callbacks = <int, _CameraCallback>{};
 
   @visibleForTesting
   static final MethodChannel channel = MethodChannel(
     'dev.plugins/super_camera',
-  );
+  )..setMethodCallHandler(
+      (MethodCall call) async {
+        assert(call.method == 'handleCallback');
+
+        final int handle = call.arguments['handle'];
+        if (_callbacks[handle] != null) _callbacks[handle](call.arguments);
+      },
+    );
 
   @visibleForTesting
   static int nextHandle = 0;
@@ -56,21 +62,15 @@ class Camera {
   }
 
   static void _registerCallback(int handle, _CameraCallback callback) {
-    if (!_methodHandlerSet) {
-      channel.setMethodCallHandler(
-        (MethodCall call) async {
-          assert(call.method == 'handleCallback');
-
-          final int handle = call.arguments['handle'];
-          if (_callbacks[handle] != null) _callbacks[handle](call.arguments);
-        },
-      );
-      _methodHandlerSet = true;
-    }
+    assert(handle != null);
+    assert(_CameraCallback != null);
 
     assert(!_callbacks.containsKey(handle));
     _callbacks[handle] = callback;
   }
 
-  static void _unregisterCallback(int handle) => _callbacks.remove(handle);
+  static void _unregisterCallback(int handle) {
+    assert(handle != null);
+    _callbacks.remove(handle);
+  }
 }
