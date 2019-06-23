@@ -15,5 +15,9 @@ dependencies:
   super_camera:
     path: ../
 
+dev_dependencies:
+  flutter_driver:
+    sdk: flutter
+
 flutter:
   uses-material-design: true

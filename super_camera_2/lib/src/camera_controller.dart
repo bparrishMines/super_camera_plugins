@@ -33,6 +33,17 @@ class CameraController {
     );
   }
 
+  factory CameraController.customConfigurator({
+    @required CameraDescription description,
+    @required CameraConfigurator configurator,
+  }) {
+    return CameraController._(
+      description: description,
+      configurator: configurator,
+      api: _getCameraApi(description),
+    );
+  }
+
   final CameraDescription description;
   final CameraConfigurator configurator;
   final CameraApi api;
