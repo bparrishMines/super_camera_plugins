@@ -140,7 +140,7 @@ void main() {
       });
 
       tearDownAll(() {
-        cameraDevice.close();
+        cameraDevice?.close();
       });
 
       test('createCaptureRequest', () async {
@@ -251,8 +251,8 @@ void main() {
       });
 
       tearDownAll(() {
-        cameraDevice.close();
-        captureSession.close();
+        cameraDevice?.close();
+        captureSession?.close();
       });
 
       test('setRepeatingRequest', () async {
