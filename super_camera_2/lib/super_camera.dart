@@ -20,6 +20,8 @@ part 'src/camera.dart';
 part 'src/camera_controller.dart';
 part 'src/camera_preview.dart';
 part 'src/common/platform_texture.dart';
+part 'src/ios/capture_discovery_session.dart';
+part 'src/ios/capture_device.dart';
 part 'src/support_android/camera_info.dart';
 part 'src/support_android/support_android_camera.dart';
 part 'src/support_android/support_android_camera_configurator.dart';
