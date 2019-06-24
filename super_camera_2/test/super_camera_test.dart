@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('$Camera', () {
     final List<MethodCall> log = <MethodCall>[];
+
     setUpAll(() {
       Camera.channel.setMockMethodCallHandler((MethodCall methodCall) async {
         log.add(methodCall);

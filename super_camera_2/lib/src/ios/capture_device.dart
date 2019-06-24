@@ -19,6 +19,20 @@ class CaptureDevice implements CameraDescription {
   final String uniqueId;
   final CaptureDevicePosition position;
 
+  static Future<List<CaptureDevice>> getDevices(MediaType mediaType) async {
+    assert(mediaType != null);
+
+    final List<dynamic> deviceData =
+        await Camera.channel.invokeListMethod<dynamic>(
+      '$CaptureDevice#getDevices',
+      <String, dynamic>{'mediaType': mediaType.toString()},
+    );
+
+    return deviceData
+        .map<CaptureDevice>((dynamic data) => CaptureDevice._fromMap(data))
+        .toList();
+  }
+
   @override
   LensDirection get direction {
     switch (position) {
