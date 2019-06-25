@@ -2,6 +2,13 @@ part of super_camera;
 
 mixin _NativeMethodCallHandler {
   final int _handle = Camera.nextHandle++;
+}
+
+mixin _CameraMappable {
+  Map<String, dynamic> asMap();
+}
+
+mixin _CameraClosable {
   bool _isClosed = false;
 }
 

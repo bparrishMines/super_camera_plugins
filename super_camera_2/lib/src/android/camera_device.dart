@@ -8,7 +8,7 @@ typedef CameraDeviceStateCallback = void Function(
   CameraDevice device,
 );
 
-class CameraDevice with _NativeMethodCallHandler {
+class CameraDevice with _NativeMethodCallHandler, _CameraClosable {
   CameraDevice._(this.id, CameraDeviceStateCallback stateCallback)
       : assert(id != null),
         assert(stateCallback != null) {

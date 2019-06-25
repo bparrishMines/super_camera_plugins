@@ -1,6 +1,6 @@
 part of super_camera;
 
-class SupportAndroidCamera with _NativeMethodCallHandler {
+class SupportAndroidCamera with _NativeMethodCallHandler, _CameraClosable {
   SupportAndroidCamera._();
 
   static Future<int> getNumberOfCameras() {

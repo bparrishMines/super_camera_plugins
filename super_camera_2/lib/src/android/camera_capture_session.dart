@@ -7,7 +7,7 @@ typedef CameraCaptureSessionStateCallback = Function(
 
 enum CameraCaptureSessionState { configured, configureFailed, closed }
 
-class CameraCaptureSession with _NativeMethodCallHandler {
+class CameraCaptureSession with _NativeMethodCallHandler, _CameraClosable {
   CameraCaptureSession._(
     this._cameraDeviceHandle,
     List<Surface> outputs,
