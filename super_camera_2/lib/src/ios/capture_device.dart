@@ -1,7 +1,9 @@
 part of super_camera;
 
-class CaptureDevice implements CameraDescription {
-  const CaptureDevice._({this.uniqueId, this.position})
+class CaptureDevice
+    with _CameraMappable, _NativeMethodCallHandler
+    implements CameraDescription {
+  CaptureDevice._({this.uniqueId, this.position})
       : assert(uniqueId != null),
         assert(position != null);
 
@@ -49,4 +51,9 @@ class CaptureDevice implements CameraDescription {
 
   @override
   get id => uniqueId;
+
+  @override
+  Map<String, dynamic> asMap() {
+    return <String, dynamic>{'handle': _handle, 'uniqueId': uniqueId};
+  }
 }
