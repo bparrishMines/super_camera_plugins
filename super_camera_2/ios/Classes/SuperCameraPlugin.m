@@ -1,77 +1,40 @@
-#import "SuperCameraPlugin.h"
-
-@interface Pair : NSObject
-@property(readwrite) FlutterMethodChannel *channel;
-@property(readwrite) CameraController *controller;
-@end
-
-@implementation Pair
-@end
-
-@interface SuperCameraPlugin ()
-@property NSMutableArray<Pair *> *controllers;
-@property id<FlutterPluginRegistrar> registrar;
-@end
+#import "SuperCameraPlugin+Internal.h"
 
 @implementation SuperCameraPlugin
-static NSString *const kPluginChannelName = @"bmparr2450.plugins/super_camera";
+static NSMutableDictionary<NSNumber *, id<MethodCallHandler>> *methodHandlers;
+static FlutterMethodChannel *channel;
+static id<FlutterPluginRegistrar> registrar;
 
-- (instancetype)initWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
-  self = [super init];
-  if (self) {
-    _controllers = [NSMutableArray new];
-    _registrar = registrar;
-  }
-  return self;
-}
-
-+ (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
-  FlutterMethodChannel* channel = [FlutterMethodChannel
-      methodChannelWithName:kPluginChannelName
++ (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)pluginRegistrar {
+  methodHandlers = [NSMutableDictionary new];
+  registrar = pluginRegistrar;
+  channel = [FlutterMethodChannel
+      methodChannelWithName:@"dev.plugins/super_camera"
             binaryMessenger:[registrar messenger]];
-  
-  SuperCameraPlugin* instance = [[SuperCameraPlugin alloc] initWithRegistrar:registrar];
+
+  SuperCameraPlugin* instance = [SuperCameraPlugin new];
   [registrar addMethodCallDelegate:instance channel:channel];
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
-  if ([@"Camera#availableCameras" isEqualToString:call.method]) {
-    result([CameraController availableCameras]);
-  } else if ([@"Camera#createCameraController" isEqualToString:call.method]) {
-    [self createCameraController:call];
-    result(nil);
-  } else if ([@"Camera#releaseAllResources" isEqualToString:call.method]) {
-    [self releaseAllResources];
-    result(nil);
+  if ([@"CaptureDiscoverySession#devices" isEqualToString:call.method]) {
+    result([FLTCaptureDiscoverySession devices:call]);
   } else {
     result(FlutterMethodNotImplemented);
   }
 }
 
-- (void)createCameraController:(FlutterMethodCall*)call {
-  NSString *channelName = call.arguments[@"channelName"];
-  FlutterMethodChannel* channel = [FlutterMethodChannel
-                                methodChannelWithName:channelName
-                                      binaryMessenger:[_registrar messenger]];
-
-  NSString *cameraId = call.arguments[@"cameraId"];
-  CameraController *controller = [[CameraController alloc] initWithCameraId:cameraId
-                                                            textureRegistry:[_registrar textures]
-                                                                  messenger:[_registrar messenger]];
-
-  [_registrar addMethodCallDelegate:controller channel:channel];
-
-  Pair *pair = [Pair new];
-  pair.channel = channel;
-  pair.controller = controller;
-  [_controllers addObject:pair];
-}
-
-- (void)releaseAllResources {
-  for (Pair *controllerPair in _controllers) {
-    [controllerPair.controller close];
++ (void)addMethodHandler:(NSNumber *)handle methodHandler:(id<MethodCallHandler>)handler {
+  if (methodHandlers[handle]) {
+    NSString *reason =
+    [[NSString alloc] initWithFormat:@"Object for handle already exists: %d", handle.intValue];
+    @throw [[NSException alloc] initWithName:NSInvalidArgumentException reason:reason userInfo:nil];
   }
 
-  [_controllers removeAllObjects];
+  methodHandlers[handle] = handler;
+}
+
++ (void)removeMethodHandler:(NSNumber *)handle {
+  [methodHandlers removeObjectForKey:handle];
 }
 @end

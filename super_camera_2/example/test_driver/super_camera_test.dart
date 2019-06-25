@@ -4,12 +4,22 @@
 
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_driver/flutter_driver.dart';
 
 void main() async {
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    await grantAndroidPermissions();
+  }
+
+  final FlutterDriver driver = await FlutterDriver.connect();
+  await driver.requestData(null, timeout: const Duration(minutes: 1));
+  driver.close();
+}
+
+Future<void> grantAndroidPermissions() async {
   final Map<String, String> envVars = Platform.environment;
-  final String adbPath =
-      envVars['ANDROID_HOME'] + '/platform-tools/adb';
+  final String adbPath = envVars['ANDROID_HOME'] + '/platform-tools/adb';
   await Process.run(adbPath, [
     'shell',
     'pm',
@@ -17,7 +27,4 @@ void main() async {
     'com.example.supercameraexample',
     'android.permission.CAMERA',
   ]);
-  final FlutterDriver driver = await FlutterDriver.connect();
-  await driver.requestData(null, timeout: const Duration(minutes: 1));
-  driver.close();
 }

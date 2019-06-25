@@ -260,6 +260,6 @@ void main() {
         await expectLater(controller.stop(), completes);
         await expectLater(controller.dispose(), completes);
       });
-    });
+    }, skip: defaultTargetPlatform == TargetPlatform.iOS);
   });
 }
