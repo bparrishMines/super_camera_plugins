@@ -22,6 +22,16 @@ void main() {
                 'position': CaptureDevicePosition.unspecified.toString(),
               }
             ];
+          case 'CaptureSession#running':
+            return true;
+          case 'CaptureSession#addOutput':
+            return null;
+          case 'CaptureSession#removeOutput':
+            return null;
+          case 'CaptureSession#addInput':
+            return null;
+          case 'CaptureSession#removeInput':
+            return null;
         }
 
         throw ArgumentError.value(
@@ -94,6 +104,102 @@ void main() {
         expect(devices[1].uniqueId, 'banana');
         expect(devices[1].position, CaptureDevicePosition.unspecified);
         expect(devices[1].direction, LensDirection.external);
+      });
+    });
+
+    group('$CaptureSession', () {
+      CaptureSession session;
+
+      setUp(() {
+        session = CaptureSession();
+      });
+
+      test('running', () async {
+        await expectLater(session.running, completion(isTrue));
+
+        expect(log, <Matcher>[
+          isMethodCall(
+            '$CaptureSession#running',
+            arguments: <String, dynamic>{'handle': 0},
+          )
+        ]);
+      });
+
+      test('addOutput', () async {
+        final CaptureVideoDataOutput output = CaptureVideoDataOutput();
+        await session.addOutput(output);
+
+        expect(log, <Matcher>[
+          isMethodCall(
+            '$CaptureSession#running',
+            arguments: <String, dynamic>{'handle': 0},
+          ),
+          isMethodCall(
+            '$CaptureSession#addOutput',
+            arguments: <String, dynamic>{'handle': 0, 'output': output.asMap()},
+          )
+        ]);
+      });
+
+      test('removeOutput', () async {
+        final CaptureVideoDataOutput output = CaptureVideoDataOutput();
+        await session.addOutput(output);
+
+        log.clear();
+        await session.removeOutput(output);
+
+        expect(log, <Matcher>[
+          isMethodCall(
+            '$CaptureSession#running',
+            arguments: <String, dynamic>{'handle': 0},
+          ),
+          isMethodCall(
+            '$CaptureSession#removeOutput',
+            arguments: <String, dynamic>{'handle': 0, 'output': output.asMap()},
+          )
+        ]);
+      });
+
+      test('addInput', () async {
+        final List<CaptureDevice> devices =
+            await CaptureDevice.getDevices(MediaType.video);
+        final CaptureDeviceInput input = CaptureDeviceInput(device: devices[0]);
+
+        log.clear();
+        await session.addInput(input);
+
+        expect(log, <Matcher>[
+          isMethodCall(
+            '$CaptureSession#running',
+            arguments: <String, dynamic>{'handle': 0},
+          ),
+          isMethodCall(
+            '$CaptureSession#addInput',
+            arguments: <String, dynamic>{'handle': 0, 'input': input.asMap()},
+          )
+        ]);
+      });
+
+      test('removeInput', () async {
+        final List<CaptureDevice> devices =
+            await CaptureDevice.getDevices(MediaType.video);
+        final CaptureDeviceInput input = CaptureDeviceInput(device: devices[0]);
+
+        await session.addInput(input);
+
+        log.clear();
+        await session.removeInput(input);
+
+        expect(log, <Matcher>[
+          isMethodCall(
+            '$CaptureSession#running',
+            arguments: <String, dynamic>{'handle': 0},
+          ),
+          isMethodCall(
+            '$CaptureSession#removeInput',
+            arguments: <String, dynamic>{'handle': 0, 'input': input.asMap()},
+          )
+        ]);
       });
     });
   });

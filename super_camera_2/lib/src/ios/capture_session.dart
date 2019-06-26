@@ -3,35 +3,42 @@ part of super_camera;
 class CaptureSession with _NativeMethodCallHandler, _CameraMappable {
   CaptureSession();
 
-  List<CaptureInput> _inputs;
-  List<CaptureOutput> _outputs;
+  final List<CaptureOutput> _outputs = <CaptureOutput>[];
+  final List<CaptureInput> _inputs = <CaptureInput>[];
 
-  List<CaptureInput> get inputs => List<CaptureInput>.unmodifiable(_inputs);
   List<CaptureOutput> get outputs => List<CaptureOutput>.unmodifiable(_outputs);
+  List<CaptureInput> get inputs => List<CaptureInput>.unmodifiable(_inputs);
 
   Future<void> addOutput(CaptureOutput output) {
     assert(output != null);
+    assert(!_outputs.contains(output));
 
     _outputs.add(output);
-    return running
-      ..then((bool isRunning) {
-        if (isRunning) {
-          Camera.channel.invokeMethod<void>(
-            '$CaptureSession#addOutput',
-            <String, dynamic>{'handle': _handle},
-          );
-        }
-      }).catchError(() => _outputs.remove(output));
+    try {
+      return running
+        ..then((bool isRunning) {
+          if (isRunning) {
+            Camera.channel.invokeMethod<void>(
+              '$CaptureSession#addOutput',
+              <String, dynamic>{'handle': _handle, 'output': output.asMap()},
+            );
+          }
+        });
+    } on PlatformException {
+      _outputs.remove(output);
+      rethrow;
+    }
   }
 
   Future<void> removeOutput(CaptureOutput output) {
-    _outputs.remove(output);
+    if (!_outputs.remove(output)) return Future<void>.value();
+
     return running
       ..then((bool isRunning) {
         if (isRunning) {
           Camera.channel.invokeMethod<void>(
             '$CaptureSession#removeOutput',
-            <String, dynamic>{'handle': _handle},
+            <String, dynamic>{'handle': _handle, 'output': output.asMap()},
           );
         }
       });
@@ -39,27 +46,35 @@ class CaptureSession with _NativeMethodCallHandler, _CameraMappable {
 
   Future<void> addInput(CaptureInput input) {
     assert(input != null);
+    assert(!_inputs.contains(input));
 
     _inputs.add(input);
-    return running
-      ..then((bool isRunning) {
-        if (isRunning) {
-          Camera.channel.invokeMethod<void>(
-            '$CaptureSession#addInput',
-            <String, dynamic>{'handle': _handle},
-          );
-        }
-      }).catchError(() => _inputs.remove(input));
+
+    try {
+      return running
+        ..then((bool isRunning) {
+          if (isRunning) {
+            Camera.channel.invokeMethod<void>(
+              '$CaptureSession#addInput',
+              <String, dynamic>{'handle': _handle, 'input': input.asMap()},
+            );
+          }
+        });
+    } on PlatformException {
+      _inputs.remove(input);
+      rethrow;
+    }
   }
 
   Future<void> removeInput(CaptureInput input) {
-    _inputs.remove(input);
+    if (!_inputs.remove(input)) return Future<void>.value();
+
     return running
       ..then((bool isRunning) {
         if (isRunning) {
           Camera.channel.invokeMethod<void>(
             '$CaptureSession#removeInput',
-            <String, dynamic>{'handle': _handle},
+            <String, dynamic>{'handle': _handle, 'input': input.asMap()},
           );
         }
       });

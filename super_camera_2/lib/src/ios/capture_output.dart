@@ -15,7 +15,7 @@ class CaptureVideoDataOutput extends CaptureOutput {
     return <String, dynamic>{
       'handle': _handle,
       'delegate': delegate?.asMap(),
-      'formatType': formatType,
+      'formatType': formatType?.toString(),
     };
   }
 }

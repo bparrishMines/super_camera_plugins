@@ -37,11 +37,11 @@ class CaptureDeviceInput extends CaptureInput {
   Map<String, dynamic> asMap() {
     return <String, dynamic>{
       'handle': _handle,
-      'class': _inputClass,
+      'class': _inputClass.toString(),
       'device': device.asMap(),
       'ports': ports.map<Map<String, dynamic>>(
         (CaptureInputPort port) => port.asMap(),
-      ),
+      ).toList(),
     };
   }
 }
