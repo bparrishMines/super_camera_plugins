@@ -25,6 +25,7 @@ part 'src/ios/capture_device.dart';
 part 'src/ios/capture_input.dart';
 part 'src/ios/capture_output.dart';
 part 'src/ios/capture_session.dart';
+part 'src/ios/ios_camera_configuator.dart';
 part 'src/support_android/camera_info.dart';
 part 'src/support_android/support_android_camera.dart';
 part 'src/support_android/support_android_camera_configurator.dart';

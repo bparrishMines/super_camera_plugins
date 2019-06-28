@@ -77,7 +77,7 @@ class CameraController {
       case CameraApi.android:
         return AndroidCameraConfigurator(description);
       case CameraApi.iOS:
-        throw UnimplementedError();
+        return IOSCameraConfigurator(description);
       case CameraApi.supportAndroid:
         return SupportAndroidCameraConfigurator(description);
     }
