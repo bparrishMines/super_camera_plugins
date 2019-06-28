@@ -86,7 +86,7 @@ class CaptureSession with _NativeMethodCallHandler, _CameraMappable {
 
     return Camera.channel.invokeMethod<void>(
       '$CaptureSession#startRunning',
-      <String, dynamic>{'handle': _handle, ...asMap()},
+      <String, dynamic>{'sessionHandle': _handle, ...asMap()},
     );
   }
 

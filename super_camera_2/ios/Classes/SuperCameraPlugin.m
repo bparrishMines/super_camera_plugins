@@ -19,8 +19,28 @@ static id<FlutterPluginRegistrar> registrar;
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
   if ([@"CaptureDiscoverySession#devices" isEqualToString:call.method]) {
     result([FLTCaptureDiscoverySession devices:call]);
+  } else if ([@"CaptureSession#startRunning" isEqualToString:call.method]) {
+    [FLTCaptureSession startRunning:call result:result];
+  } else if ([@"CaptureSession#running" isEqualToString:call.method]) {
+    NSNumber *handle = call.arguments[@"handle"];
+    if (methodHandlers[handle]) {
+      result([NSNumber numberWithBool:YES]);
+    } else {
+      result([NSNumber numberWithBool:NO]);
+    }
+  } else if ([@"Camera#createPlatformTexture" isEqualToString:call.method]) {
+    NSNumber *handle = call.arguments[@"handle"];
+    PlatformTexture *texture = [[PlatformTexture alloc] initWithTextureRegistry:registrar.textures
+                                                                         handle:handle];
+    [SuperCameraPlugin addMethodHandler:handle methodHandler:texture];
   } else {
-    result(FlutterMethodNotImplemented);
+    NSNumber *handle = call.arguments[@"handle"];
+    
+    if (![handle isEqual:[NSNull null]]) {
+      [methodHandlers[handle] handleMethodCall:call result:result];
+    } else {
+      result(FlutterMethodNotImplemented);
+    }
   }
 }
 
@@ -36,5 +56,9 @@ static id<FlutterPluginRegistrar> registrar;
 
 + (void)removeMethodHandler:(NSNumber *)handle {
   [methodHandlers removeObjectForKey:handle];
+}
+
++ (id<MethodCallHandler>)getHandler:(NSNumber *)handle {
+  return methodHandlers[handle];
 }
 @end

@@ -12,7 +12,7 @@ mixin _CameraClosable {
   bool _isClosed = false;
 }
 
-class PlatformTexture {
+class PlatformTexture with _CameraClosable {
   PlatformTexture._({@required int handle, @required this.textureId})
       : _handle = handle,
         assert(handle != null),
@@ -20,8 +20,6 @@ class PlatformTexture {
 
   final int _handle;
   final int textureId;
-
-  bool _isClosed = false;
 
   Future<void> release() {
     if (_isClosed) return Future<void>.value();

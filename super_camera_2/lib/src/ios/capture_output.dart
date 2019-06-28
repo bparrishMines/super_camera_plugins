@@ -2,10 +2,15 @@ part of super_camera;
 
 enum PixelFormatType { bgra32 }
 
+enum _CaptureOutputClass { captureVideoDataOutput }
+
 abstract class CaptureOutput with _NativeMethodCallHandler, _CameraMappable {}
 
 class CaptureVideoDataOutput extends CaptureOutput {
   CaptureVideoDataOutput({this.delegate, this.formatType});
+
+  static const _CaptureOutputClass _outputClass =
+      _CaptureOutputClass.captureVideoDataOutput;
 
   final CaptureVideoDataOutputSampleBufferDelegate delegate;
   final PixelFormatType formatType;
@@ -14,6 +19,7 @@ class CaptureVideoDataOutput extends CaptureOutput {
   Map<String, dynamic> asMap() {
     return <String, dynamic>{
       'handle': _handle,
+      'class': _outputClass.toString(),
       'delegate': delegate?.asMap(),
       'formatType': formatType?.toString(),
     };
