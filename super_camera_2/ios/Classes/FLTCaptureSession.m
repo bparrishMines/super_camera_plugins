@@ -88,6 +88,17 @@
   [SuperCameraPlugin addMethodHandler:handle methodHandler:fltSession];
 }
 
++ (void)stopRunning:(FlutterMethodCall * _Nonnull)call result:(FlutterResult _Nonnull)result {
+  NSNumber *handle = call.arguments[@"handle"];
+  id<MethodCallHandler> handler = [SuperCameraPlugin getHandler:handle];
+
+  if (handler) {
+    [handler handleMethodCall:call result:result];
+  } else {
+    result(nil);
+  }
+}
+
 - (void)stopRunning:(FlutterMethodCall *_Nonnull)call {
   [_session stopRunning];
   [SuperCameraPlugin removeMethodHandler:_handle];

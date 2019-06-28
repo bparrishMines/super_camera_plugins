@@ -21,6 +21,8 @@ static id<FlutterPluginRegistrar> registrar;
     result([FLTCaptureDiscoverySession devices:call]);
   } else if ([@"CaptureSession#startRunning" isEqualToString:call.method]) {
     [FLTCaptureSession startRunning:call result:result];
+  } else if ([@"CaptureSession#stopRunning" isEqualToString:call.method]) {
+    [FLTCaptureSession stopRunning:call result:result];
   } else if ([@"CaptureSession#running" isEqualToString:call.method]) {
     NSNumber *handle = call.arguments[@"handle"];
     if (methodHandlers[handle]) {
@@ -35,9 +37,10 @@ static id<FlutterPluginRegistrar> registrar;
     [SuperCameraPlugin addMethodHandler:handle methodHandler:texture];
   } else {
     NSNumber *handle = call.arguments[@"handle"];
+    id<MethodCallHandler> handler = [SuperCameraPlugin getHandler:handle];
     
-    if (![handle isEqual:[NSNull null]]) {
-      [methodHandlers[handle] handleMethodCall:call result:result];
+    if (handler) {
+      [handler handleMethodCall:call result:result];
     } else {
       result(FlutterMethodNotImplemented);
     }

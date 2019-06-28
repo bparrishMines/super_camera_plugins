@@ -22,6 +22,7 @@
 
 @interface FLTCaptureSession : NSObject<MethodCallhandler>
 + (void)startRunning:(FlutterMethodCall * _Nonnull)call result:(FlutterResult _Nonnull)result;
++ (void)stopRunning:(FlutterMethodCall * _Nonnull)call result:(FlutterResult _Nonnull)result;
 @end
 
 @interface PlatformTexture : NSObject<MethodCallHandler, FlutterTexture>
