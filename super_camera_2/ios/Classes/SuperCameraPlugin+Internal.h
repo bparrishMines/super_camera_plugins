@@ -20,7 +20,7 @@
 + (NSArray<NSDictionary *> *)devices:(FlutterMethodCall *)call;
 @end
 
-@interface FLTCaptureSession : NSObject<MethodCallhandler>
+@interface FLTCaptureSession : NSObject<MethodCallHandler>
 + (void)startRunning:(FlutterMethodCall * _Nonnull)call result:(FlutterResult _Nonnull)result;
 + (void)stopRunning:(FlutterMethodCall * _Nonnull)call result:(FlutterResult _Nonnull)result;
 @end

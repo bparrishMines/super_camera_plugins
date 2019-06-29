@@ -9,7 +9,7 @@
   [FLTCaptureDiscoverySession validateVersion];
 
   if (@available(iOS 10.0, *)) {
-    NSArray<NSString *> * deviceTypeStrs = call.arguments[@"deviceTypes"];
+    NSArray<NSString *> *deviceTypeStrs = call.arguments[@"deviceTypes"];
 
     NSMutableArray<AVCaptureDeviceType> *types = [NSMutableArray new];
     for (NSString *str in deviceTypeStrs) {
@@ -47,14 +47,29 @@
                           [[NSMutableArray alloc] initWithCapacity:devices.count];
 
     for (AVCaptureDevice *device in devices) {
+      NSString *retPositionStr;
+      switch ([device position]) {
+        case AVCaptureDevicePositionBack:
+          retPositionStr = @"CaptureDevicePosition.back";
+          break;
+        case AVCaptureDevicePositionFront:
+          retPositionStr = @"CaptureDevicePosition.front";
+          break;
+        case AVCaptureDevicePositionUnspecified:
+          retPositionStr = @"CaptureDevicePosition.unspecified";
+          break;
+      }
+
       [deviceData addObject:@{
          @"uniqueId": [device uniqueID],
-         @"position": postionStr,
+         @"position": retPositionStr,
       }];
     }
 
     return deviceData;
   }
+
+  return nil;
 }
 
 + (void) validateVersion {

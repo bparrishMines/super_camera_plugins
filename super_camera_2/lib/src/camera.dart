@@ -44,8 +44,6 @@ class Camera {
       }
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       final IosDeviceInfo info = await infoPlugin.iosInfo;
-      print('AVAILABLE CAMERAS');
-      print(info.systemVersion);
       final double version = double.tryParse(info.systemVersion) ?? 8.0;
       if (version >= 10) {
         final CaptureDiscoverySession session = CaptureDiscoverySession(

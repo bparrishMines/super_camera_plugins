@@ -16,6 +16,7 @@ void main() {
   tearDownAll(() => completer.complete(null));
 
   group('super_camera', () {
+    /*
     group(
       'Support Android Camera',
       () {
@@ -228,7 +229,28 @@ void main() {
       },
       skip: defaultTargetPlatform != TargetPlatform.android,
     );
+*/
+    group('Ios Camera', () {
+      group('$CaptureDiscoverySession', () {
+        test('devices', () async {
+          final CaptureDiscoverySession session = CaptureDiscoverySession(
+            deviceTypes: <CaptureDeviceType>[
+              CaptureDeviceType.builtInWideAngleCamera
+            ],
+            position: CaptureDevicePosition.front,
+            mediaType: MediaType.video,
+          );
 
+          final List<CaptureDevice> devices = await session.devices;
+
+          expect(devices, isNotEmpty);
+          expect(devices, everyElement(isNotNull));
+          expect(devices[0].uniqueId, isNotEmpty);
+          expect(devices[0].position, CaptureDevicePosition.front);
+        });
+      });
+    });
+/*
     group('$Camera', () {
       test('availableCameras', () async {
         final List<CameraDescription> descriptions =
@@ -240,8 +262,9 @@ void main() {
         final PlatformTexture texture = await Camera.createPlatformTexture();
         expect(texture.textureId, isNotNull);
       });
-    });
-
+    }, skip: true);
+    */
+    /*
     group('$CameraController', () {
       test('works', () async {
         final List<CameraDescription> descriptions =
@@ -261,5 +284,6 @@ void main() {
         await expectLater(controller.dispose(), completes);
       });
     }, skip: defaultTargetPlatform == TargetPlatform.iOS);
+    */
   });
 }
