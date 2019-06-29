@@ -243,8 +243,7 @@ void main() {
 
           final List<CaptureDevice> devices = await session.devices;
 
-          expect(devices, isNotEmpty);
-          expect(devices, everyElement(isNotNull));
+          expect(devices, hasLength(1));
           expect(devices[0].uniqueId, isNotEmpty);
           expect(devices[0].position, CaptureDevicePosition.front);
         });
