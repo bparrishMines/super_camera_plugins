@@ -16,7 +16,7 @@ public class PlatformTexture implements MethodChannel.MethodCallHandler {
 
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
-    if (call.method.equals("PlatformTexture#release")) {
+    if (call.method.equals("NativeTexture#release")) {
       release(result);
     } else {
       result.notImplemented();

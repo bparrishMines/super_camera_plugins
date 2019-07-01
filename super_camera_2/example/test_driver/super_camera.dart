@@ -48,7 +48,7 @@ void main() {
 
           test('startPreview', () async {
             final SupportAndroidCamera camera = SupportAndroidCamera.open(0);
-            expectLater(camera.startPreview(), completes);
+            expect(camera.startPreview(), completes);
 
             camera.release();
           });
@@ -63,8 +63,7 @@ void main() {
           test('platformTexture', () async {
             final SupportAndroidCamera camera = SupportAndroidCamera.open(0);
 
-            final PlatformTexture texture =
-                await Camera.createPlatformTexture();
+            final NativeTexture texture = await NativeTexture.allocate();
             expect(texture.textureId, isNotNull);
 
             camera.previewTexture = texture;
@@ -147,11 +146,10 @@ void main() {
           });
 
           test('createCaptureSession', () async {
-            final PlatformTexture platformTexture =
-                await Camera.createPlatformTexture();
+            final NativeTexture nativeTexture = await NativeTexture.allocate();
             final SurfaceTexture surfaceTexture = SurfaceTexture();
             final PreviewTexture previewTexture = PreviewTexture(
-              platformTexture: platformTexture,
+              nativeTexture: nativeTexture,
               surfaceTexture: surfaceTexture,
             );
 
@@ -170,14 +168,14 @@ void main() {
             expect(session, isNotNull);
 
             session.close();
-            platformTexture.release();
+            nativeTexture.release();
           });
         });
 
         group('$CameraCaptureSession', () {
           CameraDevice device;
           CameraCaptureSession session;
-          PlatformTexture platformTexture;
+          NativeTexture nativeTexture;
           List<Surface> surfaces;
 
           setUpAll(() async {
@@ -195,10 +193,10 @@ void main() {
 
             device = await deviceCompleter.future;
 
-            platformTexture = await Camera.createPlatformTexture();
+            nativeTexture = await NativeTexture.allocate();
             final SurfaceTexture surfaceTexture = SurfaceTexture();
             final PreviewTexture previewTexture = PreviewTexture(
-              platformTexture: platformTexture,
+              nativeTexture: nativeTexture,
               surfaceTexture: surfaceTexture,
             );
 
@@ -220,7 +218,7 @@ void main() {
           tearDownAll(() {
             device.close();
             session.close();
-            platformTexture.release();
+            nativeTexture.release();
           });
 
           test('setRepeatingRequest', () async {
@@ -280,8 +278,7 @@ void main() {
             final CaptureSession session = CaptureSession();
             session.addInput(input);
 
-            final PlatformTexture texture =
-                await Camera.createPlatformTexture();
+            final NativeTexture texture = await NativeTexture.allocate();
 
             final CaptureVideoDataOutput output = CaptureVideoDataOutput(
               delegate: CaptureVideoDataOutputSampleBufferDelegate(
@@ -302,15 +299,15 @@ void main() {
           : null,
     );
 
-    group('$Camera', () {
+    group('SuperCamera', () {
       test('availableCameras', () async {
         final List<CameraDescription> descriptions =
-            await Camera.availableCameras();
+            await CameraController.availableCameras();
         expect(descriptions, isNotEmpty);
       });
 
       test('createPlatformTexture', () async {
-        final PlatformTexture texture = await Camera.createPlatformTexture();
+        final NativeTexture texture = await NativeTexture.allocate();
         expect(texture.textureId, greaterThan(-1));
       });
     });
@@ -318,7 +315,7 @@ void main() {
     group('$CameraController', () {
       test('works', () async {
         final List<CameraDescription> descriptions =
-            await Camera.availableCameras();
+            await CameraController.availableCameras();
 
         final CameraController controller = CameraController(
           description: descriptions[0],

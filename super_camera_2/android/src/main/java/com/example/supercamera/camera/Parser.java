@@ -47,7 +47,7 @@ class Parser {
       final String surfaceClass = (String) outputData.get("surfaceClass");
 
       if (surfaceClass.equals("PreviewTexture")) {
-        final Map<String, Object> textureData = (Map<String, Object>) outputData.get("platformTexture");
+        final Map<String, Object> textureData = (Map<String, Object>) outputData.get("nativeTexture");
         final Integer textureHandle = (Integer) textureData.get("handle");
         final PlatformTexture texture = (PlatformTexture) SuperCameraPlugin.getHandler(textureHandle);
 

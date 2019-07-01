@@ -30,12 +30,12 @@ class SupportAndroidCamera with NativeMethodCallHandler, CameraClosable {
     return CameraInfo._fromMap(infoMap);
   }
 
-  set previewTexture(PlatformTexture texture) {
+  set previewTexture(NativeTexture texture) {
     assert(!isClosed);
 
     CameraChannel.channel.invokeMethod<void>(
       '$SupportAndroidCamera#previewTexture',
-      <String, dynamic>{'handle': handle, 'platformTexture': texture?.asMap()},
+      <String, dynamic>{'handle': handle, 'nativeTexture': texture?.asMap()},
     );
   }
 

@@ -81,6 +81,8 @@ class CaptureSession with NativeMethodCallHandler, CameraMappable {
   }
 
   Future<void> stopRunning() {
+    if (!_running) return Future<void>.value();
+
     _running = false;
     return CameraChannel.channel.invokeMethod<void>(
       '$CaptureSession#stopRunning',

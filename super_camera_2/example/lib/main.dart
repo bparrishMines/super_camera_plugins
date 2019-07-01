@@ -4,8 +4,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:super_camera/super_camera.dart';
 import 'package:sensors/sensors.dart';
+import 'package:super_camera/super_camera.dart';
 
 void main() {
   SystemChrome.setEnabledSystemUIOverlays([]);
@@ -79,7 +79,8 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _setupCamera() async {
-    final List<CameraDescription> cameras = await Camera.availableCameras();
+    final List<CameraDescription> cameras =
+        await CameraController.availableCameras();
     final CameraDescription camera = cameras.firstWhere(
       (CameraDescription desc) => desc.direction == _lensDirection,
     );

@@ -62,8 +62,8 @@ public class SuperCameraPlugin implements MethodCallHandler {
   @Override
   public void onMethodCall(MethodCall call, Result result) {
     switch(call.method) {
-      case "Camera#createPlatformTexture":
-        createPlatformTexture(call, result);
+      case "NativeTexture#allocate":
+        allocateTexture(call, result);
         break;
       case "SupportAndroidCamera#getNumberOfCameras":
         result.success(SupportAndroidCamera.getNumberOfCameras());
@@ -110,7 +110,7 @@ public class SuperCameraPlugin implements MethodCallHandler {
     }
   }
 
-  private void createPlatformTexture(MethodCall call, Result result) {
+  private void allocateTexture(MethodCall call, Result result) {
     final TextureRegistry.SurfaceTextureEntry entry = registrar.textures().createSurfaceTexture();
     final Integer textureHandle = call.argument("textureHandle");
     addHandler(textureHandle, new PlatformTexture(entry, textureHandle));

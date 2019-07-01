@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:super_camera/src/camera_testing.dart';
 
-import 'package:super_camera/super_camera.dart';
 import 'package:super_camera/support_android_camera.dart';
 
 void main() {
@@ -9,7 +9,7 @@ void main() {
     group('$SupportAndroidCamera', () {
       final List<MethodCall> log = <MethodCall>[];
       setUpAll(() {
-        Camera.channel.setMockMethodCallHandler((MethodCall methodCall) async {
+        CameraTesting.channel.setMockMethodCallHandler((MethodCall methodCall) async {
           log.add(methodCall);
           switch (methodCall.method) {
             case 'SupportAndroidCamera#getNumberOfCameras':
@@ -40,7 +40,7 @@ void main() {
 
       setUp(() {
         log.clear();
-        Camera.nextHandle = 0;
+        CameraTesting.nextHandle = 0;
       });
 
       test('getNumberOfCameras', () async {

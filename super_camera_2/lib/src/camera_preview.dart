@@ -1,4 +1,10 @@
-part of super_camera;
+
+
+import 'package:flutter/widgets.dart';
+
+import '../support_android_camera.dart';
+import 'camera_controller.dart';
+import 'common/camera_abstraction.dart';
 
 class CameraPreview extends StatefulWidget {
   CameraPreview(this.controller) : assert(controller != null);

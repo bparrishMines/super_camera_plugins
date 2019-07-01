@@ -1,4 +1,9 @@
-part of ios_camera;
+import 'dart:async';
+
+import '../ios_camera.dart';
+import 'common/camera_abstraction.dart';
+import 'common/camera_mixins.dart';
+import 'common/native_texture.dart';
 
 class IOSCameraConfigurator with CameraClosable implements CameraConfigurator {
   IOSCameraConfigurator(this.device)
@@ -9,7 +14,7 @@ class IOSCameraConfigurator with CameraClosable implements CameraConfigurator {
   }
 
   final CaptureSession _session;
-  PlatformTexture _texture;
+  NativeTexture _texture;
 
   final CaptureDevice device;
 
@@ -17,7 +22,7 @@ class IOSCameraConfigurator with CameraClosable implements CameraConfigurator {
   Future<void> addPreviewTexture() async {
     assert(!isClosed);
 
-    if (_texture == null) _texture = await Camera.createPlatformTexture();
+    if (_texture == null) _texture = await NativeTexture.allocate();
 
     final CaptureVideoDataOutput output = CaptureVideoDataOutput(
       delegate: CaptureVideoDataOutputSampleBufferDelegate(
@@ -30,10 +35,14 @@ class IOSCameraConfigurator with CameraClosable implements CameraConfigurator {
   }
 
   @override
-  Future<void> dispose() async {
+  Future<void> dispose() {
+    if (isClosed) return Future<void>.value();
     isClosed = true;
-    await stop();
-    return _texture?.release();
+
+    Completer<void> completer = Completer<void>();
+
+    stop().then((_) => _texture?.release()).then((_) => completer.complete());
+    return completer.future;
   }
 
   @override
@@ -47,7 +56,6 @@ class IOSCameraConfigurator with CameraClosable implements CameraConfigurator {
 
   @override
   Future<void> stop() {
-    if (isClosed) return Future<void>.value();
     return _session.stopRunning();
   }
 }

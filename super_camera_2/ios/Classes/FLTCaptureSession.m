@@ -93,7 +93,7 @@
 
       NSDictionary *delegateData = outputData[@"delegate"];
       if (delegateData) {
-        NSDictionary *textureData = delegateData[@"platformTexture"];
+        NSDictionary *textureData = delegateData[@"nativeTexture"];
         NSNumber *textureHandle = textureData[@"handle"];
 
         PlatformTexture *texture = nil;

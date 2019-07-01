@@ -25,7 +25,7 @@
 }
 
 - (void)handleMethodCall:(FlutterMethodCall *)call result:(FlutterResult)result {
-  if ([@"PlatformTexture#release" isEqualToString:call.method]) {
+  if ([@"NativeTexture#release" isEqualToString:call.method]) {
     [self release:result];
   } else {
     result(FlutterMethodNotImplemented);

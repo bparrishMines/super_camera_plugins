@@ -1,4 +1,9 @@
-part of android_camera;
+import 'dart:async';
+
+import '../android_camera.dart';
+import 'common/camera_abstraction.dart';
+import 'common/camera_mixins.dart';
+import 'common/native_texture.dart';
 
 class AndroidCameraConfigurator
     with CameraClosable
@@ -16,7 +21,7 @@ class AndroidCameraConfigurator
 
   final Completer<void> _deviceCallbackCompleter = Completer<void>();
 
-  PlatformTexture _texture;
+  NativeTexture _texture;
   CameraDevice _device;
   CameraCaptureSession _session;
   final List<Surface> _outputs = <Surface>[];
@@ -32,13 +37,13 @@ class AndroidCameraConfigurator
 
     if (_texture != null) return Future<void>.value();
 
-    _texture = await Camera.createPlatformTexture();
+    _texture = await NativeTexture.allocate();
     final CaptureRequest request = _device.createCaptureRequest(
       Template.preview,
     );
 
     final PreviewTexture previewTexture = PreviewTexture(
-      platformTexture: _texture,
+      nativeTexture: _texture,
       surfaceTexture: SurfaceTexture(),
     );
 
@@ -50,16 +55,26 @@ class AndroidCameraConfigurator
   }
 
   @override
-  Future<void> dispose() async {
+  Future<void> dispose() {
     if (isClosed) return Future<void>.value();
-
-    await _deviceCallbackCompleter.future;
-
     isClosed = true;
 
-    await stop();
-    await _device.close();
-    await _texture?.release();
+    Completer<void> completer = Completer<void>();
+
+    if (!_deviceCallbackCompleter.isCompleted) {
+      _deviceCallbackCompleter.future
+          .then((_) => stop())
+          .then((_) => _device.close())
+          .then((_) => _texture?.release())
+          .then((_) => completer.complete());
+    } else {
+      stop()
+          .then((_) => _device.close())
+          .then((_) => _texture?.release())
+          .then((_) => completer.complete());
+    }
+
+    return completer.future;
   }
 
   @override
@@ -91,11 +106,9 @@ class AndroidCameraConfigurator
   Future<void> stop() async {
     await _deviceCallbackCompleter.future;
 
-    if (isClosed || _session == null) return Future<void>.value();
-
     final CameraCaptureSession tmpSess = _session;
     _session = null;
 
-    return tmpSess.close();
+    return tmpSess?.close();
   }
 }

@@ -1,14 +1,15 @@
 import 'package:flutter/services.dart';
 import 'package:super_camera/ios_camera.dart';
-import 'package:super_camera/super_camera.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:super_camera/src/camera_testing.dart';
+import 'package:super_camera/src/common/camera_abstraction.dart';
 
 void main() {
   group('iOS Camera', () {
     final List<MethodCall> log = <MethodCall>[];
 
     setUpAll(() {
-      Camera.channel.setMockMethodCallHandler((MethodCall methodCall) async {
+      CameraTesting.channel.setMockMethodCallHandler((MethodCall methodCall) async {
         log.add(methodCall);
         switch (methodCall.method) {
           case 'CaptureDevice#getDevices':
@@ -47,7 +48,7 @@ void main() {
 
     setUp(() {
       log.clear();
-      Camera.nextHandle = 0;
+      CameraTesting.nextHandle = 0;
     });
 
     group('$CaptureDiscoverySession', () {

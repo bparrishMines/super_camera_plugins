@@ -4,19 +4,19 @@ abstract class Surface with CameraMappable {}
 
 class PreviewTexture implements Surface {
   const PreviewTexture({
-    @required this.platformTexture,
+    @required this.nativeTexture,
     @required this.surfaceTexture,
-  })  : assert(platformTexture != null),
+  })  : assert(nativeTexture != null),
         assert(surfaceTexture != null);
 
-  final PlatformTexture platformTexture;
+  final NativeTexture nativeTexture;
   final SurfaceTexture surfaceTexture;
 
   @override
   Map<String, dynamic> asMap() {
     return Map.unmodifiable(<String, dynamic>{
       'surfaceClass': '$PreviewTexture',
-      'platformTexture': platformTexture.asMap(),
+      'nativeTexture': nativeTexture.asMap(),
       'surfaceTexture': surfaceTexture.asMap(),
     });
   }

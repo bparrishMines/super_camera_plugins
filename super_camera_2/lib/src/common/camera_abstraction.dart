@@ -1,5 +1,4 @@
-part of super_camera;
-
+enum CameraApi { android, iOS, supportAndroid }
 enum LensDirection { front, back, external }
 
 abstract class CameraDescription {

@@ -1,4 +1,9 @@
-part of support_android_camera;
+import 'dart:async';
+
+import '../support_android_camera.dart';
+import 'common/camera_abstraction.dart';
+import 'common/camera_mixins.dart';
+import 'common/native_texture.dart';
 
 class SupportAndroidCameraConfigurator
     with CameraClosable
@@ -7,7 +12,7 @@ class SupportAndroidCameraConfigurator
     _camera = SupportAndroidCamera.open(info.id);
   }
 
-  PlatformTexture _texture;
+  NativeTexture _texture;
   SupportAndroidCamera _camera;
 
   final CameraInfo info;
@@ -17,15 +22,22 @@ class SupportAndroidCameraConfigurator
   @override
   Future<void> addPreviewTexture() async {
     assert(!isClosed);
-    if (_texture == null) _texture = await Camera.createPlatformTexture();
+    if (_texture == null) _texture = await NativeTexture.allocate();
     _camera.previewTexture = _texture;
   }
 
   @override
-  Future<void> dispose() async {
+  Future<void> dispose() {
     isClosed = true;
-    await _camera.release();
-    await _texture?.release();
+
+    Completer<void> completer = Completer<void>();
+
+    _camera
+        .release()
+        .then((_) => _texture?.release())
+        .then((_) => completer.complete());
+
+    return completer.future;
   }
 
   @override
@@ -39,7 +51,6 @@ class SupportAndroidCameraConfigurator
 
   @override
   Future<void> stop() {
-    if (isClosed) return Future<void>.value();
     return _camera.stopPreview();
   }
 }

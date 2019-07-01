@@ -1,15 +1,17 @@
 import 'package:flutter/services.dart';
-import 'package:super_camera/super_camera.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:super_camera/android_camera.dart';
+import 'package:super_camera/src/camera_testing.dart';
+import 'package:super_camera/src/common/native_texture.dart';
 
 void main() {
   group('Android Camera', () {
     final List<MethodCall> log = <MethodCall>[];
 
     setUpAll(() {
-      Camera.channel.setMockMethodCallHandler((MethodCall methodCall) async {
+      CameraTesting.channel
+          .setMockMethodCallHandler((MethodCall methodCall) async {
         log.add(methodCall);
         switch (methodCall.method) {
           case 'CameraManager()':
@@ -28,7 +30,7 @@ void main() {
             return null;
           case 'CameraDevice#createCaptureSession':
             return null;
-          case 'Camera#createPlatformTexture':
+          case 'NativeTexture#allocate':
             return 15;
           case 'CameraCaptureSession#close':
             return null;
@@ -46,7 +48,7 @@ void main() {
 
     setUp(() {
       log.clear();
-      Camera.nextHandle = 0;
+      CameraTesting.nextHandle = 0;
     });
 
     group('$CameraManager', () {
@@ -127,7 +129,7 @@ void main() {
       CameraDevice cameraDevice;
 
       setUpAll(() async {
-        Camera.nextHandle = 0;
+        CameraTesting.nextHandle = 0;
         CameraManager.instance.openCamera(
           '',
           (CameraDeviceState state, CameraDevice device) {
@@ -158,16 +160,15 @@ void main() {
       });
 
       test('createCaptureSession', () async {
-        final PlatformTexture platformTexture =
-            await Camera.createPlatformTexture();
+        final NativeTexture nativeTexture = await NativeTexture.allocate();
         final SurfaceTexture surfaceTexture = SurfaceTexture();
         final PreviewTexture previewTexture = PreviewTexture(
-          platformTexture: platformTexture,
+          nativeTexture: nativeTexture,
           surfaceTexture: surfaceTexture,
         );
 
         log.clear();
-        Camera.nextHandle = 1;
+        CameraTesting.nextHandle = 1;
 
         CameraCaptureSession captureSession;
         cameraDevice.createCaptureSession(
@@ -216,7 +217,7 @@ void main() {
       List<Surface> surfaces;
 
       setUpAll(() async {
-        Camera.nextHandle = 1;
+        CameraTesting.nextHandle = 1;
 
         CameraManager.instance.openCamera(
           '',
@@ -230,17 +231,16 @@ void main() {
           '$CameraDeviceState': CameraDeviceState.opened.toString(),
         });
 
-        final PlatformTexture platformTexture =
-            await Camera.createPlatformTexture();
+        final NativeTexture nativeTexture = await NativeTexture.allocate();
         final SurfaceTexture surfaceTexture = SurfaceTexture();
         final PreviewTexture previewTexture = PreviewTexture(
-          platformTexture: platformTexture,
+          nativeTexture: nativeTexture,
           surfaceTexture: surfaceTexture,
         );
 
         surfaces = <Surface>[previewTexture];
 
-        Camera.nextHandle = 0;
+        CameraTesting.nextHandle = 0;
         cameraDevice.createCaptureSession(
           surfaces,
           (CameraCaptureSessionState state, CameraCaptureSession session) {
@@ -299,8 +299,8 @@ void main() {
 // Simulates passing back a callback to Camera
 Future<void> _makeCallback(dynamic arguments) {
   return defaultBinaryMessenger.handlePlatformMessage(
-    Camera.channel.name,
-    Camera.channel.codec.encodeMethodCall(
+    CameraTesting.channel.name,
+    CameraTesting.channel.codec.encodeMethodCall(
       MethodCall('handleCallback', arguments),
     ),
     (ByteData reply) {},

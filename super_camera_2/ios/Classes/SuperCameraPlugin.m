@@ -53,8 +53,8 @@ static FlutterMethodChannel *channel;
     [FLTCaptureSession startRunning:call result:result];
   } else if ([@"CaptureSession#stopRunning" isEqualToString:call.method]) {
     [FLTCaptureSession stopRunning:call result:result];
-  } else if ([@"Camera#createPlatformTexture" isEqualToString:call.method]) {
-    [self createPlatformTexture:call result:result];
+  } else if ([@"NativeTexture#allocate" isEqualToString:call.method]) {
+    [self allocateTexture:call result:result];
   } else if ([@"CaptureDevice#devices" isEqualToString:call.method]) {
     result([FLTCaptureDevice getDevices:call]);
   } else {
@@ -62,10 +62,9 @@ static FlutterMethodChannel *channel;
   }
 }
 
-- (void)createPlatformTexture:(FlutterMethodCall*)call result:(FlutterResult)result {
+- (void)allocateTexture:(FlutterMethodCall*)call result:(FlutterResult)result {
   NSNumber *handle = call.arguments[@"textureHandle"];
-  PlatformTexture *texture = [[PlatformTexture alloc] initWithTextureRegistry:_registrar.textures
-                                                                       handle:handle];
+  PlatformTexture *texture = [[PlatformTexture alloc] initWithTextureRegistry:_registrar.textures handle:handle];
 
   [SuperCameraPlugin addMethodHandler:handle methodHandler:texture];
   result(@(texture.textureId));

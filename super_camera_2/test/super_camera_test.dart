@@ -1,16 +1,18 @@
 import 'package:flutter/services.dart';
-import 'package:super_camera/super_camera.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:super_camera/src/camera_testing.dart';
+import 'package:super_camera/src/common/native_texture.dart';
 
 void main() {
-  group('$Camera', () {
+  group('SuperCamera', () {
     final List<MethodCall> log = <MethodCall>[];
 
     setUpAll(() {
-      Camera.channel.setMockMethodCallHandler((MethodCall methodCall) async {
+      CameraTesting.channel
+          .setMockMethodCallHandler((MethodCall methodCall) async {
         log.add(methodCall);
         switch (methodCall.method) {
-          case 'Camera#createPlatformTexture':
+          case 'NativeTexture#allocate':
             return 15;
         }
 
@@ -24,16 +26,16 @@ void main() {
 
     setUp(() {
       log.clear();
-      Camera.nextHandle = 0;
+      CameraTesting.nextHandle = 0;
     });
 
     test('createPlatformTexture', () async {
-      final PlatformTexture texture = await Camera.createPlatformTexture();
+      final NativeTexture texture = await NativeTexture.allocate();
 
       expect(texture.textureId, 15);
       expect(log, <Matcher>[
         isMethodCall(
-          '$Camera#createPlatformTexture',
+          '$NativeTexture#allocate',
           arguments: <String, dynamic>{'textureHandle': 0},
         )
       ]);

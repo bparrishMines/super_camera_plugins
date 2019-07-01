@@ -71,7 +71,7 @@ public class SupportAndroidCamera implements MethodChannel.MethodCallHandler {
   }
 
   private void previewTexture(MethodCall call, MethodChannel.Result result) {
-    final Map<String, Object> textureData = call.argument("platformTexture");
+    final Map<String, Object> textureData = call.argument("nativeTexture");
     final Integer textureHandle = (Integer) textureData.get("handle");
 
     try {
