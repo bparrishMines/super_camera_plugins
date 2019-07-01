@@ -4,10 +4,10 @@
 
 import 'dart:async';
 
-import 'package:device_info/device_info.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_driver/driver_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:super_camera/super_camera.dart';
 
 void main() {
@@ -16,7 +16,8 @@ void main() {
   tearDownAll(() => completer.complete(null));
 
   group('super_camera', () {
-    /*
+    setUpAll(() async => await _getCameraPermission());
+
     group(
       'Support Android Camera',
       () {
@@ -68,7 +69,9 @@ void main() {
           });
         });
       },
-      skip: defaultTargetPlatform != TargetPlatform.android,
+      skip: defaultTargetPlatform != TargetPlatform.android
+          ? 'Requires an Android device.'
+          : null,
     );
 
     group(
@@ -227,75 +230,75 @@ void main() {
           });
         });
       },
-      skip: defaultTargetPlatform != TargetPlatform.android,
+      skip: defaultTargetPlatform != TargetPlatform.android
+          ? 'Requries an Android device.'
+          : null,
     );
-*/
-    group('Ios Camera', () {
-      group('$CaptureDiscoverySession', () {
-        test('devices', () async {
-          final CaptureDiscoverySession session = CaptureDiscoverySession(
-            deviceTypes: <CaptureDeviceType>[
-              CaptureDeviceType.builtInWideAngleCamera
-            ],
-            position: CaptureDevicePosition.front,
-            mediaType: MediaType.video,
-          );
 
-          final List<CaptureDevice> devices = await session.devices;
+    group(
+      'Ios Camera',
+      () {
+        group('$CaptureDiscoverySession', () {
+          test('devices', () async {
+            final CaptureDiscoverySession session = CaptureDiscoverySession(
+              deviceTypes: <CaptureDeviceType>[
+                CaptureDeviceType.builtInWideAngleCamera
+              ],
+              position: CaptureDevicePosition.front,
+              mediaType: MediaType.video,
+            );
 
-          expect(devices, hasLength(1));
-          expect(devices[0].uniqueId, isNotEmpty);
-          expect(devices[0].position, CaptureDevicePosition.front);
-        });
-      });
+            final List<CaptureDevice> devices = await session.devices;
 
-      group('$CaptureSession', () {
-        CaptureInput input;
-
-        setUpAll(() async {
-          final CaptureDiscoverySession session = CaptureDiscoverySession(
-            deviceTypes: <CaptureDeviceType>[
-              CaptureDeviceType.builtInWideAngleCamera
-            ],
-            position: CaptureDevicePosition.front,
-            mediaType: MediaType.video,
-          );
-
-          final List<CaptureDevice> devices = await session.devices;
-
-          input = CaptureDeviceInput(device: devices[0]);
+            expect(devices, hasLength(1));
+            expect(devices[0].uniqueId, isNotEmpty);
+            expect(devices[0].position, CaptureDevicePosition.front);
+          });
         });
 
-        test('running', () async {
-          final CaptureSession session = CaptureSession();
+        group('$CaptureSession', () {
+          CaptureInput input;
 
-          await expectLater(session.running, completion(isFalse));
+          setUpAll(() async {
+            final CaptureDiscoverySession session = CaptureDiscoverySession(
+              deviceTypes: <CaptureDeviceType>[
+                CaptureDeviceType.builtInWideAngleCamera
+              ],
+              position: CaptureDevicePosition.front,
+              mediaType: MediaType.video,
+            );
+
+            final List<CaptureDevice> devices = await session.devices;
+
+            input = CaptureDeviceInput(device: devices[0]);
+          });
+
+          test('startRunning', () async {
+            final CaptureSession session = CaptureSession();
+            session.addInput(input);
+
+            final PlatformTexture texture =
+                await Camera.createPlatformTexture();
+
+            final CaptureVideoDataOutput output = CaptureVideoDataOutput(
+              delegate: CaptureVideoDataOutputSampleBufferDelegate(
+                texture: texture,
+              ),
+              formatType: PixelFormatType.bgra32,
+            );
+
+            session.addOutput(output);
+
+            await expectLater(session.startRunning(), completes);
+            await expectLater(session.stopRunning(), completes);
+          });
         });
+      },
+      skip: defaultTargetPlatform != TargetPlatform.iOS
+          ? 'Requires an iOS device.'
+          : null,
+    );
 
-        test('startRunning', () async {
-          final CaptureSession session = CaptureSession();
-          session.addInput(input);
-
-          print('hello');
-          final PlatformTexture texture = await Camera.createPlatformTexture();
-          print('hi');
-          final CaptureVideoDataOutput output = CaptureVideoDataOutput(
-            delegate: CaptureVideoDataOutputSampleBufferDelegate(
-              texture: texture,
-            ),
-            formatType: PixelFormatType.bgra32,
-          );
-
-          session.addOutput(output);
-
-          print('hee');
-          await session.startRunning();
-          print('yool');
-          await expectLater(session.running, completion(isTrue));
-        });
-      });
-    });
-/*
     group('$Camera', () {
       test('availableCameras', () async {
         final List<CameraDescription> descriptions =
@@ -305,11 +308,10 @@ void main() {
 
       test('createPlatformTexture', () async {
         final PlatformTexture texture = await Camera.createPlatformTexture();
-        expect(texture.textureId, isNotNull);
+        expect(texture.textureId, greaterThan(-1));
       });
-    }, skip: true);
-    */
-    /*
+    });
+
     group('$CameraController', () {
       test('works', () async {
         final List<CameraDescription> descriptions =
@@ -328,7 +330,22 @@ void main() {
         await expectLater(controller.stop(), completes);
         await expectLater(controller.dispose(), completes);
       });
-    }, skip: defaultTargetPlatform == TargetPlatform.iOS);
-    */
+    });
   });
+}
+
+Future<bool> _getCameraPermission() async {
+  final PermissionStatus permission =
+      await PermissionHandler().checkPermissionStatus(
+    PermissionGroup.camera,
+  );
+
+  if (permission == PermissionStatus.granted) {
+    return true;
+  }
+
+  final Map<PermissionGroup, PermissionStatus> permissions =
+      await PermissionHandler().requestPermissions([PermissionGroup.camera]);
+
+  return permissions[PermissionGroup.camera] == PermissionStatus.granted;
 }
