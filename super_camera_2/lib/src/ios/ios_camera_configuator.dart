@@ -17,7 +17,7 @@ class IOSCameraConfigurator implements CameraConfigurator {
   Future<void> addPreviewTexture() async {
     if (_texture == null) _texture = await Camera.createPlatformTexture();
 
-    CaptureVideoDataOutput output = CaptureVideoDataOutput(
+    final CaptureVideoDataOutput output = CaptureVideoDataOutput(
       delegate: CaptureVideoDataOutputSampleBufferDelegate(
         texture: _texture,
       ),

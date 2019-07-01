@@ -6,6 +6,7 @@
 
 @protocol MethodCallHandler
 @required
+@property NSNumber *_Nonnull handle;
 - (void)handleMethodCall:(FlutterMethodCall *_Nonnull)call result:(FlutterResult _Nonnull)result;
 @end
 
@@ -13,11 +14,11 @@
 + (void)addMethodHandler:(NSNumber *_Nonnull)handle
            methodHandler:(id<MethodCallHandler> _Nonnull)handler;
 + (void)removeMethodHandler:(NSNumber *_Nonnull)handle;
-+ (id<MethodCallHandler>)getHandler:(NSNumber *)handle;
++ (id<MethodCallHandler> _Nullable)getHandler:(NSNumber *_Nullable)handle;
 @end
 
 @interface FLTCaptureDiscoverySession : NSObject
-+ (NSArray<NSDictionary *> *)devices:(FlutterMethodCall *)call;
++ (NSArray<NSDictionary *> *_Nonnull)devices:(FlutterMethodCall *_Nonnull)call;
 @end
 
 @interface FLTCaptureSession : NSObject<MethodCallHandler>
@@ -26,13 +27,21 @@
 @end
 
 @interface PlatformTexture : NSObject<MethodCallHandler, FlutterTexture>
-@property id<FlutterTextureRegistry> registry;
-@property int64_t textureId;
+@property(readonly) int64_t textureId;
 - (instancetype _Nonnull)initWithTextureRegistry:(NSObject<FlutterTextureRegistry> *_Nonnull)registry
-                                          handle:(NSNumber *)handle;
-- (void)updatePixelBuffer:(CVPixelBufferRef)pixelBuffer;
+                                          handle:(NSNumber *_Nonnull)handle;
+- (void)updatePixelBuffer:(CVPixelBufferRef _Nullable)pixelBuffer;
 @end
 
-@interface FLTCaptureVideoDataOutputSampleBufferDelegate : NSObject<AVCaptureVideoDataOutputSampleBufferDelegate>
-- (instancetype _Nonnull)initWithPlatformTexture:(PlatformTexture *_Nullable)texture;
+@interface FLTCaptureVideoDataOutputSampleBufferDelegate : NSObject<AVCaptureVideoDataOutputSampleBufferDelegate, MethodCallHandler>
+- (instancetype _Nonnull)initWithPlatformTexture:(PlatformTexture *_Nullable)texture
+                                          handle:(NSNumber *_Nonnull)handle;
+@end
+
+@interface FLTCaptureDevice : NSObject<MethodCallHandler>
++ (NSArray<NSDictionary *> *_Nonnull)getDevices:(FlutterMethodCall *_Nonnull)call;
+- (instancetype _Nonnull)initWithCaptureDevice:(AVCaptureDevice *_Nonnull)device
+                                        handle:(NSNumber *_Nonnull)handle;
++ (AVCaptureDevice *_Nonnull)deserialize:(NSDictionary *_Nonnull)data;
++ (NSDictionary *_Nonnull)serialize:(AVCaptureDevice *_Nonnull)device;
 @end

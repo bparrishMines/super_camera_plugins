@@ -7,23 +7,24 @@
 
 @interface PlatformTexture ()
 @property CVPixelBufferRef volatile latestPixelBuffer;
-@property NSNumber *handle;
+@property _Nonnull id<FlutterTextureRegistry> registry;
 @end
 
 @implementation PlatformTexture
-- (instancetype _Nonnull)initWithTextureRegistry:(NSObject<FlutterTextureRegistry> *_Nonnull)registry
+@synthesize handle;
+- (instancetype _Nonnull)initWithTextureRegistry:(NSObject<FlutterTextureRegistry> *)registry
                                           handle:(NSNumber *)handle {
   self = [self init];
   if (self) {
     _registry = registry;
     _textureId = [_registry registerTexture:self];
-    _handle = handle;
+    self.handle = handle;
   }
 
   return self;
 }
 
-- (void)handleMethodCall:(FlutterMethodCall * _Nonnull)call result:(FlutterResult _Nonnull)result {
+- (void)handleMethodCall:(FlutterMethodCall *)call result:(FlutterResult)result {
   if ([@"PlatformTexture#release" isEqualToString:call.method]) {
     [self release:result];
   } else {
@@ -61,7 +62,7 @@
     CFRelease(_latestPixelBuffer);
   }
 
-  [SuperCameraPlugin removeMethodHandler:_handle];
+  [SuperCameraPlugin removeMethodHandler:handle];
 
   result(nil);
 }

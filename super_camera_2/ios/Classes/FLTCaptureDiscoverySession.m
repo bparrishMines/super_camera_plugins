@@ -47,23 +47,7 @@
                           [[NSMutableArray alloc] initWithCapacity:devices.count];
 
     for (AVCaptureDevice *device in devices) {
-      NSString *retPositionStr;
-      switch ([device position]) {
-        case AVCaptureDevicePositionBack:
-          retPositionStr = @"CaptureDevicePosition.back";
-          break;
-        case AVCaptureDevicePositionFront:
-          retPositionStr = @"CaptureDevicePosition.front";
-          break;
-        case AVCaptureDevicePositionUnspecified:
-          retPositionStr = @"CaptureDevicePosition.unspecified";
-          break;
-      }
-
-      [deviceData addObject:@{
-         @"uniqueId": [device uniqueID],
-         @"position": retPositionStr,
-      }];
+      [deviceData addObject:[FLTCaptureDevice serialize:device]];
     }
 
     return deviceData;

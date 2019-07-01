@@ -248,6 +248,52 @@ void main() {
           expect(devices[0].position, CaptureDevicePosition.front);
         });
       });
+
+      group('$CaptureSession', () {
+        CaptureInput input;
+
+        setUpAll(() async {
+          final CaptureDiscoverySession session = CaptureDiscoverySession(
+            deviceTypes: <CaptureDeviceType>[
+              CaptureDeviceType.builtInWideAngleCamera
+            ],
+            position: CaptureDevicePosition.front,
+            mediaType: MediaType.video,
+          );
+
+          final List<CaptureDevice> devices = await session.devices;
+
+          input = CaptureDeviceInput(device: devices[0]);
+        });
+
+        test('running', () async {
+          final CaptureSession session = CaptureSession();
+
+          await expectLater(session.running, completion(isFalse));
+        });
+
+        test('startRunning', () async {
+          final CaptureSession session = CaptureSession();
+          session.addInput(input);
+
+          print('hello');
+          final PlatformTexture texture = await Camera.createPlatformTexture();
+          print('hi');
+          final CaptureVideoDataOutput output = CaptureVideoDataOutput(
+            delegate: CaptureVideoDataOutputSampleBufferDelegate(
+              texture: texture,
+            ),
+            formatType: PixelFormatType.bgra32,
+          );
+
+          session.addOutput(output);
+
+          print('hee');
+          await session.startRunning();
+          print('yool');
+          await expectLater(session.running, completion(isTrue));
+        });
+      });
     });
 /*
     group('$Camera', () {

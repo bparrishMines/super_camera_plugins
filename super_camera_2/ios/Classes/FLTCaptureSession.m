@@ -6,15 +6,22 @@
 
 @interface FLTCaptureSession ()
 @property AVCaptureSession *session;
-@property NSNumber *handle;
+@property NSMutableDictionary<NSNumber *, AVCaptureInput *> *inputs;
+@property NSMutableDictionary<NSNumber *, AVCaptureOutput *> *outputs;
+@property NSMutableArray<NSNumber *> *handlerHandles;
+@property FLTCaptureVideoDataOutputSampleBufferDelegate *delegate;
 @end
 
 @implementation FLTCaptureSession
+@synthesize handle;
 - (instancetype _Nonnull)initWithSession:(AVCaptureSession *)session handle:(NSNumber *)handle {
   self = [super init];
   if (self) {
     _session = session;
-    _handle = handle;
+    _inputs = [NSMutableDictionary new];
+    _outputs = [NSMutableDictionary new];
+    _handlerHandles = [NSMutableArray new];
+    self.handle = handle;
   }
 
   return self;
@@ -39,53 +46,85 @@
 
 + (void)startRunning:(FlutterMethodCall * _Nonnull)call result:(FlutterResult _Nonnull)result {
   AVCaptureSession *session = [AVCaptureSession new];
-  
+  NSNumber *sessionHandle = call.arguments[@"sessionHandle"];
+  FLTCaptureSession *fltSession = [[FLTCaptureSession alloc] initWithSession:session handle:sessionHandle];
+
   NSArray<NSDictionary *> *inputs = call.arguments[@"inputs"];
   for (NSDictionary *inputData in inputs) {
-    if ([@"_CaptureInputClass.captureDeviceInput" isEqualToString:inputData[@"class"]]) {
+    NSString *className = inputData[@"class"];
+    AVCaptureInput *input;
+
+    if ([@"_CaptureInputClass.captureDeviceInput" isEqualToString:className]) {
       NSDictionary *deviceData = inputData[@"device"];
+      AVCaptureDevice *device = [FLTCaptureDevice deserialize:deviceData];
+      input = [AVCaptureDeviceInput deviceInputWithDevice:device error:nil];
       
-      NSString *uniqueId = deviceData[@"uniqueId"];
-      AVCaptureDevice *captureDevice = [AVCaptureDevice deviceWithUniqueID:uniqueId];
-      AVCaptureDeviceInput *deviceInput = [AVCaptureDeviceInput
-                                           deviceInputWithDevice:captureDevice error:nil];
-      
-      [session addInput:deviceInput];
+      NSNumber *handle = deviceData[@"handle"];
+      FLTCaptureDevice *fltDevice = [[FLTCaptureDevice alloc] initWithCaptureDevice:device
+                                                                             handle:handle];
+
+      [fltSession.handlerHandles addObject:handle];
+      [SuperCameraPlugin addMethodHandler:handle methodHandler:fltDevice];
     }
+
+    [session addInput:input];
+
+    NSNumber *handle = inputData[@"handle"];
+    fltSession.inputs[handle] = input;
   }
-  
+
   NSArray<NSDictionary *> *outputs = call.arguments[@"outputs"];
   for (NSDictionary *outputData in outputs) {
-    if ([@"_CaptureOutputClass.captureVideoDataOutput" isEqualToString:outputData[@"class"]]) {
+    NSString *className = outputData[@"class"];
+    AVCaptureOutput *output;
+
+    if ([@"_CaptureOutputClass.captureVideoDataOutput" isEqualToString:className]) {
       AVCaptureVideoDataOutput *dataOutput = [AVCaptureVideoDataOutput new];
-      
+
       NSString *formatStr = outputData[@"formatType"];
       if (formatStr) {
+        FourCharCode pixelFormat = 0;
         if ([@"PixelFormatType.bgra32" isEqualToString:formatStr]) {
-          dataOutput.videoSettings =
-              @{(NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA)};
+          pixelFormat = kCVPixelFormatType_32BGRA;
         }
+
+        dataOutput.videoSettings = @{(NSString *)kCVPixelBufferPixelFormatTypeKey : @(pixelFormat)};
       }
-      
+
       NSDictionary *delegateData = outputData[@"delegate"];
       if (delegateData) {
-        NSNumber *textureHandle = call.arguments[@"textureHandle"];
+        NSNumber *textureHandle = delegateData[@"textureHandle"];
+
         PlatformTexture *texture = nil;
         if (textureHandle) {
           texture = (PlatformTexture *) [SuperCameraPlugin getHandler:textureHandle];
         }
-        
-        FLTCaptureVideoDataOutputSampleBufferDelegate *delegate = [[FLTCaptureVideoDataOutputSampleBufferDelegate alloc] initWithPlatformTexture:texture];
-        
-        [dataOutput setSampleBufferDelegate:delegate queue:nil];
+
+        NSNumber *handle = outputData[@"handle"];
+        FLTCaptureVideoDataOutputSampleBufferDelegate *delegate =   [[FLTCaptureVideoDataOutputSampleBufferDelegate alloc]
+           initWithPlatformTexture:texture
+           handle:handle];
+
+        [dataOutput setSampleBufferDelegate:delegate queue:dispatch_get_main_queue()];
+
+        [fltSession.handlerHandles addObject:handle];
+        [SuperCameraPlugin addMethodHandler:handle methodHandler:delegate];
+        fltSession.delegate = delegate;
       }
+
+      output = dataOutput;
     }
+
+    [session addOutput:output];
+
+    NSNumber *handle = outputData[@"handle"];
+    fltSession.outputs[handle] = output;
   }
-  
-  NSNumber *handle = call.arguments[@"sessionHandle"];
-  FLTCaptureSession *fltSession = [[FLTCaptureSession alloc] initWithSession:session
-                                                                      handle:handle];
-  [SuperCameraPlugin addMethodHandler:handle methodHandler:fltSession];
+
+  [SuperCameraPlugin addMethodHandler:sessionHandle methodHandler:fltSession];
+
+  [session startRunning];
+  result(nil);
 }
 
 + (void)stopRunning:(FlutterMethodCall * _Nonnull)call result:(FlutterResult _Nonnull)result {
@@ -101,7 +140,12 @@
 
 - (void)stopRunning:(FlutterMethodCall *_Nonnull)call {
   [_session stopRunning];
-  [SuperCameraPlugin removeMethodHandler:_handle];
+
+  for (NSNumber *handle in _handlerHandles) {
+    [SuperCameraPlugin removeMethodHandler:handle];
+  }
+
+  [SuperCameraPlugin removeMethodHandler:handle];
 }
 
 - (void)addOutput:(FlutterMethodCall *_Nonnull)call result:(FlutterResult _Nonnull)result {

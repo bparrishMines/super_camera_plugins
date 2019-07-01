@@ -90,6 +90,8 @@ class CameraController {
       return CameraApi.supportAndroid;
     } else if (description is CameraCharacteristics) {
       return CameraApi.android;
+    } else if (description is CaptureDevice) {
+      return CameraApi.iOS;
     }
 
     throw ArgumentError.value(

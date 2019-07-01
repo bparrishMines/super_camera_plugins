@@ -9,10 +9,13 @@
 @end
 
 @implementation FLTCaptureVideoDataOutputSampleBufferDelegate
-- (instancetype _Nonnull)initWithPlatformTexture:(PlatformTexture *_Nullable)texture {
-  self = [self init];
+@synthesize handle;
+- (instancetype _Nonnull)initWithPlatformTexture:(PlatformTexture *_Nullable)texture
+                                          handle:(NSNumber *)handle {
+  self = [super init];
   if (self) {
     _texture = texture;
+    self.handle = handle;
   }
   
   return self;
@@ -22,10 +25,13 @@
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection {
   CVPixelBufferRef newBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-  //CFRetain(newBuffer);
-  
+
   if (_texture) {
     [_texture updatePixelBuffer:newBuffer];
   }
+}
+
+- (void)handleMethodCall:(FlutterMethodCall * _Nonnull)call result:(FlutterResult _Nonnull)result {
+  result(FlutterMethodNotImplemented);
 }
 @end
