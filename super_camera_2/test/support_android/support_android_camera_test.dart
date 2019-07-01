@@ -20,7 +20,7 @@ void main() {
               return <dynamic, dynamic>{
                 'id': 3,
                 'orientation': 90,
-                '$Facing': Facing.front.toString(),
+                'facing': Facing.front.toString(),
               };
             case 'SupportAndroidCamera#startPreview':
               return null;

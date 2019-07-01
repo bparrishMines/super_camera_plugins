@@ -56,13 +56,13 @@ public class FlutterCameraManager implements MethodChannel.MethodCallHandler {
 
     switch(characteristics.get(CameraCharacteristics.LENS_FACING)) {
       case CameraCharacteristics.LENS_FACING_FRONT:
-        data.put("LensFacing", "LensFacing.front");
+        data.put("lensFacing", "LensFacing.front");
         break;
       case CameraCharacteristics.LENS_FACING_BACK:
-        data.put("LensFacing", "LensFacing.back");
+        data.put("lensFacing", "LensFacing.back");
         break;
       case CameraCharacteristics.LENS_FACING_EXTERNAL:
-        data.put("LensFacing", "LensFacing.external");
+        data.put("lensFacing", "LensFacing.external");
         break;
     }
 

@@ -13,7 +13,7 @@ class CameraInfo implements CameraDescription {
       id: map['id'],
       orientation: map['orientation'],
       facing: Facing.values.firstWhere(
-        (Facing facing) => facing.toString() == map['$Facing'],
+        (Facing facing) => facing.toString() == map['facing'],
       ),
     );
   }

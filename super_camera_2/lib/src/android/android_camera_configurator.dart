@@ -1,6 +1,8 @@
 part of android_camera;
 
-class AndroidCameraConfigurator implements CameraConfigurator {
+class AndroidCameraConfigurator
+    with CameraClosable
+    implements CameraConfigurator {
   AndroidCameraConfigurator(this.characteristics)
       : assert(characteristics != null) {
     CameraManager.instance.openCamera(
@@ -24,6 +26,8 @@ class AndroidCameraConfigurator implements CameraConfigurator {
 
   @override
   Future<void> addPreviewTexture() async {
+    assert(!isClosed);
+
     await _deviceCallbackCompleter.future;
 
     if (_texture != null) return Future<void>.value();
@@ -47,9 +51,15 @@ class AndroidCameraConfigurator implements CameraConfigurator {
 
   @override
   Future<void> dispose() async {
+    if (isClosed) return Future<void>.value();
+
     await _deviceCallbackCompleter.future;
 
-    return stop().then((_) => _device.close()).then((_) => _texture?.release());
+    isClosed = true;
+
+    await stop();
+    await _device.close();
+    await _texture?.release();
   }
 
   @override
@@ -57,6 +67,8 @@ class AndroidCameraConfigurator implements CameraConfigurator {
 
   @override
   Future<void> start() async {
+    assert(!isClosed);
+
     await _deviceCallbackCompleter.future;
 
     final Completer<void> completer = Completer<void>();
@@ -76,8 +88,14 @@ class AndroidCameraConfigurator implements CameraConfigurator {
   }
 
   @override
-  Future<void> stop() {
-    if (_session == null) return Future<void>.value();
-    return _session.close().then((_) => _session = null);
+  Future<void> stop() async {
+    await _deviceCallbackCompleter.future;
+
+    if (isClosed || _session == null) return Future<void>.value();
+
+    final CameraCaptureSession tmpSess = _session;
+    _session = null;
+
+    return tmpSess.close();
   }
 }

@@ -37,10 +37,10 @@ public class SupportAndroidCamera implements MethodChannel.MethodCallHandler {
 
     switch(info.facing) {
       case Camera.CameraInfo.CAMERA_FACING_FRONT:
-        data.put("Facing", "Facing.front");
+        data.put("facing", "Facing.front");
         break;
       case Camera.CameraInfo.CAMERA_FACING_BACK:
-        data.put("Facing", "Facing.back");
+        data.put("facing", "Facing.back");
         break;
     }
 

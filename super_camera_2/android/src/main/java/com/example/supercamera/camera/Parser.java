@@ -22,7 +22,7 @@ class Parser {
         (FlutterCameraDevice) SuperCameraPlugin.getHandler(deviceHandle);
 
     final int requestTemplate;
-    switch ((String) data.get("Template")) {
+    switch ((String) data.get("template")) {
       case "Template.preview":
         requestTemplate = CameraDevice.TEMPLATE_PREVIEW;
         break;
@@ -52,7 +52,7 @@ class Parser {
         final PlatformTexture texture = (PlatformTexture) SuperCameraPlugin.getHandler(textureHandle);
 
         final Map<String, Object> surfaceTextureData =
-            (Map<String, Object>) outputData.get("SurfaceTexture");
+            (Map<String, Object>) outputData.get("surfaceTexture");
         final Double width = (Double) surfaceTextureData.get("width");
         final Double height = (Double) surfaceTextureData.get("height");
 

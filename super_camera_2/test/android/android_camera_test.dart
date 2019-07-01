@@ -18,7 +18,7 @@ void main() {
             return <dynamic, dynamic>{
               'id': 'apple',
               'sensorOrientation': 90,
-              '$LensFacing': LensFacing.back.toString(),
+              'lensFacing': LensFacing.back.toString(),
             };
           case 'CameraManager#getCameraIdList':
             return <dynamic>['1', '2', '3'];
@@ -276,7 +276,7 @@ void main() {
             arguments: <String, dynamic>{
               'handle': 0,
               'cameraDeviceHandle': 1,
-              '$CaptureRequest': request.asMap(),
+              'captureRequest': request.asMap(),
             },
           ),
         ]);

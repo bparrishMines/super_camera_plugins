@@ -1,6 +1,8 @@
 part of support_android_camera;
 
-class SupportAndroidCameraConfigurator implements CameraConfigurator {
+class SupportAndroidCameraConfigurator
+    with CameraClosable
+    implements CameraConfigurator {
   SupportAndroidCameraConfigurator(this.info) : assert(info != null) {
     _camera = SupportAndroidCamera.open(info.id);
   }
@@ -14,13 +16,16 @@ class SupportAndroidCameraConfigurator implements CameraConfigurator {
 
   @override
   Future<void> addPreviewTexture() async {
+    assert(!isClosed);
     if (_texture == null) _texture = await Camera.createPlatformTexture();
     _camera.previewTexture = _texture;
   }
 
   @override
-  Future<void> dispose() {
-    return _camera.release().then((_) => _texture?.release());
+  Future<void> dispose() async {
+    isClosed = true;
+    await _camera.release();
+    await _texture?.release();
   }
 
   @override
@@ -28,11 +33,13 @@ class SupportAndroidCameraConfigurator implements CameraConfigurator {
 
   @override
   Future<void> start() {
+    assert(!isClosed);
     return _camera.startPreview();
   }
 
   @override
   Future<void> stop() {
+    if (isClosed) return Future<void>.value();
     return _camera.stopPreview();
   }
 }

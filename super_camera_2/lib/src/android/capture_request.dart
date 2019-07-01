@@ -39,7 +39,7 @@ class CaptureRequest with CameraMappable {
         .toList();
 
     return Map.unmodifiable(<String, dynamic>{
-      '$Template': template.toString(),
+      'template': template.toString(),
       'jpegQuality': jpegQuality,
       'targets': outputData,
     });

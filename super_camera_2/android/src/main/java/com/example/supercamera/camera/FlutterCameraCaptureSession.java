@@ -36,7 +36,7 @@ public class FlutterCameraCaptureSession implements MethodChannel.MethodCallHand
 
   private void setRepeatingRequest(MethodCall call, MethodChannel.Result result) {
     final Integer cameraDeviceHandle = call.argument("cameraDeviceHandle");
-    final Map<String, Object> requestData = call.argument("CaptureRequest");
+    final Map<String, Object> requestData = call.argument("captureRequest");
 
     try {
       final CaptureRequest request = Parser.parseCaptureRequest(cameraDeviceHandle, requestData);

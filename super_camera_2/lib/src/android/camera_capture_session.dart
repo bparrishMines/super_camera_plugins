@@ -53,7 +53,7 @@ class CameraCaptureSession with NativeMethodCallHandler, CameraClosable {
       <String, dynamic>{
         'handle': handle,
         'cameraDeviceHandle': _cameraDeviceHandle,
-        '$CaptureRequest': request.asMap(),
+        'captureRequest': request.asMap(),
       },
     );
   }

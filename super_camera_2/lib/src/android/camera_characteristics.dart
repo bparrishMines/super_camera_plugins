@@ -14,7 +14,7 @@ class CameraCharacteristics implements CameraDescription {
       id: map['id'],
       sensorOrientation: map['sensorOrientation'],
       lensFacing: LensFacing.values.firstWhere(
-        (LensFacing facing) => facing.toString() == map['$LensFacing'],
+        (LensFacing facing) => facing.toString() == map['lensFacing'],
       ),
     );
   }

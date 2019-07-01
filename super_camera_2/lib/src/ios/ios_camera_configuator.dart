@@ -1,6 +1,6 @@
 part of ios_camera;
 
-class IOSCameraConfigurator implements CameraConfigurator {
+class IOSCameraConfigurator with CameraClosable implements CameraConfigurator {
   IOSCameraConfigurator(this.device)
       : _session = CaptureSession(),
         assert(device != null) {
@@ -15,6 +15,8 @@ class IOSCameraConfigurator implements CameraConfigurator {
 
   @override
   Future<void> addPreviewTexture() async {
+    assert(!isClosed);
+
     if (_texture == null) _texture = await Camera.createPlatformTexture();
 
     final CaptureVideoDataOutput output = CaptureVideoDataOutput(
@@ -29,6 +31,7 @@ class IOSCameraConfigurator implements CameraConfigurator {
 
   @override
   Future<void> dispose() async {
+    isClosed = true;
     await stop();
     return _texture?.release();
   }
@@ -38,11 +41,13 @@ class IOSCameraConfigurator implements CameraConfigurator {
 
   @override
   Future<void> start() {
+    assert(!isClosed);
     return _session.startRunning();
   }
 
   @override
   Future<void> stop() {
+    if (isClosed) return Future<void>.value();
     return _session.stopRunning();
   }
 }

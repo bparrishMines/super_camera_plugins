@@ -17,7 +17,7 @@ class PreviewTexture implements Surface {
     return Map.unmodifiable(<String, dynamic>{
       'surfaceClass': '$PreviewTexture',
       'platformTexture': platformTexture.asMap(),
-      '$SurfaceTexture': surfaceTexture.asMap(),
+      'surfaceTexture': surfaceTexture.asMap(),
     });
   }
 }
