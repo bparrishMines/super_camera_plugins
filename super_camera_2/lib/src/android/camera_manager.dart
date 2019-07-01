@@ -2,10 +2,12 @@ part of super_camera;
 
 class CameraManager with _NativeMethodCallHandler {
   CameraManager._() {
-    Camera.channel.invokeMethod<void>(
-      '$CameraManager()',
-      <String, dynamic>{'managerHandle': _handle},
-    );
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      Camera.channel.invokeMethod<void>(
+        '$CameraManager()',
+        <String, dynamic>{'managerHandle': _handle},
+      );
+    }
   }
 
   static final CameraManager instance = CameraManager._();
