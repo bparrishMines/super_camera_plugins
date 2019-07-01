@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-class Parsers {
-  private Parsers() {}
+class Parser {
+  private Parser() {}
 
   static CaptureRequest parseCaptureRequest(int deviceHandle, Map<String, Object> data) throws CameraAccessException {
     final FlutterCameraDevice device =

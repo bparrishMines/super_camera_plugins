@@ -41,7 +41,7 @@ public class FlutterCameraDevice implements MethodChannel.MethodCallHandler {
   private void createCaptureSession(final MethodCall call, final MethodChannel.Result result) {
     final Integer sessionHandle = call.argument("sessionHandle");
     final List<Map<String, Object>> outputData = call.argument("outputs");
-    final List<Surface> outputs = Parsers.parseSurfaces(outputData);
+    final List<Surface> outputs = Parser.parseSurfaces(outputData);
 
     final String stateClassName = "CameraCaptureSessionState";
     try {
