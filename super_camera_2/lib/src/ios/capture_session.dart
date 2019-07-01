@@ -1,7 +1,7 @@
 part of super_camera;
 
 class CaptureSession with _NativeMethodCallHandler, _CameraMappable {
-  CaptureSession();
+  bool _running = false;
 
   final List<CaptureOutput> _outputs = <CaptureOutput>[];
   final List<CaptureInput> _inputs = <CaptureInput>[];
@@ -68,23 +68,27 @@ class CaptureSession with _NativeMethodCallHandler, _CameraMappable {
   }
 
   Future<void> startRunning() {
-    assert(inputs.length > 0);
-    assert(outputs.length > 0);
-
-    return Camera.channel.invokeMethod<void>(
-      '$CaptureSession#startRunning',
-      <String, dynamic>{'sessionHandle': _handle, ...asMap()},
-    );
+    _running = true;
+    try {
+      return Camera.channel.invokeMethod<void>(
+        '$CaptureSession#startRunning',
+        <String, dynamic>{'sessionHandle': _handle, ...asMap()},
+      );
+    } on PlatformException {
+      _running = false;
+      rethrow;
+    }
   }
 
   Future<void> stopRunning() {
+    _running = false;
     return Camera.channel.invokeMethod<void>(
       '$CaptureSession#stopRunning',
       <String, dynamic>{'handle': _handle},
     );
   }
 
-  bool get running => false;
+  bool get running => _running;
 
   @override
   Map<String, dynamic> asMap() {
