@@ -1,6 +1,6 @@
 part of android_camera;
 
-class CaptureRequest {
+class CaptureRequest with CameraMappable {
   const CaptureRequest._({
     @required this.template,
     @required this.targets,
@@ -32,6 +32,7 @@ class CaptureRequest {
     );
   }
 
+  @override
   Map<String, dynamic> asMap() {
     final List<Map<String, dynamic>> outputData = targets
         .map<Map<String, dynamic>>((Surface surface) => surface.asMap())

@@ -19,7 +19,13 @@ class CaptureDiscoverySession {
   final MediaType mediaType;
   final CaptureDevicePosition position;
 
+  List<CaptureDevice> _devices;
+
   Future<List<CaptureDevice>> get devices async {
+    if (_devices != null) {
+      return Future<List<CaptureDevice>>.value(_devices);
+    }
+
     final List<dynamic> deviceData =
         await CameraChannel.channel.invokeListMethod<dynamic>(
       '$CaptureDiscoverySession#devices',
@@ -32,8 +38,8 @@ class CaptureDiscoverySession {
       },
     );
 
-    return deviceData
+    return _devices = List<CaptureDevice>.unmodifiable(deviceData
         .map<CaptureDevice>((dynamic data) => CaptureDevice._fromMap(data))
-        .toList();
+        .toList());
   }
 }

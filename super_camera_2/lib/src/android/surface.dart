@@ -1,8 +1,6 @@
 part of android_camera;
 
-abstract class Surface {
-  Map<String, dynamic> asMap();
-}
+abstract class Surface with CameraMappable {}
 
 class PreviewTexture implements Surface {
   const PreviewTexture({
@@ -14,6 +12,7 @@ class PreviewTexture implements Surface {
   final PlatformTexture platformTexture;
   final SurfaceTexture surfaceTexture;
 
+  @override
   Map<String, dynamic> asMap() {
     return Map.unmodifiable(<String, dynamic>{
       'surfaceClass': '$PreviewTexture',
@@ -23,11 +22,12 @@ class PreviewTexture implements Surface {
   }
 }
 
-class SurfaceTexture {
+class SurfaceTexture with CameraMappable {
   const SurfaceTexture({this.defaultBufferSize});
 
   final Size defaultBufferSize;
 
+  @override
   Map<String, dynamic> asMap() {
     return Map.unmodifiable(<String, dynamic>{
       'width': defaultBufferSize?.width?.toInt(),
