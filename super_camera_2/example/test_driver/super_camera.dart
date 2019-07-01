@@ -9,6 +9,7 @@ import 'package:flutter_driver/driver_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:super_camera/super_camera.dart';
+import 'package:super_camera/super_camera.dart';
 
 void main() {
   final Completer<String> completer = Completer<String>();

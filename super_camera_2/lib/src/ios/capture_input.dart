@@ -1,19 +1,19 @@
-part of super_camera;
+part of ios_camera;
 
 enum _CaptureInputClass { captureDeviceInput }
 
-abstract class CaptureInput with _NativeMethodCallHandler, _CameraMappable {
+abstract class CaptureInput with NativeMethodCallHandler, CameraMappable {
   List<CaptureInputPort> get ports;
 }
 
-class CaptureInputPort with _NativeMethodCallHandler, _CameraMappable {
+class CaptureInputPort with NativeMethodCallHandler, CameraMappable {
   CaptureInputPort._(this.input);
 
   final CaptureInput input;
 
   @override
   Map<String, dynamic> asMap() {
-    return <String, dynamic>{'handle': _handle, 'inputHandle': input._handle};
+    return <String, dynamic>{'handle': handle, 'inputHandle': input.handle};
   }
 }
 
@@ -36,7 +36,7 @@ class CaptureDeviceInput extends CaptureInput {
   @override
   Map<String, dynamic> asMap() {
     return <String, dynamic>{
-      'handle': _handle,
+      'handle': handle,
       'class': _inputClass.toString(),
       'device': device.asMap(),
       'ports': ports.map<Map<String, dynamic>>(

@@ -1,4 +1,4 @@
-part of super_camera;
+part of support_android_camera;
 
 class SupportAndroidCameraConfigurator implements CameraConfigurator {
   SupportAndroidCameraConfigurator(this.info) : assert(info != null) {

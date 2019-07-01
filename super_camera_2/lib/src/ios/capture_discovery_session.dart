@@ -1,4 +1,4 @@
-part of super_camera;
+part of ios_camera;
 
 enum CaptureDeviceType { builtInWideAngleCamera }
 enum MediaType { video }
@@ -21,7 +21,7 @@ class CaptureDiscoverySession {
 
   Future<List<CaptureDevice>> get devices async {
     final List<dynamic> deviceData =
-        await Camera.channel.invokeListMethod<dynamic>(
+        await CameraChannel.channel.invokeListMethod<dynamic>(
       '$CaptureDiscoverySession#devices',
       <String, dynamic>{
         'deviceTypes': deviceTypes

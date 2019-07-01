@@ -1,26 +1,16 @@
 part of super_camera;
 
-typedef _CameraCallback = void Function(dynamic result);
-
 class Camera {
   Camera._();
 
-  static final Map<int, dynamic> _callbacks = <int, _CameraCallback>{};
+  @visibleForTesting
+  static final MethodChannel channel = CameraChannel.channel;
 
   @visibleForTesting
-  static final MethodChannel channel = MethodChannel(
-    'dev.plugins/super_camera',
-  )..setMethodCallHandler(
-      (MethodCall call) async {
-        assert(call.method == 'handleCallback');
-
-        final int handle = call.arguments['handle'];
-        if (_callbacks[handle] != null) _callbacks[handle](call.arguments);
-      },
-    );
+  static int get nextHandle => CameraChannel.nextHandle;
 
   @visibleForTesting
-  static int nextHandle = 0;
+  static set nextHandle(int handle) => CameraChannel.nextHandle = handle;
 
   static Future<List<CameraDescription>> availableCameras() async {
     final List<CameraDescription> devices = <CameraDescription>[];
@@ -74,18 +64,5 @@ class Camera {
     );
 
     return PlatformTexture._(handle: handle, textureId: textureId);
-  }
-
-  static void _registerCallback(int handle, _CameraCallback callback) {
-    assert(handle != null);
-    assert(_CameraCallback != null);
-
-    assert(!_callbacks.containsKey(handle));
-    _callbacks[handle] = callback;
-  }
-
-  static void _unregisterCallback(int handle) {
-    assert(handle != null);
-    _callbacks.remove(handle);
   }
 }

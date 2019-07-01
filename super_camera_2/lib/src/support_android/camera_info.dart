@@ -1,4 +1,4 @@
-part of super_camera;
+part of support_android_camera;
 
 enum Facing { back, front }
 

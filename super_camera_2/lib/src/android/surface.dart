@@ -1,4 +1,4 @@
-part of super_camera;
+part of android_camera;
 
 abstract class Surface {
   Map<String, dynamic> asMap();
@@ -17,7 +17,7 @@ class PreviewTexture implements Surface {
   Map<String, dynamic> asMap() {
     return Map.unmodifiable(<String, dynamic>{
       'surfaceClass': '$PreviewTexture',
-      'textureHandle': platformTexture._handle,
+      'platformTexture': platformTexture.asMap(),
       '$SurfaceTexture': surfaceTexture.asMap(),
     });
   }

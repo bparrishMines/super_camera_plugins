@@ -1,6 +1,6 @@
-part of super_camera;
+part of ios_camera;
 
-class CaptureSession with _NativeMethodCallHandler, _CameraMappable {
+class CaptureSession with NativeMethodCallHandler, CameraMappable {
   bool _running = false;
 
   final List<CaptureOutput> _outputs = <CaptureOutput>[];
@@ -16,9 +16,9 @@ class CaptureSession with _NativeMethodCallHandler, _CameraMappable {
     _outputs.add(output);
 
     if (running) {
-      Camera.channel.invokeMethod<void>(
+      CameraChannel.channel.invokeMethod<void>(
         '$CaptureSession#addOutput',
-        <String, dynamic>{'handle': _handle, 'output': output.asMap()},
+        <String, dynamic>{'handle': handle, 'output': output.asMap()},
       );
     }
 
@@ -29,9 +29,9 @@ class CaptureSession with _NativeMethodCallHandler, _CameraMappable {
     if (!_outputs.remove(output)) return Future<void>.value();
 
     if (running) {
-      return Camera.channel.invokeMethod<void>(
+      return CameraChannel.channel.invokeMethod<void>(
         '$CaptureSession#removeOutput',
-        <String, dynamic>{'handle': _handle, 'output': output.asMap()},
+        <String, dynamic>{'handle': handle, 'output': output.asMap()},
       );
     }
 
@@ -45,9 +45,9 @@ class CaptureSession with _NativeMethodCallHandler, _CameraMappable {
     _inputs.add(input);
 
     if (running) {
-      return Camera.channel.invokeMethod<void>(
+      return CameraChannel.channel.invokeMethod<void>(
         '$CaptureSession#addInput',
-        <String, dynamic>{'handle': _handle, 'input': input.asMap()},
+        <String, dynamic>{'handle': handle, 'input': input.asMap()},
       );
     }
 
@@ -58,9 +58,9 @@ class CaptureSession with _NativeMethodCallHandler, _CameraMappable {
     if (!_inputs.remove(input)) return Future<void>.value();
 
     if (running) {
-      return Camera.channel.invokeMethod<void>(
+      return CameraChannel.channel.invokeMethod<void>(
         '$CaptureSession#removeInput',
-        <String, dynamic>{'handle': _handle, 'input': input.asMap()},
+        <String, dynamic>{'handle': handle, 'input': input.asMap()},
       );
     }
 
@@ -70,9 +70,9 @@ class CaptureSession with _NativeMethodCallHandler, _CameraMappable {
   Future<void> startRunning() {
     _running = true;
     try {
-      return Camera.channel.invokeMethod<void>(
+      return CameraChannel.channel.invokeMethod<void>(
         '$CaptureSession#startRunning',
-        <String, dynamic>{'sessionHandle': _handle, ...asMap()},
+        <String, dynamic>{'sessionHandle': handle, ...asMap()},
       );
     } on PlatformException {
       _running = false;
@@ -82,9 +82,9 @@ class CaptureSession with _NativeMethodCallHandler, _CameraMappable {
 
   Future<void> stopRunning() {
     _running = false;
-    return Camera.channel.invokeMethod<void>(
+    return CameraChannel.channel.invokeMethod<void>(
       '$CaptureSession#stopRunning',
-      <String, dynamic>{'handle': _handle},
+      <String, dynamic>{'handle': handle},
     );
   }
 

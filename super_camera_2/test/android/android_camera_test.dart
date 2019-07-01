@@ -2,6 +2,8 @@ import 'package:flutter/services.dart';
 import 'package:super_camera/super_camera.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:super_camera/android_camera.dart';
+
 void main() {
   group('Android Camera', () {
     final List<MethodCall> log = <MethodCall>[];
@@ -81,7 +83,9 @@ void main() {
         expect(log, <Matcher>[
           isMethodCall(
             '$CameraManager#getCameraIdList',
-            arguments: <String, dynamic>{'handle': 0},
+            arguments: <String, dynamic>{
+              'handle': 0,
+            },
           )
         ]);
       });

@@ -1,10 +1,10 @@
-part of super_camera;
+part of support_android_camera;
 
-class SupportAndroidCamera with _NativeMethodCallHandler, _CameraClosable {
+class SupportAndroidCamera with NativeMethodCallHandler, CameraClosable {
   SupportAndroidCamera._();
 
   static Future<int> getNumberOfCameras() {
-    return Camera.channel.invokeMethod<int>(
+    return CameraChannel.channel.invokeMethod<int>(
       '$SupportAndroidCamera#getNumberOfCameras',
     );
   }
@@ -12,9 +12,9 @@ class SupportAndroidCamera with _NativeMethodCallHandler, _CameraClosable {
   static SupportAndroidCamera open(int cameraId) {
     final SupportAndroidCamera camera = SupportAndroidCamera._();
 
-    Camera.channel.invokeMethod<int>(
+    CameraChannel.channel.invokeMethod<int>(
       '$SupportAndroidCamera#open',
-      <String, dynamic>{'cameraId': cameraId, 'cameraHandle': camera._handle},
+      <String, dynamic>{'cameraId': cameraId, 'cameraHandle': camera.handle},
     );
 
     return camera;
@@ -22,7 +22,7 @@ class SupportAndroidCamera with _NativeMethodCallHandler, _CameraClosable {
 
   static Future<CameraInfo> getCameraInfo(int cameraId) async {
     final Map<String, dynamic> infoMap =
-        await Camera.channel.invokeMapMethod<String, dynamic>(
+        await CameraChannel.channel.invokeMapMethod<String, dynamic>(
       '$SupportAndroidCamera#getCameraInfo',
       <String, dynamic>{'cameraId': cameraId},
     );
@@ -31,39 +31,39 @@ class SupportAndroidCamera with _NativeMethodCallHandler, _CameraClosable {
   }
 
   set previewTexture(PlatformTexture texture) {
-    assert(!_isClosed);
+    assert(!isClosed);
 
-    Camera.channel.invokeMethod<void>(
+    CameraChannel.channel.invokeMethod<void>(
       '$SupportAndroidCamera#previewTexture',
-      <String, dynamic>{'handle': _handle, 'textureHandle': texture?._handle},
+      <String, dynamic>{'handle': handle, 'platformTexture': texture?.asMap()},
     );
   }
 
   Future<void> startPreview() {
-    assert(!_isClosed);
+    assert(!isClosed);
 
-    return Camera.channel.invokeMethod<void>(
+    return CameraChannel.channel.invokeMethod<void>(
       '$SupportAndroidCamera#startPreview',
-      <String, dynamic>{'handle': _handle},
+      <String, dynamic>{'handle': handle},
     );
   }
 
   Future<void> stopPreview() {
-    if (_isClosed) return Future<void>.value();
+    if (isClosed) return Future<void>.value();
 
-    return Camera.channel.invokeMethod<void>(
+    return CameraChannel.channel.invokeMethod<void>(
       '$SupportAndroidCamera#stopPreview',
-      <String, dynamic>{'handle': _handle},
+      <String, dynamic>{'handle': handle},
     );
   }
 
   Future<void> release() {
-    if (_isClosed) return Future<void>.value();
+    if (isClosed) return Future<void>.value();
 
-    _isClosed = true;
-    return Camera.channel.invokeMethod<void>(
+    isClosed = true;
+    return CameraChannel.channel.invokeMethod<void>(
       '$SupportAndroidCamera#release',
-      <String, dynamic>{'handle': _handle},
+      <String, dynamic>{'handle': handle},
     );
   }
 }

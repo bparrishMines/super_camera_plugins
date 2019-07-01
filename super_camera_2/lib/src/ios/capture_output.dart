@@ -1,10 +1,10 @@
-part of super_camera;
+part of ios_camera;
 
 enum PixelFormatType { bgra32 }
 
 enum _CaptureOutputClass { captureVideoDataOutput }
 
-abstract class CaptureOutput with _NativeMethodCallHandler, _CameraMappable {}
+abstract class CaptureOutput with NativeMethodCallHandler, CameraMappable {}
 
 class CaptureVideoDataOutput extends CaptureOutput {
   CaptureVideoDataOutput({this.delegate, this.formatType});
@@ -18,7 +18,7 @@ class CaptureVideoDataOutput extends CaptureOutput {
   @override
   Map<String, dynamic> asMap() {
     return <String, dynamic>{
-      'handle': _handle,
+      'handle': handle,
       'class': _outputClass.toString(),
       'delegate': delegate?.asMap(),
       'formatType': formatType?.toString(),
@@ -27,7 +27,7 @@ class CaptureVideoDataOutput extends CaptureOutput {
 }
 
 class CaptureVideoDataOutputSampleBufferDelegate
-    with _CameraMappable, _NativeMethodCallHandler {
+    with CameraMappable, NativeMethodCallHandler {
   CaptureVideoDataOutputSampleBufferDelegate({PlatformTexture texture})
       : _texture = texture;
 
@@ -36,8 +36,8 @@ class CaptureVideoDataOutputSampleBufferDelegate
   @override
   Map<String, dynamic> asMap() {
     return <String, dynamic>{
-      'handle': _handle,
-      'textureHandle': _texture?._handle,
+      'handle': handle,
+      'platformTexture': _texture?.asMap(),
     };
   }
 }

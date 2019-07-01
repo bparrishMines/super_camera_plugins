@@ -1,4 +1,4 @@
-part of super_camera;
+part of android_camera;
 
 class CaptureRequest {
   const CaptureRequest._({

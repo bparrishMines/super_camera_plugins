@@ -1,4 +1,4 @@
-part of super_camera;
+part of android_camera;
 
 enum CameraDeviceState { closed, disconnected, error, opened }
 enum Template { preview }
@@ -8,12 +8,12 @@ typedef CameraDeviceStateCallback = void Function(
   CameraDevice device,
 );
 
-class CameraDevice with _NativeMethodCallHandler, _CameraClosable {
+class CameraDevice with NativeMethodCallHandler, CameraClosable {
   CameraDevice._(this.id, CameraDeviceStateCallback stateCallback)
       : assert(id != null),
         assert(stateCallback != null) {
-    Camera._registerCallback(
-      _handle,
+    CameraChannel.registerCallback(
+      handle,
       (dynamic event) {
         final String deviceState = event['$CameraDeviceState'];
 
@@ -35,7 +35,7 @@ class CameraDevice with _NativeMethodCallHandler, _CameraClosable {
   final String id;
 
   CaptureRequest createCaptureRequest(Template template) {
-    assert(!_isClosed);
+    assert(!isClosed);
 
     return CaptureRequest._(template: template, targets: <Surface>[]);
   }
@@ -44,13 +44,13 @@ class CameraDevice with _NativeMethodCallHandler, _CameraClosable {
     List<Surface> outputs,
     CameraCaptureSessionStateCallback callback,
   ) {
-    assert(!_isClosed);
+    assert(!isClosed);
     assert(outputs != null);
     assert(outputs.isNotEmpty);
     assert(callback != null);
 
     final CameraCaptureSession session = CameraCaptureSession._(
-      _handle,
+      handle,
       outputs,
       callback,
     );
@@ -61,23 +61,23 @@ class CameraDevice with _NativeMethodCallHandler, _CameraClosable {
         )
         .toList();
 
-    Camera.channel.invokeMethod<void>(
+    CameraChannel.channel.invokeMethod<void>(
       '$CameraDevice#createCaptureSession',
       <String, dynamic>{
-        'handle': _handle,
-        'sessionHandle': session._handle,
+        'handle': handle,
+        'sessionHandle': session.handle,
         'outputs': outputData,
       },
     );
   }
 
   Future<void> close() {
-    if (_isClosed) return Future<void>.value();
+    if (isClosed) return Future<void>.value();
 
-    _isClosed = true;
-    return Camera.channel.invokeMethod<void>(
+    isClosed = true;
+    return CameraChannel.channel.invokeMethod<void>(
       '$CameraDevice#close',
-      <String, dynamic>{'handle': _handle},
-    ).then((_) => Camera._unregisterCallback(_handle));
+      <String, dynamic>{'handle': handle},
+    ).then((_) => CameraChannel.unregisterCallback(handle));
   }
 }

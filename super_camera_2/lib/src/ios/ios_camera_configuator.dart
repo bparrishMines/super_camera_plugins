@@ -1,4 +1,4 @@
-part of super_camera;
+part of ios_camera;
 
 class IOSCameraConfigurator implements CameraConfigurator {
   IOSCameraConfigurator(this.device)

@@ -1,7 +1,7 @@
-part of super_camera;
+part of ios_camera;
 
 class CaptureDevice
-    with _CameraMappable, _NativeMethodCallHandler
+    with CameraMappable, NativeMethodCallHandler
     implements CameraDescription {
   CaptureDevice._({this.uniqueId, this.position})
       : assert(uniqueId != null),
@@ -25,7 +25,7 @@ class CaptureDevice
     assert(mediaType != null);
 
     final List<dynamic> deviceData =
-        await Camera.channel.invokeListMethod<dynamic>(
+        await CameraChannel.channel.invokeListMethod<dynamic>(
       '$CaptureDevice#getDevices',
       <String, dynamic>{'mediaType': mediaType.toString()},
     );
@@ -54,6 +54,6 @@ class CaptureDevice
 
   @override
   Map<String, dynamic> asMap() {
-    return <String, dynamic>{'handle': _handle, 'uniqueId': uniqueId};
+    return <String, dynamic>{'handle': handle, 'uniqueId': uniqueId};
   }
 }

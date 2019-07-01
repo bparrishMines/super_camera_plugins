@@ -1,4 +1,4 @@
-part of super_camera;
+part of android_camera;
 
 enum CameraCharacteristicKey { lensFacing, sensorOrientation }
 enum LensFacing { front, back, external }

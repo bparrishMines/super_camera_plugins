@@ -1,4 +1,4 @@
-part of super_camera;
+part of android_camera;
 
 typedef CameraCaptureSessionStateCallback = Function(
   CameraCaptureSessionState state,
@@ -7,7 +7,7 @@ typedef CameraCaptureSessionStateCallback = Function(
 
 enum CameraCaptureSessionState { configured, configureFailed, closed }
 
-class CameraCaptureSession with _NativeMethodCallHandler, _CameraClosable {
+class CameraCaptureSession with NativeMethodCallHandler, CameraClosable {
   CameraCaptureSession._(
     this._cameraDeviceHandle,
     List<Surface> outputs,
@@ -17,8 +17,8 @@ class CameraCaptureSession with _NativeMethodCallHandler, _CameraClosable {
         assert(outputs != null),
         assert(outputs.isNotEmpty),
         assert(stateCallback != null) {
-    Camera._registerCallback(
-      _handle,
+    CameraChannel.registerCallback(
+      handle,
       (dynamic event) {
         final String deviceState = event['$CameraCaptureSessionState'];
 
@@ -41,17 +41,17 @@ class CameraCaptureSession with _NativeMethodCallHandler, _CameraClosable {
   final List<Surface> outputs;
 
   Future<void> setRepeatingRequest({@required CaptureRequest request}) {
-    assert(!_isClosed);
+    assert(!isClosed);
     assert(request != null);
     assert(request.targets.isNotEmpty);
     assert(request.targets.every(
       (Surface surface) => outputs.contains(surface),
     ));
 
-    return Camera.channel.invokeMethod<void>(
+    return CameraChannel.channel.invokeMethod<void>(
       '$CameraCaptureSession#setRepeatingRequest',
       <String, dynamic>{
-        'handle': _handle,
+        'handle': handle,
         'cameraDeviceHandle': _cameraDeviceHandle,
         '$CaptureRequest': request.asMap(),
       },
@@ -59,12 +59,12 @@ class CameraCaptureSession with _NativeMethodCallHandler, _CameraClosable {
   }
 
   Future<void> close() {
-    if (_isClosed) return Future<void>.value();
+    if (isClosed) return Future<void>.value();
 
-    _isClosed = true;
-    return Camera.channel.invokeMethod<void>(
+    isClosed = true;
+    return CameraChannel.channel.invokeMethod<void>(
       '$CameraCaptureSession#close',
-      <String, dynamic>{'handle': _handle},
-    ).then((_) => Camera._unregisterCallback(_handle));
+      <String, dynamic>{'handle': handle},
+    ).then((_) => CameraChannel.unregisterCallback(handle));
   }
 }

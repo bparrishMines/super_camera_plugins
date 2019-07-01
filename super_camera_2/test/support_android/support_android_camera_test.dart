@@ -1,6 +1,8 @@
 import 'package:flutter/services.dart';
-import 'package:super_camera/super_camera.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'package:super_camera/super_camera.dart';
+import 'package:super_camera/support_android_camera.dart';
 
 void main() {
   group('Support Android Camera', () {
@@ -59,7 +61,10 @@ void main() {
         expect(log, <Matcher>[
           isMethodCall(
             '$SupportAndroidCamera#open',
-            arguments: <String, dynamic>{'cameraId': 14, 'cameraHandle': 0},
+            arguments: <String, dynamic>{
+              'cameraId': 14,
+              'cameraHandle': 0,
+            },
           )
         ]);
       });
@@ -88,7 +93,9 @@ void main() {
         expect(log, <Matcher>[
           isMethodCall(
             '$SupportAndroidCamera#startPreview',
-            arguments: <String, dynamic>{'handle': 0},
+            arguments: <String, dynamic>{
+              'handle': 0,
+            },
           )
         ]);
       });
@@ -102,7 +109,9 @@ void main() {
         expect(log, <Matcher>[
           isMethodCall(
             '$SupportAndroidCamera#stopPreview',
-            arguments: <String, dynamic>{'handle': 0},
+            arguments: <String, dynamic>{
+              'handle': 0,
+            },
           )
         ]);
       });
@@ -116,7 +125,9 @@ void main() {
         expect(log, <Matcher>[
           isMethodCall(
             '$SupportAndroidCamera#release',
-            arguments: <String, dynamic>{'handle': 0},
+            arguments: <String, dynamic>{
+              'handle': 0,
+            },
           )
         ]);
       });

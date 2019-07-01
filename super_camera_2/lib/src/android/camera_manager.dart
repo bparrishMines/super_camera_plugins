@@ -1,11 +1,11 @@
-part of super_camera;
+part of android_camera;
 
-class CameraManager with _NativeMethodCallHandler {
+class CameraManager with NativeMethodCallHandler {
   CameraManager._() {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      Camera.channel.invokeMethod<void>(
+      CameraChannel.channel.invokeMethod<void>(
         '$CameraManager()',
-        <String, dynamic>{'managerHandle': _handle},
+        <String, dynamic>{'managerHandle': handle},
       );
     }
   }
@@ -18,18 +18,18 @@ class CameraManager with _NativeMethodCallHandler {
     assert(cameraId != null);
 
     final Map<String, dynamic> data =
-        await Camera.channel.invokeMapMethod<String, dynamic>(
+        await CameraChannel.channel.invokeMapMethod<String, dynamic>(
       '$CameraManager#getCameraCharacteristics',
-      <String, dynamic>{'cameraId': cameraId, 'handle': _handle},
+      <String, dynamic>{'cameraId': cameraId, 'handle': handle},
     );
 
     return CameraCharacteristics._fromMap(data);
   }
 
   Future<List<String>> getCameraIdList() {
-    return Camera.channel.invokeListMethod<String>(
+    return CameraChannel.channel.invokeListMethod<String>(
       '$CameraManager#getCameraIdList',
-      <String, dynamic>{'handle': _handle},
+      <String, dynamic>{'handle': handle},
     );
   }
 
@@ -38,12 +38,12 @@ class CameraManager with _NativeMethodCallHandler {
     assert(stateCallback != null);
 
     final CameraDevice device = CameraDevice._(cameraId, stateCallback);
-    Camera.channel.invokeMethod<void>(
+    CameraChannel.channel.invokeMethod<void>(
       '$CameraManager#openCamera',
       <String, dynamic>{
-        'handle': _handle,
+        'handle': handle,
         'cameraId': cameraId,
-        'cameraHandle': device._handle,
+        'cameraHandle': device.handle,
       },
     );
   }
