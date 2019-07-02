@@ -313,12 +313,30 @@ void main() {
     });
 
     group('$CameraController', () {
-      test('works', () async {
+      test('Starting and stopping does not cause a crash', () async {
         final List<CameraDescription> descriptions =
             await CameraController.availableCameras();
 
         final CameraController controller = CameraController(
           description: descriptions[0],
+        );
+
+        await expectLater(controller.api, isNotNull);
+        await expectLater(
+          controller.configurator.addPreviewTexture(),
+          completes,
+        );
+        await expectLater(controller.start(), completes);
+        await expectLater(controller.stop(), completes);
+        await expectLater(controller.dispose(), completes);
+      });
+
+      test('$SupportAndroidCameraConfigurator does not crash', () async {
+        final CameraInfo info = await SupportAndroidCamera.getCameraInfo(0);
+
+        final CameraController controller = CameraController.customConfigurator(
+          description: info,
+          configurator: SupportAndroidCameraConfigurator(info),
         );
 
         await expectLater(controller.api, isNotNull);

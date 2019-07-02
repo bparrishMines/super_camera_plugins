@@ -39,9 +39,9 @@ class CaptureDeviceInput extends CaptureInput {
       'handle': handle,
       'class': _inputClass.toString(),
       'device': device.asMap(),
-      'ports': ports.map<Map<String, dynamic>>(
-        (CaptureInputPort port) => port.asMap(),
-      ).toList(),
+      'ports': ports
+          .map<Map<String, dynamic>>((CaptureInputPort port) => port.asMap())
+          .toList(),
     };
   }
 }
