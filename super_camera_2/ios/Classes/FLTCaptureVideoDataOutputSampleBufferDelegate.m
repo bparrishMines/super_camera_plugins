@@ -5,12 +5,12 @@
 #import "SuperCameraPlugin+Internal.h"
 
 @interface FLTCaptureVideoDataOutputSampleBufferDelegate ()
-@property PlatformTexture *texture;
+@property NativeTexture *texture;
 @end
 
 @implementation FLTCaptureVideoDataOutputSampleBufferDelegate
 @synthesize handle;
-- (instancetype _Nonnull)initWithPlatformTexture:(PlatformTexture *_Nullable)texture
+- (instancetype _Nonnull)initWithPlatformTexture:(NativeTexture *_Nullable)texture
                                           handle:(NSNumber *)handle {
   self = [super init];
   if (self) {

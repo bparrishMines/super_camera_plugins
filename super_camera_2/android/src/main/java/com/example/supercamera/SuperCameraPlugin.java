@@ -5,7 +5,7 @@ import android.hardware.camera2.CameraManager;
 import android.os.Build;
 import android.util.SparseArray;
 import com.example.supercamera.camera.FlutterCameraManager;
-import com.example.supercamera.common.PlatformTexture;
+import com.example.supercamera.common.NativeTexture;
 import com.example.supercamera.support_camera.SupportAndroidCamera;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -113,7 +113,7 @@ public class SuperCameraPlugin implements MethodCallHandler {
   private void allocateTexture(MethodCall call, Result result) {
     final TextureRegistry.SurfaceTextureEntry entry = registrar.textures().createSurfaceTexture();
     final Integer textureHandle = call.argument("textureHandle");
-    addHandler(textureHandle, new PlatformTexture(entry, textureHandle));
+    addHandler(textureHandle, new NativeTexture(entry, textureHandle));
 
     result.success(entry.id());
   }

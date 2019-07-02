@@ -5,12 +5,12 @@
 #import "SuperCameraPlugin+Internal.h"
 #import <libkern/OSAtomic.h>
 
-@interface PlatformTexture ()
+@interface NativeTexture ()
 @property CVPixelBufferRef volatile latestPixelBuffer;
 @property _Nonnull id<FlutterTextureRegistry> registry;
 @end
 
-@implementation PlatformTexture
+@implementation NativeTexture
 @synthesize handle;
 - (instancetype _Nonnull)initWithTextureRegistry:(NSObject<FlutterTextureRegistry> *)registry
                                           handle:(NSNumber *)handle {

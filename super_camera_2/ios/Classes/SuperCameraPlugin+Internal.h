@@ -26,7 +26,7 @@
 + (void)stopRunning:(FlutterMethodCall * _Nonnull)call result:(FlutterResult _Nonnull)result;
 @end
 
-@interface PlatformTexture : NSObject<MethodCallHandler, FlutterTexture>
+@interface NativeTexture : NSObject<MethodCallHandler, FlutterTexture>
 @property(readonly) int64_t textureId;
 - (instancetype _Nonnull)initWithTextureRegistry:(NSObject<FlutterTextureRegistry> *_Nonnull)registry
                                           handle:(NSNumber *_Nonnull)handle;
@@ -34,7 +34,7 @@
 @end
 
 @interface FLTCaptureVideoDataOutputSampleBufferDelegate : NSObject<AVCaptureVideoDataOutputSampleBufferDelegate, MethodCallHandler>
-- (instancetype _Nonnull)initWithPlatformTexture:(PlatformTexture *_Nullable)texture
+- (instancetype _Nonnull)initWithPlatformTexture:(NativeTexture *_Nullable)texture
                                           handle:(NSNumber *_Nonnull)handle;
 @end
 

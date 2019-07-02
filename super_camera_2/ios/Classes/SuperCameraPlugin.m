@@ -64,7 +64,7 @@ static FlutterMethodChannel *channel;
 
 - (void)allocateTexture:(FlutterMethodCall*)call result:(FlutterResult)result {
   NSNumber *handle = call.arguments[@"textureHandle"];
-  PlatformTexture *texture = [[PlatformTexture alloc] initWithTextureRegistry:_registrar.textures handle:handle];
+  NativeTexture *texture = [[NativeTexture alloc] initWithTextureRegistry:_registrar.textures handle:handle];
 
   [SuperCameraPlugin addMethodHandler:handle methodHandler:texture];
   result(@(texture.textureId));

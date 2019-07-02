@@ -2,7 +2,7 @@ package com.example.supercamera.support_camera;
 
 import android.hardware.Camera;
 import com.example.supercamera.SuperCameraPlugin;
-import com.example.supercamera.common.PlatformTexture;
+import com.example.supercamera.common.NativeTexture;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import java.io.IOException;
@@ -78,7 +78,7 @@ public class SupportAndroidCamera implements MethodChannel.MethodCallHandler {
       if (textureHandle == null) {
         camera.setPreviewTexture(null);
       } else {
-        final PlatformTexture texture = (PlatformTexture) SuperCameraPlugin.getHandler(textureHandle);
+        final NativeTexture texture = (NativeTexture) SuperCameraPlugin.getHandler(textureHandle);
         camera.setPreviewTexture(texture.textureEntry.surfaceTexture());
       }
     } catch (IOException e) {

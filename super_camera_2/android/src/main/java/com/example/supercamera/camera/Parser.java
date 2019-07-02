@@ -8,7 +8,7 @@ import android.os.Build;
 import android.view.Surface;
 import androidx.annotation.RequiresApi;
 import com.example.supercamera.SuperCameraPlugin;
-import com.example.supercamera.common.PlatformTexture;
+import com.example.supercamera.common.NativeTexture;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +49,7 @@ class Parser {
       if (surfaceClass.equals("PreviewTexture")) {
         final Map<String, Object> textureData = (Map<String, Object>) outputData.get("nativeTexture");
         final Integer textureHandle = (Integer) textureData.get("handle");
-        final PlatformTexture texture = (PlatformTexture) SuperCameraPlugin.getHandler(textureHandle);
+        final NativeTexture texture = (NativeTexture) SuperCameraPlugin.getHandler(textureHandle);
 
         final Map<String, Object> surfaceTextureData =
             (Map<String, Object>) outputData.get("surfaceTexture");

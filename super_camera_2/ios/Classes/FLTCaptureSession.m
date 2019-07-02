@@ -96,9 +96,9 @@
         NSDictionary *textureData = delegateData[@"nativeTexture"];
         NSNumber *textureHandle = textureData[@"handle"];
 
-        PlatformTexture *texture = nil;
+        NativeTexture *texture = nil;
         if (textureHandle) {
-          texture = (PlatformTexture *) [SuperCameraPlugin getHandler:textureHandle];
+          texture = (NativeTexture *) [SuperCameraPlugin getHandler:textureHandle];
         }
 
         NSNumber *handle = outputData[@"handle"];
