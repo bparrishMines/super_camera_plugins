@@ -51,6 +51,7 @@ class AndroidCameraConfigurator
 
     _previewCaptureRequest = request.copyWith(
       targets: _outputs,
+      jpegQuality: 90,
     );
   }
 

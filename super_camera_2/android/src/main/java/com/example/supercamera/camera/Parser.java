@@ -32,6 +32,11 @@ class Parser {
 
     CaptureRequest.Builder builder = device.device.createCaptureRequest(requestTemplate);
 
+    final Integer jpegQuality = (Integer) data.get("jpegQuality");
+    if (jpegQuality != null) {
+      builder.set(CaptureRequest.JPEG_QUALITY, jpegQuality.byteValue());
+    }
+
     final List<Map<String, Object>> targetData = (List<Map<String, Object>>) data.get("targets");
     for(Surface target : parseSurfaces(targetData)) {
       builder.addTarget(target);
